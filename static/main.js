@@ -291,10 +291,14 @@ function onClickImage(){
     let input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
+    
     input.onchange = _ => {
-            imageFile = Array.from(input.files)[0];
-            previewImage();
-        };
+        imageFile = Array.from(input.files)[0];
+        previewImage();
+        input.remove();
+    };
+    input.style.display = 'none';
+    document.body.appendChild(input);
     input.click();
 }
 //Drop image
