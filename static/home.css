@@ -220,7 +220,7 @@ body{
     background-color: white;
     position: fixed;
     z-index: 2;
-    top: -200px;
+    top: -300px;
     width: 100%;
     max-width: 500px;
     display: flex;
