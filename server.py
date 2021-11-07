@@ -1,3 +1,4 @@
+from sqlite3.dbapi2 import sqlite_version
 import flask
 from flask import request
 from flask import render_template
@@ -30,6 +31,10 @@ def checkFileName(name):
 @app.route('/')
 def stickyMap():
 	return render_template('home.html', color=COLOR)
+
+@app.route('/admin', methods=['GET'])
+def admin():
+	return render_template('admin.html', color=COLOR)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def uploadSticker():
@@ -99,6 +104,25 @@ def getStickers():
 			return json.dumps(rows)
 	else:
 		return json.dumps({'status' : '400', 'error': 'Bounding box not defined or incomplete.'}), 400
+
+@app.route('/getUnverifiedStickers', methods=['GET'])
+def getUnverifiedStickers():
+	if checkToken(request.args.get('token')):
+		#Get all unverified stickers'
+		with sqlite3.connect('stickers.db') as con:
+			#create cursor
+			cursor = con.cursor()
+			#find results
+			rows = cursor.execute("SELECT * FROM stickers WHERE verified=0").fetchall()
+			return json.dumps(rows)
+	else:
+		return json.dumps({'status' : '403', 'error': 'Token invalid'}), 403
+
+def checkToken(token):
+	if(token == "123"):
+		return True
+	else:
+		return False
 
 if __name__ == "__main__":
 	from waitress import serve
