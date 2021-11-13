@@ -6,19 +6,20 @@
 
 .content{
     display: flex;
-    flex-direction: row;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     width: 100%;
     overflow: hidden;
 }
 
-.pageContent{
+.cardSection{
     width: 100%;
     max-width: 400px;
     position: relative;
-
-    border-left: dashed 1px grey;
-    border-right: dashed 1px grey;
+    padding-top: 10px;
+    margin: 10px 0px 10px 0px;
+    border-radius: 15px;
+    background-color: rgb(30,30,30);
 }
 
 .navBar{
@@ -27,12 +28,21 @@
     display: flex;
     align-items: center;
     flex-direction: row;
+    background-color: rgb(30,30,30);
+    box-shadow: 0px 3px 5px rgba(0,0,0,0.5);
 }
 
 .title{
     color: white;
     font-size: 30px;
     margin-left: 30px;
+}
+
+.containerLabel{
+    color: white;
+    display: block;
+    font-size: 25px;
+    margin-left: 35px;
 }
 
 .cardHolder{
@@ -42,7 +52,7 @@
 .card{
     position: absolute;
     overflow: hidden;
-    margin: 30px;
+    margin: 15px 30px 30px 30px;
     border-radius: 20px;
     box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
     width: calc(100% - 60px);
@@ -85,5 +95,27 @@
     height: 80px;
     background: linear-gradient(rgba(255,255,255, 0) 0%, rgba(255,255,255,1) 50%);
     margin-top: -45px;
-    
+}
+
+.bottomSection{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    color: white;
+}
+
+.allStickersSection{
+    background-color: rgb(30,30,30);
+    width: 50%;
+    margin: 0px 5px 0px 10px;
+    padding: 10px;
+    border-radius: 15px;
+}
+
+.allLogosSection{
+    background-color: rgb(30,30,30);
+    width: 50%;
+    margin: 0px 10px 0px 5px;
+    padding: 10px;
+    border-radius: 15px;
 }
