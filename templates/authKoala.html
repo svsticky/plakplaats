@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login with Koala</title>
+    <link rel="stylesheet" href="static/auth.css">
+    <style>
+        .color{
+            background-color: {{color}};
+        }
+    </style>
+</head>
+<body>
+    <div class="navBar color">
+        <img src="/static/logo_compact_outline_wit.png" height="60px" style="padding-left: 20px;">
+    </div>
+
+    <div class="contentContainer">
+        <span class="title">Login</span>
+        <span class="description">Please login with koala to continue</span>
+        <div class="cookieWarning">
+            <svg class="cookieIcon" viewBox="0 0 24 24">
+                <path fill="{{color}}" d="M15 10H14.5C13.67 10 13 9.33 13 8.5V8H12.5C11.67 8 11 7.33 11 6.5V5.07C7.91 5.5 5.47 8 5.07 11.08C5.25 10.46 5.82 10 6.5 10C7.33 10 8 10.67 8 11.5S7.33 13 6.5 13C5.71 13 5.07 12.39 5 11.62C5 12.11 5 12.61 5.09 13.12C5.5 15.81 7.54 18.04 10.16 18.74C9.76 18.47 9.5 18 9.5 17.5C9.5 16.67 10.17 16 11 16S12.5 16.67 12.5 17.5C12.5 18.22 12 18.82 11.32 18.96C11.9 19 12.46 19 13 18.92C13 18.95 13 18.97 13 19C13 19.66 13.12 20.3 13.32 20.89C12.89 20.96 12.45 21 12 21C7.03 21 3 16.97 3 12S7.03 3 12 3C12 3 13 3 13 4V6H14C14 6 15 6 15 7V8H17C17 8 18 8 18 9V10H20C20 10 20.6 10 20.87 10.5C20.96 11 21 11.5 21 12C21 12.45 20.96 12.89 20.89 13.32C20.3 13.12 19.66 13 19 13C18.97 13 18.95 13 18.92 13C18.97 12.68 19 12.34 19 12H17.5C16.67 12 16 11.33 16 10.5V10H15M15 14.5C15 14.5 15 14.5 15 14.53C15.66 13.95 16.45 13.5 17.32 13.24C17.08 13.09 16.8 13 16.5 13C15.67 13 15 13.67 15 14.5M11.5 14C12.33 14 13 13.33 13 12.5S12.33 11 11.5 11 10 11.67 10 12.5 10.67 14 11.5 14M11 7.5C11 6.67 10.33 6 9.5 6S8 6.67 8 7.5 8.67 9 9.5 9 11 8.33 11 7.5M21.34 15.84L17.75 19.43L16.16 17.84L15 19L17.75 22L22.5 17.25L21.34 15.84Z" />
+            </svg>
+            <span class="cookieText">We use cookies to keep you logged in.<br>You accept that we use cookies for this purpose by logging in.</span>
+        </div>
+        <div class="loginButton" onclick='window.location = "{{loginUrl}}"'>
+            <svg class="koalaIcon" viewBox="0 0 24 24">
+                <path fill="white" d="M19 3C18.1 3 15.5 3 14.3 6.1C13.9 6 13.4 6 13 6H11C10.6 6 10.1 6 9.7 6.1C8.5 3 5.9 3 5 3C4 3 1 4 1 9C1 12.6 3.5 13.6 5 13.9V15C5 18.3 7.7 21 11 21H13C16.3 21 19 18.3 19 15V13.9C20.5 13.6 23 12.6 23 9C23 4 20 3 19 3M5 12V12.4C2.9 11.8 3.3 9.5 4.3 8.7C4 8.3 3 9 3 8.6C3 8.1 4.8 7.4 5.1 7.3C4.8 6.8 3.6 7 3.6 6.6C3.6 6.3 4.8 5.8 5.8 6C6.3 6.1 6.9 6.3 7.4 6.7C6 8 5 9.8 5 12M8.5 15C6.5 15 6.5 12 8.5 12C10.5 12 10.5 15 8.5 15M12.5 18H11.5C10.8 18 10.3 17.3 10.6 16.7L11.3 13.7C11.4 13.3 11.8 13.1 12.1 13C12.4 13 12.7 13.2 12.9 13.7L13.6 16.7C13.7 17.3 13.2 18 12.5 18M15.5 15C13.5 15 13.5 12 15.5 12C17.5 12 17.5 15 15.5 15M19.7 8.6C20.7 9.4 21.1 11.7 19 12.3C19.1 10.1 18.1 8 16.6 6.7C17.1 6.3 17.7 6.1 18.2 6C19.2 5.8 20.4 6.2 20.4 6.6C20.4 7 19.2 6.8 18.9 7.2C19.2 7.4 21 8.1 21 8.6C21 9 20.1 8.3 19.7 8.6Z" />
+            </svg>
+            <span class="buttonText">Login with Koala</span>
+        </div>
+    </div>
+</body>
+</html>

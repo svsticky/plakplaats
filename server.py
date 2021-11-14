@@ -5,13 +5,18 @@ from flask import render_template
 import sqlite3
 import json
 import os
-from werkzeug.utils import secure_filename
+from werkzeug.utils import redirect, secure_filename
 import random
+from dotenv import load_dotenv
 
+#Load env file for variable
+load_dotenv()
+
+#Create flask app
 app = flask.Flask(__name__)
 
 
-COLOR = "#800816"
+COLOR = os.getenv("STICKER_MAP_COLOR")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 UPLOAD_DIRECTORY = "static/uploads"
 #COLOR = "#036ffc"
@@ -29,12 +34,33 @@ def checkFileName(name):
 	return newName
 
 @app.route('/')
-def stickyMap():
-	return render_template('home.html', color=COLOR)
+def stickerMap():
+	if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
+		if checkToken(request.args.get('token')):
+			return render_template('home.html', color=COLOR)
+		else:
+			return redirect('/auth', code=302)
+	else:
+		return render_template('home.html', color=COLOR)
 
 @app.route('/admin', methods=['GET'])
 def admin():
 	return render_template('admin.html', color=COLOR)
+
+@app.route('/auth', methods=['GET', 'POST'])
+def auth():
+	#The request should only be a POST request after loggin in.
+	if request.method == 'GET':
+		#Check if login with koala is enabled
+		if os.getenv("LOGIN_WITH_KOALA") == "True":
+			#Construct login url
+			url = os.getenv("KOALA_URL") + "/api/oauth/authorize?client_id=" + os.getenv("KOALA_CLIENT_UID") + "&redirect_uri=" + os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth&response_type=code"
+			return render_template('authKoala.html', color=COLOR, loginUrl=url)
+		else:
+			return 'Logging in without koala is not yet supported.'
+	else:
+		return "TODO handle redirect"
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 def uploadSticker():
