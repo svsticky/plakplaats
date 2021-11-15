@@ -1,13 +1,18 @@
+import re
 from sqlite3.dbapi2 import sqlite_version
 import flask
 from flask import request
 from flask import render_template
+import requests
 import sqlite3
 import json
 import os
 from werkzeug.utils import redirect, secure_filename
 import random
 from dotenv import load_dotenv
+import secrets
+
+from werkzeug.wrappers import response
 
 #Load env file for variable
 load_dotenv()
@@ -36,10 +41,15 @@ def checkFileName(name):
 @app.route('/')
 def stickerMap():
 	if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-		if checkToken(request.args.get('token')):
-			return render_template('home.html', color=COLOR)
+		#Check if cookie is avalable
+		if request.cookies.get('token') != None:
+			#Check token
+			if checkToken(request.cookies.get('token')):
+				return render_template('home.html', color=COLOR)
+			else:
+				return redirect('/auth', code=302)
 		else:
-			return redirect('/auth', code=302)
+			return "redirecting... <script>if(window.localStorage.getItem('token') != null){ document.cookie = 'token=' + window.localStorage.getItem('token'); window.location.reload(); } else { window.location.href = '/auth' }</script>"
 	else:
 		return render_template('home.html', color=COLOR)
 
@@ -47,10 +57,10 @@ def stickerMap():
 def admin():
 	return render_template('admin.html', color=COLOR)
 
-@app.route('/auth', methods=['GET', 'POST'])
+@app.route('/auth', methods=['GET'])
 def auth():
-	#The request should only be a POST request after loggin in.
-	if request.method == 'GET':
+	#The request contain a code after loggin in.
+	if request.args.get('code') == None:
 		#Check if login with koala is enabled
 		if os.getenv("LOGIN_WITH_KOALA") == "True":
 			#Construct login url
@@ -59,7 +69,26 @@ def auth():
 		else:
 			return 'Logging in without koala is not yet supported.'
 	else:
-		return "TODO handle redirect"
+		#Handle code
+		#Create post request to koala server
+		tokenUrl = os.getenv("KOALA_URL") + "/api/oauth/token?grant_type=authorization_code&code=" + request.args.get('code') + "&client_id=" + os.getenv("KOALA_CLIENT_UID") + "&client_secret=" + os.getenv("KOALA_CLIENT_SECRET") + "&redirect_uri="+ os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth" 
+		tokenResponse = json.loads(requests.post(tokenUrl).text)
+		#Check if the response is valid, redirect back if not
+		if 'credentials_type' not in tokenResponse:
+			return redirect('/auth', code=302)
+		#Connect to db
+		with sqlite3.connect('stickers.db') as con:
+			#Create a (normal) token for user
+			token = secrets.token_urlsafe(30)
+			cursor = con.cursor()
+			cursor.execute("INSERT INTO tokens VALUES (?)", (token,))
+			con.commit()
+			#Create a response
+			page = "redirecting <script>window.localStorage.setItem('token', '" + token + "'); window.location.href = '../'</script>"
+			resp = flask.make_response(page)
+			#Save token as cookie
+			resp.set_cookie('token', token)			
+			return resp
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -145,10 +174,13 @@ def getUnverifiedStickers():
 		return json.dumps({'status' : '403', 'error': 'Token invalid'}), 403
 
 def checkToken(token):
-	if(token == "123"):
-		return True
-	else:
-		return False
+	with sqlite3.connect('stickers.db') as con:
+		cursor = con.cursor()
+		rows = cursor.execute("SELECT * FROM tokens WHERE token=?", (token,)).fetchall()
+		if len(rows) > 0:
+			return True
+		else:
+			return False
 
 if __name__ == "__main__":
 	from waitress import serve
