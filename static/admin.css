@@ -95,6 +95,25 @@
     height: 80px;
     background: linear-gradient(rgba(255,255,255, 0) 0%, rgba(255,255,255,1) 50%);
     margin-top: -45px;
+    display: flex;
+    justify-content: space-around;
+}
+
+.cardButton{
+    width: 80px;
+    height: 80px;
+    margin-top: -25px;
+    background-size:cover;
+    
+}
+
+.accept{
+    background-image: url('/static/thumb-up.svg');
+}
+
+.reject{
+    background-image: url('/static/thumb-down.svg');
+
 }
 
 .bottomSection{

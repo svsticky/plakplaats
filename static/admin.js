@@ -54,8 +54,38 @@ function createCard(id, imagesrc){
     var buttonArea = document.createElement('div');
     buttonArea.classList.add('buttonArea');
 
+    //Create reject button
+    var rejectButton = document.createElement('div');
+    rejectButton.classList.add("cardButton");
+    rejectButton.classList.add("reject");
+    rejectButton.addEventListener('click', function(){
+        //Animate card
+        card.style.animation = "cardSwipeLeft 0.3s";
+        setTimeout(function (){
+            //Start reject function
+            rejectCard();
+        }, 300);
+    });
+
+    //Create accept button
+    var acceptButton = document.createElement('div');
+    acceptButton.classList.add("cardButton");
+    acceptButton.classList.add("accept");
+    acceptButton.addEventListener('click', function(){
+        //Animate card
+        card.style.animation = "cardSwipeRight 0.3s";
+        setTimeout(function (){
+            //Start accept function
+            acceptCard();
+        }, 300);
+    });
+
+
     card.appendChild(image);
     card.appendChild(buttonArea);
+    buttonArea.appendChild(rejectButton);
+    buttonArea.appendChild(acceptButton);
+
 
     //Touch actions
     card.addEventListener('touchstart', onTouchStart);
@@ -160,12 +190,35 @@ function createCard(id, imagesrc){
     }
 
     function acceptCard(){
-        //createCard(1, "static/uploads/dog0.jpg");
+        //update sticker
+        var updateRequest = new XMLHttpRequest()
+        updateRequest.open('GET', '/setSticker?id=' + id + '&state=Verify');
+        updateRequest.onreadystatechange = function(){
+            if(this.readyState == 4 && this.status == 400){
+                alert(this.responseText);
+            }
+        };
+        updateRequest.send();
+        if(cardHolder.children.length == 0){
+            loadCards();
+        }
         card.remove();
     }
 
     function rejectCard(){
-        //createCard(1, "static/uploads/dog0.jpg");
+        //update sticker
+        var updateRequest = new XMLHttpRequest()
+        updateRequest.open('GET', '/setSticker?id=' + id + '&state=Reject');
+        updateRequest.onreadystatechange = function(){
+            if(this.readyState == 4 && this.status == 400){
+                alert(this.responseText);
+            }
+        };
+        updateRequest.send();
+        //Check if new stickers have to be loaded
+        if(cardHolder.children.length == 0){
+            loadCards();
+        }
         card.remove();
     }
     cardHolder.appendChild(card);

@@ -202,8 +202,9 @@ def getStickers():
 
 @app.route('/getUnverifiedStickers', methods=['GET'])
 def getUnverifiedStickers():
+	#Check if the request contains an valid admin token
 	if checkAdminToken(request.cookies.get('adminToken') == False):
-		return redirect('/auth?adminRefresh=1')
+		return json.dumps({'status' : '403', 'error': 'Token invalid, expired, or not available'}), 403
 	#Get all unverified stickers'
 	with sqlite3.connect('stickers.db') as con:
 		#create cursor
@@ -211,6 +212,36 @@ def getUnverifiedStickers():
 		#find results
 		rows = cursor.execute("SELECT * FROM stickers WHERE verified=0").fetchall()
 		return json.dumps(rows)
+
+@app.route('/setSticker', methods=['GET'])
+def setSticker():
+	#Check if the request contains an valid admin token
+	if checkAdminToken(request.cookies.get('adminToken') == False):
+		return json.dumps({'status' : '403', 'error': 'Token invalid, expired, or not available'}), 403
+	if request.args.get("id") == None or request.args.get('state') == None:
+		return json.dumps({'status' : '400', 'error': 'Invalid or missing arguments.'})
+	with sqlite3.connect('stickers.db') as con:
+		#create a cursor
+		cursor = con.cursor()
+		#Get the email address of the user
+		if request.args.get('state') == 'Verify':
+			#Update db
+			cursor.execute("UPDATE stickers SET verified=1 WHERE stickerId=?", (request.args.get('id'), ));
+			con.commit();
+			#sendEmailUpdate
+			return json.dumps({'status' : '200', 'error': 'Card updated'})
+
+		if request.args.get('state') == 'Reject':
+			#Update db
+			cursor.execute("UPDATE stickers SET verified=-1 WHERE stickerId=?", (request.args.get('id'), ));
+			con.commit();
+			return json.dumps({'status' : '200', 'error': 'Card updated'})
+		return json.dumps({'status' : '400', 'error': 'Invalid card state'})
+
+def sendEmailUpdate():
+	return 0;
+
+
 
 def checkToken(token):
 	if token == None:
