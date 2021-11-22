@@ -1,10 +1,10 @@
-import re
 from sqlite3.dbapi2 import sqlite_version
 import flask
 from flask import request
 from flask import render_template
 import requests
 import sqlite3
+import time
 import json
 import os
 from werkzeug.utils import redirect, secure_filename
@@ -55,17 +55,24 @@ def stickerMap():
 
 @app.route('/admin', methods=['GET'])
 def admin():
-	return render_template('admin.html', color=COLOR)
+	#It is not needed to store or retreive the adminToken from localStorage because it is not intended to survive a new session
+	if checkAdminToken(request.cookies.get('adminToken')):
+		return render_template('admin.html', color=COLOR)
+	else:
+		return redirect('/auth?adminRefresh=1')
 
 @app.route('/auth', methods=['GET'])
 def auth():
-	#The request contain a code after loggin in.
+	#The request contains a code after loggin in.
 	if request.args.get('code') == None:
 		#Check if login with koala is enabled
 		if os.getenv("LOGIN_WITH_KOALA") == "True":
 			#Construct login url
 			url = os.getenv("KOALA_URL") + "/api/oauth/authorize?client_id=" + os.getenv("KOALA_CLIENT_UID") + "&redirect_uri=" + os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth&response_type=code"
-			return render_template('authKoala.html', color=COLOR, loginUrl=url)
+			resp = flask.make_response(render_template('authKoala.html', color=COLOR, loginUrl=url))
+			if request.args.get('adminRefresh') != None:
+				resp.set_cookie('adminRefresh', "1")
+			return resp
 		else:
 			return 'Logging in without koala is not yet supported.'
 	else:
@@ -78,21 +85,42 @@ def auth():
 			return redirect('/auth', code=302)
 		#Connect to db
 		with sqlite3.connect('stickers.db') as con:
-			#Create a (normal) token for user
-			token = secrets.token_urlsafe(30)
 			cursor = con.cursor()
-			cursor.execute("INSERT INTO tokens VALUES (?)", (token,))
-			con.commit()
+			#Check if the user already has (normal) key stored. (Admin refresh session)
+			token = ""
+			if checkToken(request.cookies.get('token')) == False:
+				#Create a (normal) token for user
+				token = secrets.token_urlsafe(30)
+				cursor.execute("INSERT INTO tokens VALUES (?)", (token,))
+			else: 
+				#User already has a valid token, re-use this one
+				token = request.cookies.get('token')
 			#Create a response
 			page = "redirecting <script>window.localStorage.setItem('token', '" + token + "'); window.location.href = '../'</script>"
+			#Check if the user came from the home page
+			if request.cookies.get('adminRefresh') != None:
+				page = "redirecting <script>window.localStorage.setItem('token', '" + token + "'); window.location.href = '../admin'</script>"
 			resp = flask.make_response(page)
+			#Check if the user is a admin
+			if tokenResponse['credentials_type'] == "Admin":
+				adminToken = secrets.token_urlsafe(30)
+				expirationTime = round(time.time()) + int(os.getenv("ADMIN_EXPIRES_IN"))
+				cursor.execute("INSERT INTO adminTokens VALUES(?,?)", (adminToken, expirationTime))
+				resp.set_cookie('adminToken', adminToken)	
+			con.commit()
 			#Save token as cookie
-			resp.set_cookie('token', token)			
+			resp.set_cookie('token', token)	
+			#Remove the admin redirect token if needed
+			resp.set_cookie('adminRefresh', '', expires=0)
 			return resp
 
 
 @app.route('/upload', methods=['GET', 'POST'])
 def uploadSticker():
+	#Check token if required
+	if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
+		if checkToken(request.cookies.get('token') == False):
+			return json.dumps({'status' : '403', 'error': 'Not authenticated or cookies disabled.'}), 405
 	#Check if request is sent with HTTP Post method
 	if request.method == 'POST':
 		#Check if all required parameters are available and good
@@ -122,6 +150,10 @@ def uploadSticker():
 
 @app.route('/logos', methods=['GET'])
 def getLogos():
+	#Check token if required
+	if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
+		if checkToken(request.cookies.get('token') == False):
+			return json.dumps({'status' : '403', 'error': 'Not authenticated or cookies disabled.'}), 405
 	with sqlite3.connect('stickers.db') as con:
 		cursor = con.cursor()
 		results = cursor.execute('SELECT * FROM logos ORDER BY logoTitle DESC').fetchall()
@@ -129,6 +161,10 @@ def getLogos():
 
 @app.route('/addEmail', methods=['PATCH'])
 def addEmail():
+	#Check token if required
+	if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
+		if checkToken(request.cookies.get('token') == False):
+			return json.dumps({'status' : '403', 'error': 'Not authenticated or cookies disabled.'}), 405
 	if request.form['email'] != '':
 		if request.form['token'] != '':
 			#Check if the token is in the database
@@ -149,6 +185,10 @@ def addEmail():
 
 @app.route('/getStickers', methods=['GET'])
 def getStickers():
+	#Check token if required
+	if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
+		if checkToken(request.cookies.get('token') == False):
+			return json.dumps({'status' : '403', 'error': 'Not authenticated or cookies disabled.'}), 405
 	if(request.args.get('west') != '' and request.args.get('east') != '' and request.args.get('north') != '' and request.args.get('south') != ''):
 		#Get all the stickers within the bounding box
 		with sqlite3.connect('stickers.db') as con:
@@ -162,25 +202,43 @@ def getStickers():
 
 @app.route('/getUnverifiedStickers', methods=['GET'])
 def getUnverifiedStickers():
-	if checkToken(request.args.get('token')):
-		#Get all unverified stickers'
-		with sqlite3.connect('stickers.db') as con:
-			#create cursor
-			cursor = con.cursor()
-			#find results
-			rows = cursor.execute("SELECT * FROM stickers WHERE verified=0").fetchall()
-			return json.dumps(rows)
-	else:
-		return json.dumps({'status' : '403', 'error': 'Token invalid'}), 403
+	if checkAdminToken(request.cookies.get('adminToken') == False):
+		return redirect('/auth?adminRefresh=1')
+	#Get all unverified stickers'
+	with sqlite3.connect('stickers.db') as con:
+		#create cursor
+		cursor = con.cursor()
+		#find results
+		rows = cursor.execute("SELECT * FROM stickers WHERE verified=0").fetchall()
+		return json.dumps(rows)
 
 def checkToken(token):
+	if token == None:
+		return False
 	with sqlite3.connect('stickers.db') as con:
 		cursor = con.cursor()
 		rows = cursor.execute("SELECT * FROM tokens WHERE token=?", (token,)).fetchall()
-		if len(rows) > 0:
+		if len(rows	) > 0:
 			return True
 		else:
 			return False
+
+def checkAdminToken(token):
+	#Check if the token is not null
+	if token == None:
+		return False
+	#Connect with database	
+	with sqlite3.connect("stickers.db") as con:
+		#Remove invalid keys from the database
+		cursor = con.cursor()
+		cursor.execute("DELETE FROM adminTokens WHERE ? > expirationTime", (time.time(),))
+		#Check if you key is still in the database
+		rows = cursor.execute("SELECT * FROM adminTokens WHERE token = ?", (token, )).fetchall()
+		if len(rows	) > 0:
+			return True
+		else:
+			return False
+
 
 if __name__ == "__main__":
 	from waitress import serve
