@@ -1,13 +1,18 @@
 const cardHolder = document.getElementsByClassName('cardHolder')[0];
+const logoContainer = document.getElementsByClassName('logoContainer')[0];
+const logoEditBackdrop = document.getElementsByClassName('logoEditBackdrop')[0];
+const logoEditName = document.getElementById('logoEditName');
+const logoEditColor = document.getElementById('logoEditColor');
+const logoEditButton = document.getElementsByClassName('logoEditButton')[0];
+
 
 var maxRotation = 30;
 var maxRotationIn = 200;
 var pivotOn = 100;
 var maxCardsPerLoad = 5;
 
-var token = '123';
-
 loadCards();
+loadLogos();
 
 function loadCards(){
     //Check if there are 0 cards in the holder
@@ -224,3 +229,160 @@ function createCard(id, imagesrc){
     cardHolder.appendChild(card);
 }
 
+function loadLogos(){
+    //Clear container
+    logoContainer.innerHTML = "";
+
+    //Retreive main logo
+    const logoRequest = new XMLHttpRequest();
+    const logosRequest = new XMLHttpRequest();
+    var logo;
+    logoRequest.open('GET', '/static/logo.svg');
+    logoRequest.onreadystatechange = function(){
+        if(this.readyState == 4 && this.status == 200){
+            logo = this.responseText;
+            logosRequest.send();
+        } else if (this.readyState == 4 && this.status == 404){
+            alert("Error: main logo svg not found...");
+        }
+    }
+    logoRequest.send()
+
+    //Retreive logo's from db
+    logosRequest.open('GET', '/logos')
+    logosRequest.onreadystatechange = function(){
+        if(this.readyState == 4 && this.status == 200){
+            //Parse result to json
+            var logosJson = JSON.parse(this.responseText);
+            //Add logos to layout
+            for(var x = 0; x < logosJson.length; x++){
+                let id = logosJson[x][0];
+                let name = logosJson[x][1];
+                let color = logosJson[x][2];
+                //Create row
+                var logoRow = document.createElement('div');
+                logoRow.classList.add('logoRow');
+                //Create logo icon
+                var logoIcon = document.createElement('div');
+                logoIcon.classList.add('logoIcon');
+                logoIcon.innerHTML = logo.replaceAll('COLORPLACE', color);
+                //Create logo label
+                var logoLabel = document.createElement('span');
+                logoLabel.classList.add('logoLabel');
+                logoLabel.innerHTML = name;
+                //Create logo controls
+                var logoControls = document.createElement('div');
+                logoControls.classList.add('logoControls');
+                //Create remove button
+                var logoRemove = document.createElement('img');
+                logoRemove.classList.add('logoControl');
+                logoRemove.src = '/static/remove.svg';
+                logoRemove.addEventListener('click', function(){
+                    var removePopUp = new PopUp();
+                    removePopUp.setTitle("Are you sure?");
+                    removePopUp.setDescription("Are you sure you want to delete this logo?");
+                    removePopUp.addButton("Yes", "rgb(0, 140, 7)", "white", function(){
+                        //Remove logo
+                        var deleteLogoRequest = new XMLHttpRequest();
+                        deleteLogoRequest.open('DELETE', '/deleteLogo?id='+ id);
+                        deleteLogoRequest.onreadystatechange = function(){
+                            if(this.readyState == 4 && this.status != 200){
+                                alert(this.responseText);
+                            }
+                        }
+                        deleteLogoRequest.send();
+                        removePopUp.close();
+                        loadLogos();
+                        setTimeout(function(){
+                            removePopUp.remove();
+                        }, 500);
+                    })
+                    removePopUp.addButton("No", "rgb(240, 0, 36)", "white", function(){
+                        removePopUp.close();
+                        setTimeout(function(){
+                            removePopUp.remove();
+                        }, 500);
+                    })
+                    removePopUp.show();
+                });
+                //Create edit button
+                var logoEdit = document.createElement('img');
+                logoEdit.classList.add('logoControl');
+                logoEdit.src = '/static/edit.svg';
+                logoEdit.addEventListener('click', function(){
+                    //Edit dialog
+                    editLogo(id, name, color);
+                });
+                //Add everything together
+                logoRow.appendChild(logoIcon);
+                logoRow.appendChild(logoLabel);
+                logoControls.appendChild(logoEdit);
+                logoControls.appendChild(logoRemove);
+                logoRow.appendChild(logoControls);
+                logoContainer.appendChild(logoRow);
+            }
+            //Add 'add logo' buttton
+            var logoAddButton = document.createElement('span');
+            logoAddButton.classList.add('logoAddButton');
+            logoAddButton.innerHTML = "Add logo";
+            logoAddButton.addEventListener('click', function(){
+                editLogo();
+            });
+            logoContainer.appendChild(logoAddButton);
+        } else if (this.readyState == 4 && this.status == 404){
+            alert("Could not connect to API...");
+        }
+    }
+}
+
+function editLogo(id = null, name = "", color = ""){
+    if(id == null){
+        document.getElementsByClassName('logoEditTitle')[0].innerHTML = "Add logo";
+    }
+
+    logoEditBackdrop.style.display = "flex";
+    logoEditName.value = name;
+    logoEditColor.value = color;
+    setTimeout(function(){
+        logoEditBackdrop.style.opacity = "1";
+    }, 10);
+
+    logoEditButton.onclick = function(){
+        //Check if the user wanted to create a new logo or edit one
+        if(id == null){
+            //Create new logo
+            var logoAddRequest = new XMLHttpRequest();
+            logoAddRequest.open('POST', '/addLogo?&name=' + logoEditName.value + "&color=" + encodeURIComponent(logoEditColor.value));
+            logoAddRequest.onreadystatechange = function(){
+                if(this.readyState == 4 && this.status == 200){
+                    //Logo added!
+                    logoEditBackdrop.style.opacity = 0;
+                    setTimeout(function(){
+                        logoEditBackdrop.style.display = 'none';
+                    }, 500);
+                    loadLogos();
+                } else if (this.readyState == 4){
+                    alert(this.responseText);
+                }
+            }
+            logoAddRequest.send();
+        } else {
+            //Update logo
+            var logoUpdateRequest = new XMLHttpRequest();
+            logoUpdateRequest.open('PATCH', '/editLogo?id=' + id + "&name=" + logoEditName.value + "&color=" +  encodeURIComponent(logoEditColor.value));
+            logoUpdateRequest.onreadystatechange = function(){
+                if(this.readyState == 4 && this.status == 200){
+                    //Logo added!
+                    logoEditBackdrop.style.opacity = 0;
+                    setTimeout(function(){
+                        logoEditBackdrop.style.display = 'none';
+                    }, 500);
+                    loadLogos();
+                } else if (this.readyState == 4){
+                    alert(this.responseText);
+                }
+            }
+            logoUpdateRequest.send();
+        }
+    }
+}

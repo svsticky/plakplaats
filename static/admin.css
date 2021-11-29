@@ -184,3 +184,103 @@
 .gridImage{
     width: 100px;
 }
+
+.logoContainer{
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.logoRow{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.logoIcon{
+    width: 40px;
+    height: 40px;
+}
+
+.logoLabel{
+    margin-left: 20px;
+    font-size: 18px;
+}
+
+.logoControls{
+    margin-right: 0;
+    margin-left: auto;  
+}
+
+.logoControl{
+    margin-left: 10px;
+}
+
+.logoAddButton{
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.logoEditBackdrop{
+    position: fixed;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.logoEdit{
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    max-width: 300px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.logoEditTitle{
+    margin: 15px;
+    font-size: 25px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.logoEditLabel{
+    margin-left: 10px;
+    margin-top: 10px;
+}
+
+.logoEditInput{
+    margin-left: 10px;
+    margin-right: 10px;
+    height: 30px;
+    font-size: 20px;
+    border: none;
+    outline: none;
+    border-bottom: solid 0.5px rgb(0,0,0,0.5);
+}
+
+.logoEditButton{
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    height: 40px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    align-items: center;
+    background-color: rgb(0, 140, 7);
+    cursor: pointer;
+}

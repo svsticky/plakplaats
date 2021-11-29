@@ -1,4 +1,3 @@
-from sqlite3.dbapi2 import sqlite_version
 import flask
 from flask import request
 from flask import render_template
@@ -158,6 +157,46 @@ def getLogos():
 		cursor = con.cursor()
 		results = cursor.execute('SELECT * FROM logos ORDER BY logoTitle DESC').fetchall()
 		return json.dumps(results)
+
+@app.route('/editLogo', methods=['PATCH'])
+def editLogo():
+	#Check if the request contains an valid admin token
+	if checkAdminToken(request.cookies.get('adminToken') == False):
+		return json.dumps({'status' : '403', 'error': 'Token invalid, expired, or not available'}), 403
+	if request.args.get("id") == None or request.args.get('name') == None or request.args.get('color') == None:
+		return json.dumps({'status' : '400', 'error': 'Invalid or missing arguments.'}), 400
+	with sqlite3.connect('stickers.db') as con:
+		cursor = con.cursor();
+		cursor.execute('UPDATE logos SET logoTitle=?, logoColor=? WHERE logoId=?',(request.args.get('name'), request.args.get('color'), request.args.get('id')))
+		con.commit()
+		return json.dumps({'status' : '200', 'error': 'Logo updated!'}), 200
+
+@app.route('/deleteLogo', methods=['DELETE'])
+def deleteLogo():
+	#Check if the request contains an valid admin token
+	if checkAdminToken(request.cookies.get('adminToken') == False):
+		return json.dumps({'status' : '403', 'error': 'Token invalid, expired, or not available'}), 403
+	if request.args.get("id") == None:
+		return json.dumps({'status' : '400', 'error': 'Invalid or missing arguments.'}), 400
+	with sqlite3.connect('stickers.db') as con:
+		cursor = con.cursor()
+		cursor.execute('DELETE FROM logos WHERE logoId=?',(request.args.get('id'),))
+		con.commit()
+		return json.dumps({'status' : '200', 'error': 'Logo deleted!'}), 200
+
+@app.route('/addLogo', methods=['POST'])
+def addLogo():
+	#Check if the request contains an valid admin token
+	if checkAdminToken(request.cookies.get('adminToken') == False):
+		return json.dumps({'status' : '403', 'error': 'Token invalid, expired, or not available'}), 403
+	if request.args.get('name') == None or request.args.get('color') == None:
+		return json.dumps({'status' : '400', 'error': 'Invalid or missing arguments.'}), 400
+	with sqlite3.connect('stickers.db') as con:
+		cursor = con.cursor()
+		cursor.execute('INSERT INTO logos (logoTitle, logoColor) VALUES (?,?)',(request.args.get('name'), request.args.get('color')))
+		con.commit()
+		return json.dumps({'status' : '200', 'error': 'Logo added!'}), 200
+
 
 @app.route('/addEmail', methods=['PATCH'])
 def addEmail():

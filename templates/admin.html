@@ -8,6 +8,8 @@
     <link rel="icon" href="static/favicon.ico" type="image/ico"/>
     <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon"/>
     <link rel="stylesheet" href="static/admin.css">
+    <link rel="stylesheet" type="text/css" href="static/popUp.css">
+    <script type="text/javascript" src="static/popUp.js"></script>
     <style>
         .userColor{
             background-color: {{color}};
@@ -54,8 +56,19 @@
             <div class="allLogosSection">
                 <span class="containerLabel">All logos</span>
                 <hr class="containerDivider">
-                <div class="span" style="margin-left: 20px;">comming soon :)</div>
+                <div class="logoContainer"></div>
             </div>
+        </div>
+    </div>
+
+    <div class="logoEditBackdrop">
+        <div class="logoEdit">
+            <span class="logoEditTitle">Edit logo</span>
+            <span class="logoEditLabel">Name</span>
+            <input type="text" class="logoEditInput" id="logoEditName">
+            <span class="logoEditLabel">Color</span>
+            <input type="text" class="logoEditInput" id="logoEditColor">
+            <span class="logoEditButton">Save</span>
         </div>
     </div>
 </body>
