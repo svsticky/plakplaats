@@ -11,6 +11,7 @@ var maxRotationIn = 200;
 var pivotOn = 100;
 var maxCardsPerLoad = 5;
 
+
 loadCards();
 loadLogos();
 
@@ -20,7 +21,6 @@ function loadCards(){
         //Create request to server
         var cardRequest = new XMLHttpRequest();
         var url = "getUnverifiedStickers?";
-        url += "token=" + token;
         cardRequest.open('GET', url);
         cardRequest.onreadystatechange = function(){
             if(this.readyState == 4){
