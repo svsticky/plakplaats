@@ -237,6 +237,8 @@ function loadLogos(){
     const logoRequest = new XMLHttpRequest();
     const logosRequest = new XMLHttpRequest();
     var logo;
+    //Get token
+    token = getCookieData('token');
     logoRequest.open('GET', '/static/logo.svg');
     logoRequest.onreadystatechange = function(){
         if(this.readyState == 4 && this.status == 200){
@@ -249,7 +251,7 @@ function loadLogos(){
     logoRequest.send()
 
     //Retreive logo's from db
-    logosRequest.open('GET', '/logos')
+    logosRequest.open('GET', '/logos?token='+token)
     logosRequest.onreadystatechange = function(){
         if(this.readyState == 4 && this.status == 200){
             //Parse result to json
@@ -385,4 +387,15 @@ function editLogo(id = null, name = "", color = ""){
             logoUpdateRequest.send();
         }
     }
+}
+
+function getCookieData( name ) {
+    var pairs = document.cookie.split("; "),
+        count = pairs.length, parts; 
+    while ( count-- ) {
+        parts = pairs[count].split("=");
+        if ( parts[0] === name )
+            return parts[1];
+    }
+    return false;
 }
