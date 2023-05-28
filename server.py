@@ -23,20 +23,6 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 UPLOAD_DIRECTORY = "static/uploads"
 
 
-def allowed_file(filename):
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def checkFileName(name):
-    newName = name
-    counter = 0
-    while os.path.exists(os.path.join(UPLOAD_DIRECTORY, newName)):
-        newName = name.split('.')[0] + str(counter) + '.' + name.split('.')[1]
-        counter += 1
-    return newName
-
-
 @app.route('/')
 def stickerMap():
     if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
@@ -55,7 +41,8 @@ def stickerMap():
 
 @app.route('/admin', methods=['GET'])
 def admin():
-    # It is not needed to store or retreive the adminToken from localStorage because it is not intended to survive a new session
+    # It is not needed to store or retrieve the adminToken from localStorage
+    # because it is not intended to survive a new session
     if checkAdminToken(request.cookies.get('adminToken')):
         return render_template('admin.html', color=COLOR)
     else:
@@ -71,7 +58,7 @@ def auth():
             # Construct login url
             url = os.getenv("KOALA_URL") + "/api/oauth/authorize?client_id=" + os.getenv("KOALA_CLIENT_UID") + "&redirect_uri=" + os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth&response_type=code"
             resp = flask.make_response(render_template('authKoala.html', color=COLOR, loginUrl=url))
-            if request.args.get('adminRefresh') != None:
+            if request.args.get('adminRefresh') is not None:
                 resp.set_cookie('adminRefresh', "1")
             return resp
         else:
@@ -89,17 +76,17 @@ def auth():
             cursor = con.cursor()
             # Check if the user already has (normal) key stored. (Admin refresh session)
             token = ""
-            if checkToken(request.cookies.get('token')) == False:
+            if not checkToken(request.cookies.get('token')):
                 # Create a (normal) token for user
                 token = secrets.token_urlsafe(30)
                 cursor.execute("INSERT INTO tokens VALUES (%s)", (token,))
-            else: 
+            else:
                 # User already has a valid token, re-use this one
                 token = request.cookies.get('token')
             # Create a response
             page = "redirecting <script>window.localStorage.setItem('token', '" + token + "'); window.location.href = '../'</script>"
             # Check if the user came from the home page
-            if request.cookies.get('adminRefresh') != None:
+            if request.cookies.get('adminRefresh') is not None:
                 page = "redirecting <script>window.localStorage.setItem('token', '" + token + "'); window.location.href = '../admin'</script>"
             resp = flask.make_response(page)
             # Check if the user is a admin
@@ -120,15 +107,15 @@ def auth():
 def uploadSticker():
     # Check token if required
     if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        if checkToken(request.cookies.get('token') == False):
-            return json.dumps({'status' : '403', 'error': 'Not authenticated or cookies disabled.'}), 405
+        if not checkToken(request.cookies.get('token')):
+            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
     # Check if request is sent with HTTP Post method
     if request.method == 'POST':
-        #Check if all required parameters are available and good
+        # Check if all required parameters are available and good
         if request.form['lat'] != '' and request.form['lon'] != '' and request.form['logoId'] != '':
             if 'image' in request.files and request.files['image'].filename != '':
                 file = request.files['image']
-                if(file and allowed_file(file.filename)):
+                if (file and allowed_file(file.filename)):
                     # Create a save to use filename
                     filename = checkFileName(secure_filename(file.filename))
                     # Save file
@@ -139,7 +126,7 @@ def uploadSticker():
                         cursor = con.cursor()
                         cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail) VALUES (%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], request.form['logoId'], os.path.join(UPLOAD_DIRECTORY, filename), emailCode))
                         con.commit()
-                        return json.dumps({'status': '200', 'error': 'Sticker added to database.', 'emailCode' : emailCode}), 200
+                        return json.dumps({'status': '200', 'error': 'Sticker added to database.', 'emailCode': emailCode}), 200
                 else:
                     return json.dumps({'status': '400', 'error': 'Unsupported file type.'}), 400
             else:
@@ -154,8 +141,8 @@ def uploadSticker():
 def getLogos():
     # Check token if required
     if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        if checkToken(request.args.get('token') == False):
-            return json.dumps({'status' : '403', 'error': 'Not authenticated or cookies disabled.'}), 405
+        if not checkToken(request.args.get('token')):
+            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
     with psycopg2.connect() as con:
         cursor = con.cursor()
         results = cursor.execute('SELECT * FROM logos ORDER BY logoTitle DESC').fetchall()
@@ -165,7 +152,7 @@ def getLogos():
 @app.route('/editLogo', methods=['PATCH'])
 def editLogo():
     # Check if the request contains an valid admin token
-    if checkAdminToken(request.cookies.get('adminToken') == False):
+    if not checkAdminToken(request.cookies.get('adminToken')):
         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
     if request.args.get("id") == None or request.args.get('name') == None or request.args.get('color') == None:
         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
@@ -179,9 +166,9 @@ def editLogo():
 @app.route('/deleteLogo', methods=['DELETE'])
 def deleteLogo():
     # Check if the request contains an valid admin token
-    if checkAdminToken(request.cookies.get('adminToken') == False):
+    if not checkAdminToken(request.cookies.get('adminToken')):
         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
-    if request.args.get("id") == None:
+    if request.args.get("id") is None:
         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
     with psycopg2.connect() as con:
         cursor = con.cursor()
@@ -193,13 +180,13 @@ def deleteLogo():
 @app.route('/addLogo', methods=['POST'])
 def addLogo():
     # Check if the request contains an valid admin token
-    if checkAdminToken(request.cookies.get('adminToken') == False):
+    if not checkAdminToken(request.cookies.get('adminToken')):
         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
     if request.args.get('name') == None or request.args.get('color') == None:
         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
     with psycopg2.connect() as con:
         cursor = con.cursor()
-        cursor.execute('INSERT INTO logos (logoTitle, logoColor) VALUES (%s,%s)',(request.args.get('name'), request.args.get('color')))
+        cursor.execute('INSERT INTO logos (logoTitle, logoColor) VALUES (%s,%s)', (request.args.get('name'), request.args.get('color')))
         con.commit()
         return json.dumps({'status': '200', 'error': 'Logo added!'}), 200
 
@@ -208,7 +195,7 @@ def addLogo():
 def addEmail():
     # Check token if required
     if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        if checkToken(request.cookies.get('token') == False):
+        if not checkToken(request.cookies.get('token')):
             return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
     if request.form['email'] != '':
         if request.form['token'] != '':
@@ -233,9 +220,9 @@ def addEmail():
 def getStickers():
     # Check token if required
     if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        if checkToken(request.cookies.get('token') == False):
+        if not checkToken(request.cookies.get('token')):
             return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
-    if(request.args.get('west') != '' and request.args.get('east') != '' and request.args.get('north') != '' and request.args.get('south') != ''):
+    if (request.args.get('west') != '' and request.args.get('east') != '' and request.args.get('north') != '' and request.args.get('south') != ''):
         # Get all the stickers within the bounding box
         with psycopg2.connect() as con:
             # create cursor
@@ -250,7 +237,7 @@ def getStickers():
 @app.route('/getUnverifiedStickers', methods=['GET'])
 def getUnverifiedStickers():
     # Check if the request contains an valid admin token
-    if checkAdminToken(request.cookies.get('adminToken') == False):
+    if not checkAdminToken(request.cookies.get('adminToken')):
         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
     # Get all unverified stickers'
     with psycopg2.connect() as con:
@@ -264,7 +251,7 @@ def getUnverifiedStickers():
 @app.route('/setSticker', methods=['GET'])
 def setSticker():
     # Check if the request contains an valid admin token
-    if checkAdminToken(request.cookies.get('adminToken') == False):
+    if not checkAdminToken(request.cookies.get('adminToken')):
         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
     if request.args.get("id") == None or request.args.get('state') == None:
         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'})
@@ -288,12 +275,12 @@ def setSticker():
 
 
 def sendEmailUpdate():
-    return 0
+    return 0  # TODO not implemented
 
 
 def checkToken(token):
     # print(token)
-    if token == None:
+    if token is None:
         return False
     with psycopg2.connect() as con:
         cursor = con.cursor()
@@ -307,7 +294,7 @@ def checkToken(token):
 
 def checkAdminToken(token):
     # Check if the token is not null
-    if token == None:
+    if token is None:
         return False
     # Connect with database
     with psycopg2.connect() as con:
@@ -321,6 +308,20 @@ def checkAdminToken(token):
             return True
         else:
             return False
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def checkFileName(name):
+    newName = name
+    counter = 0
+    while os.path.exists(os.path.join(UPLOAD_DIRECTORY, newName)):
+        newName = name.split('.')[0] + str(counter) + '.' + name.split('.')[1]
+        counter += 1
+    return newName
 
 
 if __name__ == "__main__":
