@@ -18,7 +18,7 @@ load_dotenv()
 app = flask.Flask(__name__)
 
 
-COLOR = os.getenv("STICKER_MAP_COLOR")
+BOARD_COLOR = os.getenv("STICKER_MAP_COLOR")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 UPLOAD_DIRECTORY = "static/uploads"
 
@@ -30,13 +30,13 @@ def stickerMap():
         if request.cookies.get('token') is not None:
             # Check token
             if checkToken(request.cookies.get('token')):
-                return render_template('home.html', color=COLOR)
+                return render_template('home.html', color=BOARD_COLOR)
             else:
                 return redirect('/auth', code=302)
         else:
             return "redirecting... <script>if(window.localStorage.getItem('token') != null){ document.cookie = 'token=' + window.localStorage.getItem('token'); window.location.reload(); } else { window.location.href = '/auth' }</script>"
     else:
-        return render_template('home.html', color=COLOR)
+        return render_template('home.html', color=BOARD_COLOR)
 
 
 @app.route('/admin', methods=['GET'])
@@ -44,7 +44,7 @@ def admin():
     # It is not needed to store or retrieve the adminToken from localStorage
     # because it is not intended to survive a new session
     if checkAdminToken(request.cookies.get('adminToken')):
-        return render_template('admin.html', color=COLOR)
+        return render_template('admin.html', color=BOARD_COLOR)
     else:
         return redirect('/auth?adminRefresh=1')
 
@@ -57,7 +57,7 @@ def auth():
         if os.getenv("LOGIN_WITH_KOALA") == "True":
             # Construct login url
             url = os.getenv("KOALA_URL") + "/api/oauth/authorize?client_id=" + os.getenv("KOALA_CLIENT_UID") + "&redirect_uri=" + os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth&response_type=code"
-            resp = flask.make_response(render_template('authKoala.html', color=COLOR, loginUrl=url))
+            resp = flask.make_response(render_template('authKoala.html', color=BOARD_COLOR, loginUrl=url))
             if request.args.get('adminRefresh') is not None:
                 resp.set_cookie('adminRefresh', "1")
             return resp

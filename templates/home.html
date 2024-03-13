@@ -1,11 +1,11 @@
 <html>
     <head>
-        <title>Sticker Map</title>
+        <title>Sticky Sticker Map</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="/static/home.css">
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-        crossorigin=""/>
+	    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+	    crossorigin=""/>
         <link rel="icon" href="static/favicon.ico" type="image/ico"/>
         <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon"/>
         <style>
@@ -47,9 +47,7 @@
                 <line x1="50" y1="10" x2="50" y2="90" stroke="white" stroke-width="15px" stroke-linecap="round"/>
             </svg>
         </div>
-        <div id="map">
-
-        </div>
+	<div id="map"></div>  <!-- Will be filled by leaflet code, resulting in the map -->
 
         <div class="addContainer">
             <div class="addView">
@@ -89,9 +87,10 @@
             </div>
         </div>
     </body>
+
      <!-- Make sure you put this AFTER Leaflet's CSS -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-    crossorigin=""></script>
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+	crossorigin=""></script>
     <script src="/static/main.js"></script>
 </html>
