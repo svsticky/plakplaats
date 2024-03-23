@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sticker Map Admin</title>
+    <link rel="icon" href="static/favicon.ico" type="image/ico"/>
+    <link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="static/admin.css">
+    <link rel="stylesheet" type="text/css" href="static/popUp.css">
+    <script type="text/javascript" src="static/popUp.js"></script>
+    <style>
+        .userColor{
+            background-color: {{color}};
+        }
+    </style>
+</head>
+<body class="userColor">
+    <div class="content">
+        <div class="navBar">
+            <span class="title">Sticker Map Admin</span>
+        </div>
+        <div class="cardSection">
+            <span class="containerLabel">Open sticker requests</span>
+            <div class="cardHolder">
+                <!-- CARDS WILL BE ADDED HERE-->
+            </div>
+        </div>
+        <div class="bottomSection">
+            <div class="allStickersSection">
+                <span class="containerLabel">All stickers</span>
+                <hr class="containerDivider">
+                <div class="span" style="margin-left: 20px;">comming soon :)</div>
+                <!-- <div class="containerGrid">
+                    <div class="gridItem">
+                        <img src="/static/uploads/dog11.jpg" alt="sticker" class="gridImage">
+                    </div>
+                    <div class="gridItem">
+                        <img src="/static/uploads/First_Lego_League_2018-scaled1.jpg" alt="sticker" class="gridImage">
+                    </div>
+                    <div class="gridItem">
+                        <img src="/static/uploads/dog11.jpg" alt="sticker" class="gridImage">
+                    </div>
+                    <div class="gridItem">
+                        <img src="/static/uploads/First_Lego_League_2018-scaled1.jpg" alt="sticker" class="gridImage">
+                    </div>
+                    <div class="gridItem">
+                        <img src="/static/uploads/dog11.jpg" alt="sticker" class="gridImage">
+                    </div>
+                    <div class="gridItem">
+                        <img src="/static/uploads/First_Lego_League_2018-scaled1.jpg" alt="sticker" class="gridImage">
+                    </div>
+                </div> -->
+            </div>
+            <div class="allLogosSection">
+                <span class="containerLabel">All logos</span>
+                <hr class="containerDivider">
+                <div class="logoContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="logoEditBackdrop">
+        <div class="logoEdit">
+            <span class="logoEditTitle">Edit logo</span>
+            <span class="logoEditLabel">Name</span>
+            <input type="text" class="logoEditInput" id="logoEditName">
+            <span class="logoEditLabel">Color</span>
+            <input type="text" class="logoEditInput" id="logoEditColor">
+            <span class="logoEditButton">Save</span>
+        </div>
+    </div>
+</body>
+
+<script src="/static/admin.js"></script>
+
+</html>

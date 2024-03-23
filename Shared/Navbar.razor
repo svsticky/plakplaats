@@ -1,0 +1,37 @@
+﻿<div class="top-row ps-3 navbar">
+    <img src="https://public.svsticky.nl/logos/logo_compact_outline_wit.png" alt="Sticky logo"
+         height="100%"
+         width="100%">
+    <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <div class="oi oi-expand-down">Search</div>
+            <div>
+                <span class="oi oi-magnifying-glass">Search</span>
+            </div>
+        </div>
+        @* <div class="nav-item px-3"> *@
+        @*     <NavLink class="nav-link" href="counter"> *@
+        @*         <span class="oi oi-plus" aria-hidden="true"></span> Counter *@
+        @*     </NavLink> *@
+        @* </div> *@
+        @* <div class="nav-item px-3"> *@
+        @*     <NavLink class="nav-link" href="" Match="NavLinkMatch.All"> *@
+        @*         <span class="oi oi-home" aria-hidden="true"></span> Home *@
+        @*     </NavLink> *@
+        @* </div> *@
+    </nav>
+</div>
+
+@code {
+    private bool _collapseNavMenu;
+
+    private string? NavMenuCssClass => _collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu() => _collapseNavMenu = !_collapseNavMenu;
+}

@@ -1,0 +1,75 @@
+@using LeafletForBlazor 
+<!-- ^^ Simple package for managing a Leaflet map -->
+
+<Map
+	width="@Width" 
+	height="@Height"
+	Parameters="@_parameters"
+	Options="@_mapOptions"
+	GeoJSON_urls="@_urls.ToArray()"
+	onLoadMap="@OnLoadMap"
+	onMapClick="@OnMapClick"
+	onZoomChange="@OnZoomChange">
+</Map>
+
+@code {
+	// When including this component in another component, you can pass the width and height parameters
+	[Parameter]
+	public string Width { get; set; } = "100%";
+	[Parameter]
+	public string Height { get; set; } = "100%";
+	[Parameter]
+	public Action<Map.Location>? MapClickBehaviour { get; set; }
+	
+	Map.LoadParameters _parameters = new()
+	{
+		location = new Map.Location
+		{
+			latitude = 52.057122,
+			longitude = 5.081795
+		},
+		zoom_level = 3
+	};
+
+	Map.MapOptions _mapOptions = new()
+	{
+		/* All options and their default values:
+		 
+		 (I actually don't know the default values for sure, as they don't seem to work properly yet:
+		 https://github.com/ichim/LeafletForBlazor-NuGet/issues/1
+		 Yes, this package is rather small but it's everything we need! It's not hard to get rid of
+		 the package and implement LeafletJs ourselves, but this saved some time.)
+		 
+		 interaction_options = new
+			{ doubleClickZoom = true, shiftBoxZoom = true???, dragging = true, trackResize = ??? }
+		 keyboard_navigation_options = new
+			{ keyboard = true, keyboardPanDelta = ??? }
+		*/
+	};
+
+	/*
+	 These are the URLs pointing to Json files containing points of interest to be displayed on the map.
+	 LeafletJs needs a specific format for the Json files, so you can use:
+		1. The official GEOJson format supported by LeafletJs: https://leafletjs.com/examples/geojson/
+		2. A format provided by the "LeafletForBlazor" package used in this project, that allows
+		   "symbolization customization": https://github.com/ichim/LeafletForBlazor-NuGet
+	 For now we should just stick with the official format, as that's more universal.
+	*/
+	List<string> _urls = new() {
+		"http://localhost:5005/stickerLocations.json"
+	};
+
+	public static void OnLoadMap(Map.CurrentMapState mapState)
+	{
+		
+	}
+	public void OnMapClick(Map.Location eventArgs)
+	{
+		Console.Write("Haaai!");
+		MapClickBehaviour?.Invoke(eventArgs); // Perform injected behaviour
+	}
+	public void OnZoomChange(Map.CurrentMapState mapState)
+	{
+		
+	}
+}

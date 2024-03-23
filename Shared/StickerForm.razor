@@ -1,0 +1,50 @@
+@using System.ComponentModel.DataAnnotations
+
+<EditForm Model="_stickerSubmission" OnValidSubmit="@SubmitSticker">
+    <DataAnnotationsValidator/>
+    <p>
+        <label for="long">Longitude</label>
+        <InputNumber id="long" @bind-Value="_stickerSubmission.Longitude"/>
+        <ValidationMessage For="() => _stickerSubmission.Longitude"/>
+    </p>
+    <p>
+        <label for="lat">Latitude</label>
+        <InputNumber id="lat" @bind-Value="_stickerSubmission.Latitude"/>
+        <ValidationMessage For="() => _stickerSubmission.Latitude"/>
+    </p>
+    <p>
+        <label for="notes">Notes</label>
+        <InputTextArea id="notes" @bind-Value="_stickerSubmission.Notes"/>
+        <ValidationMessage For="() => _stickerSubmission.Notes"/>
+    </p>
+    <p>
+        <label for="image">Image</label>
+        <InputFile id="image" OnChange="@(e => _stickerSubmission.Image = e.File)"/>
+        <ValidationMessage For="() => _stickerSubmission.Image"/>
+    </p>
+    <button type="submit">Submit</button>
+</EditForm>
+
+@code {
+    public class StickerSubmission
+    {
+        [Required, Range(-90, 90)]
+        public float Longitude { get; set; }
+        [Required, Range(-180, 180)]
+        public float Latitude { get; set; }
+        [StringLength(100, ErrorMessage = "Cool story bro, but it's too long. Keep it under 100 characters.")]
+        public string Notes { get; set; } = "";
+        [Required]
+        public IBrowserFile Image { get; set; } = null!;
+    }
+
+    private StickerSubmission _stickerSubmission = new();
+
+    private void SubmitSticker(EditContext obj)
+    {
+        Console.WriteLine($"_stickerSubmission: {_stickerSubmission.Longitude}, " +
+                          $"{_stickerSubmission.Latitude}, " +
+                          $"{_stickerSubmission.Notes}, " +
+                          $"{_stickerSubmission.Image.Size}");
+    }
+}

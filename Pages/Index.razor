@@ -1,0 +1,16 @@
+﻿@page "/"
+
+<PageTitle>Stickermap</PageTitle>
+
+<div style="width: 100%; height: 100%">
+    <StickerMap/>
+    <div class="@StickerFormVisible()">
+        <StickerForm/>
+    </div>
+</div>
+
+@code
+{
+    private bool _stickerFormVisible;
+    private string? StickerFormVisible() => _stickerFormVisible ? "collapse" : null;
+}

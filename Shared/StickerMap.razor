@@ -1,0 +1,36 @@
+@inject IJSRuntime JsRuntime
+
+@using BlazorLeaflet
+@using System.Drawing
+@using BlazorLeaflet.Models
+
+<div id="mapContainer" style="width: 300px; height: 300px;">
+    <LeafletMap Map="_map" />
+</div>
+
+@code {
+	private Map _map;
+	private PointF _startAt;
+	
+	[Parameter]
+	public string Width { get; set; } = "100%";
+
+	[Parameter]
+	public string Height { get; set; } = "100%";
+
+	protected override void OnInitialized()
+	{
+		_map = new Map(JsRuntime);
+		_map.RaiseOnInitialized();
+		_startAt = new PointF(47.5574007f, 16.3918687f);
+		
+		// Create the marker
+        var marker = new Marker(0.23f, 32f);
+        marker.Tooltip = new Tooltip { Content = "This is a nice location!" };
+        marker.Icon = new Icon { Url = "... some url" };
+        
+        // Add it to the layers collection
+        _map.AddLayer(marker);
+	}
+
+}
