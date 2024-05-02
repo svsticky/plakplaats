@@ -304,6 +304,31 @@ def setSticker():
         return json.dumps({'status': '400', 'error': 'Invalid card state'})
 
 
+@app.route('/updateStickerSpots', methods=['POST'])
+def updateStickerSpots():
+    # Check token if required
+    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
+        if not checkToken(request.cookies.get('token')):
+            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
+    
+    data = request.get_json()
+    stickerID = data.get('stickerID')
+
+    if (stickerID != ''):
+        # Get all the stickers within the bounding box
+        with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+            # create cursor
+            cursor = con.cursor()
+
+            # Increase spot count
+            cursor.execute("UPDATE stickers SET spots = spots + 1 WHERE stickerID = %s", (stickerID))
+            
+            return json.dumps({'status': '200', 'error': 'Updated spots count'}), 200
+    else:
+        return json.dumps({'status': '400', 'error': 'Updating sticker spots failed'}), 400
+
+
+
 def sendEmailUpdate():
     return 0  # TODO not implemented
 

@@ -21,6 +21,8 @@ var emailCode;
 var pointersOnMap = [];
 var logoIcons = [];
 
+dayjs.extend(window.dayjs_plugin_relativeTime)
+
 // ****LOGO ADDER
 //Load the logo for the add view and the icons
 var logoSourceRequest = new XMLHttpRequest();
@@ -130,21 +132,51 @@ function updateMap() {
                     }
                     if(isNotOnMap){
                         //Not on map, add the pointer
+                        var stickyIcon = L.icon({
+                            iconUrl: '/static/marker.png',
+                            shadowUrl: '/static/markerShadow.png',
+                            iconSize: [38, 52],
+                            shadowSize: [52, 52],
+                            shadowAnchor: [19, 25],
+                        });
+
                         const pointer = {
                             id: results[x][0],
                             lat: results[x][1],
                             lon: results[x][2],
-                           // pointer: L.marker([results[x][1], results[x][2]], {icon: logoIcons.filter(logo => logo.id == results[x][5])[0].icon}).addTo(mymap)
-                            pointer: L.marker([results[x][1], results[x][2]]).addTo(mymap)
+                            pointer: L.marker([results[x][1], results[x][2]], {icon: stickyIcon}).addTo(mymap)
                         }
-                        //Add a popup
-                        pointer.pointer.bindPopup("<b>Hello world!</b><br>I am a popup.<br>Posttime: " + results[x][6] + "<br>Spots: " + results[x][7] + "<br><img width='200px' src='" + results[x][4] + "'><br><br><button id='spotButton-" + results[x][0] + "'>I SPOT THIS</button>");
 
-                        document.getElementById('spotButton-' + results[x][0]).addEventListener('click', (e) => {
-                            // console.log('button-' + results[x][0] + ' clicked!');
-                            console.log('BUTTON');
-                            // Here you can do your stuff
+                        //Add a popup
+                        pointer.pointer.bindPopup("<b>Sticker " + results[x][0] + "</b><br>Sticked by user: ???.<br>Posttime: " + dayjs().to(dayjs(results[x][6])) + "<br>Spots: " + results[x][7] + "<br><center><img width='200px' src='" + results[x][4] + "'><br><br><button id='spotButton-" + pointer.id + "' data-stickerID=" + results[x][0] + ">I've spotted this sticker</button></center>")
+
+                        pointer.pointer.on('popupopen', function (e) {                         
+                            document.getElementById('spotButton-' + pointer.id).addEventListener('click', async (e) => {
+                                
+                                const button = document.getElementById('spotButton-' + pointer.id);
+                                const stickerID = button.getAttribute('data-stickerID');
+
+                                // Post to updateStickerSpots to update spots value for the sticker
+                                try {
+                                    const response = await fetch('updateStickerSpots', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({ stickerID: stickerID })
+                                    });
+                                    if (response.ok) {
+                                        console.log('Spot value updated successfully for sticker ID: ' + stickerID);
+                                        // Optionally, you can reload the map or perform any other action here
+                                    } else {
+                                        console.error('Failed to update spot value for sticker ID: ' + stickerID);
+                                    }
+                                } catch (error) {
+                                    console.error('Error updating spot value:', error);
+                                }
+                            });
                         });
+
 
                         //Add pointer object to array
                         pointersOnMap.push(pointer);
@@ -222,8 +254,9 @@ function getLocation(){
     setLocationContainer("Please grant location permission...");
 
     var successHandler = function(position) { 
-        alert(position.coords.latitude); 
-        alert(position.coords.longitude); 
+        // alert(position.coords.latitude); 
+        // alert(position.coords.longitude); 
+        return
     }; 
     
     var errorHandler = function (errorObj) { 
