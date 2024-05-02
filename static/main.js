@@ -90,19 +90,22 @@ logoSourceRequest.onreadystatechange = function(){
 logoSourceRequest.send();
 
 // ***** MAP
-//Create a map
+// Create a map
 var mymap = L.map('map').setView([52.087299, 5.165430], 13);
 
-//Give the map a source
+// Give the map a source
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
 }).addTo(mymap);
 
-//Update the pointers
+// Update the pointers
 mymap.on('moveend', updateMap);
 
-function updateMap() { 
+// Add a button for the current location
+L.control.locate().addTo(mymap);
+
+function updateMap() {
     //Remove pointers that fell of the map
     pointersOnMap = pointersOnMap.filter(function(pointer){
         if(pointer.lat < mymap.getBounds().getSouth() || pointer.lat > mymap.getBounds().getNorth() || pointer.lon < mymap.getBounds().getWest() || pointer.lon > mymap.getBounds().getEast()){
@@ -252,28 +255,12 @@ function resetView(){
 function getLocation(){
     //Get the permissions
     setLocationContainer("Please grant location permission...");
-
-    var successHandler = function(position) { 
-        // alert(position.coords.latitude); 
-        // alert(position.coords.longitude); 
-        return
-    }; 
     
-    var errorHandler = function (errorObj) { 
-    alert(errorObj.code + ": " + errorObj.message); 
-    
-    alert("something wrong take this lat " + 26.0546106 ); 
-    alert("something wrong take this lng " +-98.3939791); 
-    
-    }; 
-    
-    navigator.geolocation.getCurrentPosition(successHandler, errorHandler, {enableHighAccuracy: true, maximumAge: 10000});
-
-    // if (navigator.geolocation) {
-    //     navigator.geolocation.getCurrentPosition(handleLocation, showError);
-    // } else {
-    //     alert("Geolocation is not supported by this browser.");
-    // }
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(handleLocation, showError);
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
 }
 
 function handleLocation(position){
