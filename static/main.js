@@ -115,7 +115,7 @@ function updateMap() {
     url += '&south=' + mymap.getBounds().getSouth();
     url += '&west=' + mymap.getBounds().getWest();
     url += '&east=' + mymap.getBounds().getEast();
-    request.open('GET', url, true);
+    request.open('GET', url, true); 
     request.onreadystatechange = function(){
         if(this.readyState == 4){
             if(this.status == 200){
@@ -134,7 +134,8 @@ function updateMap() {
                             id: results[x][0],
                             lat: results[x][1],
                             lon: results[x][2],
-                            pointer: L.marker([results[x][1], results[x][2]], {icon: logoIcons.filter(logo => logo.id == results[x][5])[0].icon}).addTo(mymap)
+                           // pointer: L.marker([results[x][1], results[x][2]], {icon: logoIcons.filter(logo => logo.id == results[x][5])[0].icon}).addTo(mymap)
+                            pointer: L.marker([results[x][1], results[x][2]]).addTo(mymap)
                         }
                         //Add a popup
                         pointer.pointer.bindPopup("<img width='200px' src='" + results[x][4] + "'>");

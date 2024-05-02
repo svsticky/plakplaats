@@ -5,6 +5,7 @@ import requests
 import psycopg2
 import time
 import json
+from decimal import Decimal
 import os
 from werkzeug.utils import redirect, secure_filename
 import random
@@ -17,10 +18,28 @@ load_dotenv()
 # Create flask app
 app = flask.Flask(__name__)
 
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_DBNAME = os.getenv("POSTGRES_DBNAME")
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASS = os.getenv("POSTGRES_PASS")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 
 BOARD_COLOR = os.getenv("STICKER_MAP_COLOR")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 UPLOAD_DIRECTORY = "static/uploads"
+
+
+con = psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT)
+
+cursor = con.cursor()
+
+cursor.execute("CREATE TABLE IF NOT EXISTS stickers (stickerID SERIAL PRIMARY KEY, stickerLat Decimal(8,6), stickerLon Decimal(9,6), logoID INT, pictureUrl VARCHAR(255), adderEmail VARCHAR(255), verified INT)")
+cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail, verified) VALUES (52.1630587, 5.402001, 1, 'zwart 1920x1080.png', 'aron.den.ouden@gmail.com', 1)")
+
+con.commit()
+
+cursor.close()
+con.close()
 
 
 @app.route('/')
@@ -72,7 +91,7 @@ def auth():
         if 'credentials_type' not in tokenResponse:
             return redirect('/auth', code=302)
         # Connect to db
-        with psycopg2.connect() as con:
+        with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
             cursor = con.cursor()
             # Check if the user already has (normal) key stored. (Admin refresh session)
             token = ""
@@ -121,10 +140,11 @@ def uploadSticker():
                     # Save file
                     file.save(os.path.join(UPLOAD_DIRECTORY, filename))
                     # create db entry
-                    with psycopg2.connect() as con:
+                    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
                         emailCode = random.randrange(9999999, 999999999)
                         cursor = con.cursor()
-                        cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail) VALUES (%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], request.form['logoId'], os.path.join(UPLOAD_DIRECTORY, filename), emailCode))
+                        # cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail) VALUES (%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], request.form['logoId'], os.path.join(UPLOAD_DIRECTORY, filename), emailCode))
+                        cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail) VALUES (%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], 1, os.path.join(UPLOAD_DIRECTORY, filename), emailCode))
                         con.commit()
                         return json.dumps({'status': '200', 'error': 'Sticker added to database.', 'emailCode': emailCode}), 200
                 else:
@@ -140,13 +160,13 @@ def uploadSticker():
 @app.route('/logos', methods=['GET'])
 def getLogos():
     # Check token if required
-    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        if not checkToken(request.args.get('token')):
+    # if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
+    #     if not checkToken(request.args.get('token')):
             return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
-    with psycopg2.connect() as con:
-        cursor = con.cursor()
-        results = cursor.execute('SELECT * FROM logos ORDER BY logoTitle DESC').fetchall()
-        return json.dumps(results)
+    # with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+    #     cursor = con.cursor()
+    #     results = cursor.execute('SELECT * FROM logos ORDER BY logoTitle DESC').fetchall()
+    #     return json.dumps(results)
 
 
 @app.route('/editLogo', methods=['PATCH'])
@@ -156,7 +176,7 @@ def editLogo():
         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
     if request.args.get("id") == None or request.args.get('name') == None or request.args.get('color') == None:
         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
-    with psycopg2.connect() as con:
+    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
         cursor = con.cursor();
         cursor.execute('UPDATE logos SET logoTitle=%s, logoColor=%s WHERE logoId=%s', (request.args.get('name'), request.args.get('color'), request.args.get('id')))
         con.commit()
@@ -170,7 +190,7 @@ def deleteLogo():
         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
     if request.args.get("id") is None:
         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
-    with psycopg2.connect() as con:
+    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
         cursor = con.cursor()
         cursor.execute('DELETE FROM logos WHERE logoId=%s', (request.args.get('id'),))
         con.commit()
@@ -184,7 +204,7 @@ def addLogo():
         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
     if request.args.get('name') == None or request.args.get('color') == None:
         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
-    with psycopg2.connect() as con:
+    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
         cursor = con.cursor()
         cursor.execute('INSERT INTO logos (logoTitle, logoColor) VALUES (%s,%s)', (request.args.get('name'), request.args.get('color')))
         con.commit()
@@ -200,7 +220,7 @@ def addEmail():
     if request.form['email'] != '':
         if request.form['token'] != '':
             # Check if the token is in the database
-            with psycopg2.connect() as con:
+            with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
                 cursor = con.cursor()
                 result = cursor.execute('SELECT * FROM stickers WHERE adderEmail=%s', (request.form['token'],)).fetchall()
                 if len(result) != 0:
@@ -224,12 +244,17 @@ def getStickers():
             return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
     if (request.args.get('west') != '' and request.args.get('east') != '' and request.args.get('north') != '' and request.args.get('south') != ''):
         # Get all the stickers within the bounding box
-        with psycopg2.connect() as con:
+        with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
             # create cursor
             cursor = con.cursor()
             # find results
-            rows = cursor.execute("SELECT * FROM stickers WHERE stickerLat BETWEEN %s AND %s AND stickerLon BETWEEN %s AND %s AND verified='1'", (request.args.get('south'), request.args.get('north'), request.args.get('west'), request.args.get('east'))).fetchall()
-            return json.dumps(rows)
+            cursor.execute("SELECT * FROM stickers WHERE stickerLat BETWEEN %s AND %s AND stickerLon BETWEEN %s AND %s", (request.args.get('south'), request.args.get('north'), request.args.get('west'), request.args.get('east')))
+            
+           # rows = cursor.execute("SELECT * FROM stickers", (request.args.get('south'), request.args.get('north'), request.args.get('west'), request.args.get('east'))).fetchall()
+            # cursor.execute("SELECT * FROM stickers")
+            rows = cursor.fetchall()
+            
+            return json.dumps(rows, default=str)
     else:
         return json.dumps({'status': '400', 'error': 'Bounding box not defined or incomplete.'}), 400
 
@@ -240,7 +265,7 @@ def getUnverifiedStickers():
     if not checkAdminToken(request.cookies.get('adminToken')):
         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
     # Get all unverified stickers'
-    with psycopg2.connect() as con:
+    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
         # create cursor
         cursor = con.cursor()
         # find results
@@ -255,7 +280,7 @@ def setSticker():
         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
     if request.args.get("id") == None or request.args.get('state') == None:
         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'})
-    with psycopg2.connect() as con:
+    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
         # create a cursor
         cursor = con.cursor()
         # Get the email address of the user
@@ -282,7 +307,7 @@ def checkToken(token):
     # print(token)
     if token is None:
         return False
-    with psycopg2.connect() as con:
+    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
         cursor = con.cursor()
         cursor.execute("SELECT * FROM tokens WHERE token=%s", (token,))
         rows = cursor.fetchall()
@@ -297,7 +322,7 @@ def checkAdminToken(token):
     if token is None:
         return False
     # Connect with database
-    with psycopg2.connect() as con:
+    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
         # Remove invalid keys from the database
         cursor = con.cursor()
         cursor.execute("DELETE FROM adminTokens WHERE %s > expirationTime", (time.time(),))
