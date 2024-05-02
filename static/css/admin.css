@@ -1,0 +1,286 @@
+*{
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+
+.content{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    overflow: hidden;
+}
+
+.cardSection{
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    padding-top: 10px;
+    margin: 10px 0px 10px 0px;
+    border-radius: 15px;
+    background-color: rgb(30,30,30);
+}
+
+.navBar{
+    width: 100%;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    background-color: rgb(30,30,30);
+    box-shadow: 0px 3px 5px rgba(0,0,0,0.5);
+}
+
+.title{
+    color: white;
+    font-size: 30px;
+    margin-left: 30px;
+}
+
+.containerLabel{
+    color: white;
+    display: block;
+    font-size: 25px;
+    margin-left: 35px;
+}
+
+.cardHolder{
+    height: 450px;
+}
+
+.card{
+    position: absolute;
+    overflow: hidden;
+    margin: 15px 30px 30px 30px;
+    border-radius: 20px;
+    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+    width: calc(100% - 60px);
+    /*animation: cardSwipeRight 1s infinite;
+    animation-direction: alternate-reverse; */
+    transform-origin: bottom;
+    touch-action: none;
+}
+
+@keyframes cardSwipeLeft {
+    0%{
+        transform: translate(0px, 0px) rotate(0deg);
+        opacity: 1;
+    }
+    100%{
+        transform: translate(-200px, 30px) rotate(-30deg);
+        opacity: 0;
+    }
+}
+
+@keyframes cardSwipeRight {
+    0%{
+        transform: translate(0px, 0px) rotate(0deg);
+        opacity: 1;
+    }
+    100%{
+        transform: translate(200px, 30px) rotate(30deg);
+        opacity: 0;
+    }
+}
+
+.stickerImage{
+    width: 100%;
+    height: 350px;
+    object-fit: cover;
+}
+
+.buttonArea{
+    position: relative;
+    height: 80px;
+    background: linear-gradient(rgba(255,255,255, 0) 0%, rgba(255,255,255,1) 50%);
+    margin-top: -45px;
+    display: flex;
+    justify-content: space-around;
+}
+
+.cardButton{
+    width: 80px;
+    height: 80px;
+    margin-top: -25px;
+    background-size:cover;
+    
+}
+
+.accept{
+    background-image: url('/static/thumb-up.svg');
+}
+
+.reject{
+    background-image: url('/static/thumb-down.svg');
+
+}
+
+.bottomSection{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    color: white;
+}
+
+@media screen and (max-width:700px) {
+    .bottomSection{
+        flex-direction: column;
+    }
+    .allStickersSection{
+        margin: 0px 0px 10px 0px !important;
+        width: calc(100% - 20px) !important;
+    }
+    .allLogosSection{
+        margin: 0px !important;
+        width: calc(100% - 20px) !important;
+    }
+}
+
+.containerDivider{
+    margin: 5px 20px 10px 20px;
+    border-top: rgb(150,150,150) solid 1px;
+    border-bottom: none;
+}
+
+.allStickersSection{
+    background-color: rgb(30,30,30);
+    width: 50%;
+    margin: 0px 5px 0px 10px;
+    padding: 10px;
+    border-radius: 15px;
+}
+
+.allLogosSection{
+    background-color: rgb(30,30,30);
+    width: 50%;
+    margin: 0px 10px 0px 5px;
+    padding: 10px;
+    border-radius: 15px;
+}
+
+.containerGrid{
+    margin: 0px 20px 0px 20px;
+    width: calc(100% - 40px);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.gridItem{
+    width: 130px;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border:rgb(112, 112, 112) solid;
+    margin-right: 3px;
+}
+
+.gridItem:hover{
+    background-color: rgb(71, 67, 67);
+}
+
+.gridImage{
+    width: 100px;
+}
+
+.logoContainer{
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.logoRow{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.logoIcon{
+    width: 40px;
+    height: 40px;
+}
+
+.logoLabel{
+    margin-left: 20px;
+    font-size: 18px;
+}
+
+.logoControls{
+    margin-right: 0;
+    margin-left: auto;  
+}
+
+.logoControl{
+    margin-left: 10px;
+}
+
+.logoAddButton{
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.logoEditBackdrop{
+    position: fixed;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.logoEdit{
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    max-width: 300px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.logoEditTitle{
+    margin: 15px;
+    font-size: 25px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.logoEditLabel{
+    margin-left: 10px;
+    margin-top: 10px;
+}
+
+.logoEditInput{
+    margin-left: 10px;
+    margin-right: 10px;
+    height: 30px;
+    font-size: 20px;
+    border: none;
+    outline: none;
+    border-bottom: solid 0.5px rgb(0,0,0,0.5);
+}
+
+.logoEditButton{
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    height: 40px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    align-items: center;
+    background-color: rgb(0, 140, 7);
+    cursor: pointer;
+}

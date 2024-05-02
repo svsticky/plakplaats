@@ -255,8 +255,6 @@ def getStickers():
             # find results
             cursor.execute("SELECT * FROM stickers WHERE stickerLat BETWEEN %s AND %s AND stickerLon BETWEEN %s AND %s", (request.args.get('south'), request.args.get('north'), request.args.get('west'), request.args.get('east')))
             
-           # rows = cursor.execute("SELECT * FROM stickers", (request.args.get('south'), request.args.get('north'), request.args.get('west'), request.args.get('east'))).fetchall()
-            # cursor.execute("SELECT * FROM stickers")
             rows = cursor.fetchall()
             
             return json.dumps(rows, default=str)
