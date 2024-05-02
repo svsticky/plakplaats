@@ -11,6 +11,7 @@ from werkzeug.utils import redirect, secure_filename
 import random
 from dotenv import load_dotenv
 import secrets
+import datetime
 
 # Load env file for variable
 load_dotenv()
@@ -33,8 +34,8 @@ con = psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES
 
 cursor = con.cursor()
 
-cursor.execute("CREATE TABLE IF NOT EXISTS stickers (stickerID SERIAL PRIMARY KEY, stickerLat Decimal(8,6), stickerLon Decimal(9,6), logoID INT, pictureUrl VARCHAR(255), adderEmail VARCHAR(255), verified INT)")
-cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail, verified) VALUES (52.1630587, 5.402001, 1, 'zwart 1920x1080.png', 'aron.den.ouden@gmail.com', 1)")
+cursor.execute("CREATE TABLE IF NOT EXISTS stickers (stickerID SERIAL PRIMARY KEY, stickerLat Decimal(8,6), stickerLon Decimal(9,6), logoID INT, pictureUrl VARCHAR(255), adderEmail VARCHAR(255), postTime TIMESTAMP, spots INT, verified INT)")
+# cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail, verified) VALUES (52.1630587, 5.402001, 1, 'zwart 1920x1080.png', 'aron.den.ouden@gmail.com', 1)")
 
 con.commit()
 
@@ -142,9 +143,13 @@ def uploadSticker():
                     # create db entry
                     with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
                         emailCode = random.randrange(9999999, 999999999)
+
+                        sampleEmail = "joe@joecompany.com"
+                        currentTime = str(datetime.datetime.now())
+
                         cursor = con.cursor()
                         # cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail) VALUES (%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], request.form['logoId'], os.path.join(UPLOAD_DIRECTORY, filename), emailCode))
-                        cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail) VALUES (%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], 1, os.path.join(UPLOAD_DIRECTORY, filename), emailCode))
+                        cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail, postTime, spots, verified) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], 1, os.path.join(UPLOAD_DIRECTORY, filename), emailCode, currentTime, 0, 1))
                         con.commit()
                         return json.dumps({'status': '200', 'error': 'Sticker added to database.', 'emailCode': emailCode}), 200
                 else:

@@ -138,7 +138,14 @@ function updateMap() {
                             pointer: L.marker([results[x][1], results[x][2]]).addTo(mymap)
                         }
                         //Add a popup
-                        pointer.pointer.bindPopup("<img width='200px' src='" + results[x][4] + "'>");
+                        pointer.pointer.bindPopup("<b>Hello world!</b><br>I am a popup.<br>Posttime: " + results[x][6] + "<br>Spots: " + results[x][7] + "<br><img width='200px' src='" + results[x][4] + "'><br><br><button id='spotButton-" + results[x][0] + "'>I SPOT THIS</button>");
+
+                        document.getElementById('spotButton-' + results[x][0]).addEventListener('click', (e) => {
+                            // console.log('button-' + results[x][0] + ' clicked!');
+                            console.log('BUTTON');
+                            // Here you can do your stuff
+                        });
+
                         //Add pointer object to array
                         pointersOnMap.push(pointer);
                     }
