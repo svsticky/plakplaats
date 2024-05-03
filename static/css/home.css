@@ -1,5 +1,6 @@
 *{
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
 }
 
 html {
@@ -14,7 +15,8 @@ body{
 
 .navBar{
     position: relative;
-    height: 80px;
+    /* height: 80px; */
+    height: 10vh;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -267,6 +269,17 @@ body{
     padding: 4px;
 }
 
+.leafletMarkerButton {
+    background-color:#61518f;
+    color:#ffffff;
+    border: none;
+}
+
+/* Maybe add styling for when you hover or click a button? */
+.leafletMarkerButton:hover {
+    /* background-color:#be0202; */
+}
+
 /* nearYouMobileOverlay */
 #nearYouMobileOverlay {
     position: fixed;
@@ -276,17 +289,23 @@ body{
     width: 100%;
     height: 100%; /* Full screen height */
     background-color: rgb(255, 255, 255);
-    transition: bottom 0.5s, border-radius 0.5s; /* Transition for sliding and opacity change */
+    /* border: 5px solid #61518f; */
+    transition: bottom 0.5s, border-radius 0.5s; /* Transition for sliding  */
     transition-timing-function: 'ease-in';
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    overflow-y: auto; /* Enable scrolling if content exceeds screen height */
+     /* Enable scrolling if content exceeds screen height */
     border-radius: 30px 30px 0px 0px;
     box-shadow: 0px -3px 5px rgba(0, 0, 0, 0.5);
 }
 
 #nearYouMobileLine {
+    margin-top: 0.5rem;
+    width: 10%;
+}
+
+#nearYouMobileTopText {
     margin-top: 0.5rem;
 }

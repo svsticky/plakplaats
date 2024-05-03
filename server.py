@@ -317,9 +317,8 @@ def updateStickerSpots():
         with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
             # create cursor
             cursor = con.cursor()
-
             # Increase spot count
-            cursor.execute("UPDATE stickers SET spots = spots + 1 WHERE stickerID = %s", (stickerID))
+            cursor.execute("UPDATE stickers SET spots = spots + 1 WHERE stickerID = %s", (stickerID,))
             
             return json.dumps({'status': '200', 'error': 'Updated spots count'}), 200
     else:
