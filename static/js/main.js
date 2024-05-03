@@ -540,7 +540,11 @@ function checkEmail(email){
 //     overlay.toggle();
 // });
 
-// Google maps style upwards drag window
+// nearYouMobileOverlay = document.createElement('div');
+// nearYouMobileOverlay.id = 'nearYouMobileOverlay';
+// document.body.appendChild(nearYouMobileOverlay);
+
+// Google maps style upwards drag overlay
 var Overlay = L.Class.extend({
     // this is the constructor
     initialize: function (selector, options) {
@@ -551,20 +555,19 @@ var Overlay = L.Class.extend({
         
         // create overlay here
         this._overlayElement = document.createElement('div');
-        this._overlayElement.id = 'overlay';
-        this._overlayElement.style.position = 'fixed';
-        this._overlayElement.style.zIndex = '999';
-        this._overlayElement.style.bottom = '-80%'; // Initially at 20% visible
-        this._overlayElement.style.left = '0';
-        this._overlayElement.style.width = '100%';
-        this._overlayElement.style.height = '100%'; // Full screen height
-        this._overlayElement.style.backgroundColor = this.options.background;
-        this._overlayElement.style.transition = 'bottom 0.3s'; // Transition for sliding and opacity change
-        this._overlayElement.style.display = 'flex';
-        this._overlayElement.style.flexDirection = 'column';
-        this._overlayElement.style.alignItems = 'center';
-        this._overlayElement.style.justifyContent = 'flex-start';
-        this._overlayElement.style.overflowY = 'auto'; // Enable scrolling if content exceeds screen height
+        this._overlayElement.id = 'nearYouMobileOverlay';
+
+        this._line = document.createElement('img');
+        this._line.id = 'nearYouMobileLine';
+        this._line.src = "./static/img/line.svg";
+        this._overlayElement.appendChild(this._line);
+
+        this._nearYouTopText = document.createElement('h1');
+        this._nearYouTopText.id = 'nearYouMobileTopText';
+        this._nearYouTopTextText = document.createTextNode("Stickers near you");
+        this._nearYouTopText.appendChild(this._nearYouTopTextText);
+        this._overlayElement.appendChild(this._nearYouTopText)  
+
         document.body.appendChild(this._overlayElement);
         
         var self = this;
@@ -577,15 +580,16 @@ var Overlay = L.Class.extend({
             var deltaY = e.touches[0].clientY - self._dragStartY;
             var newBottom = Math.max(-self._overlayHeight * 0.8, -deltaY); // Limit to 80% below
             self._overlayElement.style.bottom = newBottom + 'px';
-            self._overlayElement.style.opacity = '1';
         });
         
         this._overlayElement.addEventListener('touchend', function(e) {
             var snapThreshold = -self._overlayHeight * 0.3; // Snap when dragged beyond 30% of the overlay height
             if (parseInt(self._overlayElement.style.bottom) < snapThreshold) {
-                self._overlayElement.style.bottom = '-80%'; // Snap back to 20% visible
+                self._overlayElement.style.bottom = '-90%'; // Snap back to 20% visible
+                self._overlayElement.style.borderRadius = '15px 15px 0px 0px';
             } else {
                 self._overlayElement.style.bottom = '0';
+                self._overlayElement.style.borderRadius = '0px 0px 0px 0px';
             }
         });
     },
@@ -593,21 +597,22 @@ var Overlay = L.Class.extend({
     // these are the default options
     options: {
         isActive: false,
-        background: 'rgba(0, 0, 0, 1)',
     },
   
     // this is a public function
-    toggle: function () {
-        this.isActive = !this.isActive;
-        if (this.isActive) {
-            this._overlayElement.style.bottom = '0'; // Slide up to 0 from the bottom
-        } else {
-            this._overlayElement.style.bottom = '-80%'; // Slide down to 20% visible
-        }
-    },
+    // toggle: function () {
+    //     this.isActive = !this.isActive;
+    //     if (this.isActive) {
+    //         this._overlayElement.style.bottom = '0'; // Slide up to 0 from the bottom
+    //         this._overlayElement.style.borderRadius = '0px 0px 0px 0px';
+    //     } else {
+    //         this._overlayElement.style.bottom = '-80%'; // Slide down to 20% visible
+    //         this._overlayElement.style.borderRadius = '15px 15px 0px 0px';
+    //     }
+    // },
 });
 
-var overlay = new Overlay('#overlay', { background: 'rgba(0, 0, 0, 1)' });
+var overlay = new Overlay('#overlay');
 
 // nearYouButton.addEventListener('click', function(){
 //     console.log("near you clicked!");

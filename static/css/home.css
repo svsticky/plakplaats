@@ -2,6 +2,11 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+html {
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
 body{
     margin: 0px;
     height: 100%;
@@ -260,4 +265,28 @@ body{
     background-color: white;
     border-radius: 50%;
     padding: 4px;
+}
+
+/* nearYouMobileOverlay */
+#nearYouMobileOverlay {
+    position: fixed;
+    z-index: 999;
+    bottom: -90%; /* Initially at 10% visible */
+    left: 0;
+    width: 100%;
+    height: 100%; /* Full screen height */
+    background-color: rgb(255, 255, 255);
+    transition: bottom 0.5s, border-radius 0.5s; /* Transition for sliding and opacity change */
+    transition-timing-function: 'ease-in';
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-y: auto; /* Enable scrolling if content exceeds screen height */
+    border-radius: 30px 30px 0px 0px;
+    box-shadow: 0px -3px 5px rgba(0, 0, 0, 0.5);
+}
+
+#nearYouMobileLine {
+    margin-top: 0.5rem;
 }
