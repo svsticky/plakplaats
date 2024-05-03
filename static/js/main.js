@@ -13,6 +13,8 @@ const addLogoSelector = document.getElementsByClassName('addLogoSelector')[0];
 const addIcon = document.getElementsByClassName('addIcon')[0];
 const emailInput = document.getElementsByClassName('successEmail')[0];
 
+const nearYouButton = document.getElementsByClassName('nearYouButton')[0];
+
 var imageFile;
 var selectedLogo;
 var selectedLogoId;
@@ -486,3 +488,129 @@ function checkEmail(email){
         return false;
     }
 }
+
+// This is a popup in the middle of the screen: 
+// var Overlay = L.Class.extend({
+//     // this is the constructor
+//     initialize: function (selector, options) {
+//         L.Util.setOptions(this, options);
+//         this._selector = selector;
+        
+//         // create overlay here
+//         this._overlayElement = document.createElement('div');
+//         this._overlayElement.id = 'overlay';
+//         this._overlayElement.style.position = 'fixed';
+//         this._overlayElement.style.top = '25%';
+//         this._overlayElement.style.left = '25%';
+//         this._overlayElement.style.width = '50%';
+//         this._overlayElement.style.height = '50%';
+//         this._overlayElement.style.backgroundColor = this.options.background;
+//         this._overlayElement.style.opacity = '0';
+//         this._overlayElement.style.transition = 'opacity 0.3s';
+//         this._overlayElement.style.zIndex = '-1';
+//         this._overlayElement.style.display = 'flex';
+//         this._overlayElement.style.alignItems = 'center';
+//         this._overlayElement.style.justifyContent = 'center';
+//         document.body.appendChild(this._overlayElement);
+//     },
+  
+//     // these are the default options
+//     options: {
+//         isActive: false,
+//         background: 'rgba(0, 0, 0, 1)',
+//     },
+  
+//     // this is a public function
+//     toggle: function () {
+//         this.isActive = !this.isActive;
+//         if (this.isActive) {
+//             this._overlayElement.style.opacity = '1';
+//             this._overlayElement.style.zIndex = '999';
+//         } else {
+//             this._overlayElement.style.opacity = '0';
+//             this._overlayElement.style.zIndex = '-1';
+//         }
+//     },
+// });
+
+// var overlay = new Overlay('#overlay', { background: 'rgba(0, 0, 0, 1)' });
+
+// nearYouButton.addEventListener('click', function(){
+//     console.log("near you clicked!");
+//     overlay.toggle();
+// });
+
+// Google maps style upwards drag window
+var Overlay = L.Class.extend({
+    // this is the constructor
+    initialize: function (selector, options) {
+        L.Util.setOptions(this, options);
+        this._selector = selector;
+        this._dragStartY = 0;
+        this._overlayHeight = 0;
+        
+        // create overlay here
+        this._overlayElement = document.createElement('div');
+        this._overlayElement.id = 'overlay';
+        this._overlayElement.style.position = 'fixed';
+        this._overlayElement.style.zIndex = '999';
+        this._overlayElement.style.bottom = '-80%'; // Initially at 20% visible
+        this._overlayElement.style.left = '0';
+        this._overlayElement.style.width = '100%';
+        this._overlayElement.style.height = '100%'; // Full screen height
+        this._overlayElement.style.backgroundColor = this.options.background;
+        this._overlayElement.style.transition = 'bottom 0.3s'; // Transition for sliding and opacity change
+        this._overlayElement.style.display = 'flex';
+        this._overlayElement.style.flexDirection = 'column';
+        this._overlayElement.style.alignItems = 'center';
+        this._overlayElement.style.justifyContent = 'flex-start';
+        this._overlayElement.style.overflowY = 'auto'; // Enable scrolling if content exceeds screen height
+        document.body.appendChild(this._overlayElement);
+        
+        var self = this;
+        this._overlayElement.addEventListener('touchstart', function(e) {
+            self._dragStartY = e.touches[0].clientY;
+            self._overlayHeight = self._overlayElement.clientHeight;
+        });
+        
+        this._overlayElement.addEventListener('touchmove', function(e) {
+            var deltaY = e.touches[0].clientY - self._dragStartY;
+            var newBottom = Math.max(-self._overlayHeight * 0.8, -deltaY); // Limit to 80% below
+            self._overlayElement.style.bottom = newBottom + 'px';
+            self._overlayElement.style.opacity = '1';
+        });
+        
+        this._overlayElement.addEventListener('touchend', function(e) {
+            var snapThreshold = -self._overlayHeight * 0.3; // Snap when dragged beyond 30% of the overlay height
+            if (parseInt(self._overlayElement.style.bottom) < snapThreshold) {
+                self._overlayElement.style.bottom = '-80%'; // Snap back to 20% visible
+            } else {
+                self._overlayElement.style.bottom = '0';
+            }
+        });
+    },
+  
+    // these are the default options
+    options: {
+        isActive: false,
+        background: 'rgba(0, 0, 0, 1)',
+    },
+  
+    // this is a public function
+    toggle: function () {
+        this.isActive = !this.isActive;
+        if (this.isActive) {
+            this._overlayElement.style.bottom = '0'; // Slide up to 0 from the bottom
+        } else {
+            this._overlayElement.style.bottom = '-80%'; // Slide down to 20% visible
+        }
+    },
+});
+
+var overlay = new Overlay('#overlay', { background: 'rgba(0, 0, 0, 1)' });
+
+// nearYouButton.addEventListener('click', function(){
+//     console.log("near you clicked!");
+//     overlay.toggle();
+// });
+
