@@ -156,11 +156,19 @@ function updateMap() {
                         }
 
                         //Add a popup
+                        let spotText = "";
+                        if (results[x][7] === 1) {
+                            spotText = "spot";
+                        }
+                        else {
+                            spotText = "spots";
+                        }
+
                         pointer.pointer.bindPopup(`
                         <h1>Sticker ${results[x][0]}</h1>
                         <h2>Sticked by ???</h2>
                         <img width='200px' src='${results[x][4]}'>
-                        <h2>${results[x][7]} spots</h2>
+                        <h2>${results[x][7]} ${spotText}</h2>
                         <h2>Posted ${dayjs().to(dayjs(results[x][6]))}</h2>
                         <button class='leafletMarkerButton' id='spotButton-${pointer.id}' data-stickerID='${results[x][0]}'>I've spotted this sticker</button>`)
                     
