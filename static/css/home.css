@@ -1,6 +1,8 @@
 *{
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html {
@@ -9,7 +11,7 @@ html {
 }
 
 body{
-    margin: 0px;
+    /* margin: 0px; */
     height: 100%;
 }
 
@@ -272,10 +274,10 @@ body{
 
 /* leaflet popup styling */
 .leaflet-popup-content-wrapper .leaflet-popup-content {
-}
-
-.leaflet-popup-content-wrapper .leaflet-popup-content h1, h2 {
-    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    /* justify-content: center;
+    align-items: center; */
 }
 
 .leaflet-popup-content-wrapper .leaflet-popup-content h1 {
@@ -290,6 +292,10 @@ body{
     border-radius: 5px;
     padding: 0.5rem 0.5rem;
     margin-top: 1rem;
+    margin-left: auto;    
+    margin-right: auto;
+    width: 80%;
+
 }
 
 /* Maybe add styling for when you hover or click a button? */

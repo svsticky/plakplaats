@@ -157,12 +157,12 @@ function updateMap() {
 
                         //Add a popup
                         pointer.pointer.bindPopup(`
-                        <h1><b>Sticker ${results[x][0]}</b></h1>
+                        <h1>Sticker ${results[x][0]}</h1>
                         <h2>Sticked by ???</h2>
-                        <center><img width='200px' src='${results[x][4]}'></center>
+                        <img width='200px' src='${results[x][4]}'>
                         <h2>${results[x][7]} spots</h2>
                         <h2>Posted ${dayjs().to(dayjs(results[x][6]))}</h2>
-                        <center><button class='leafletMarkerButton' id='spotButton-${pointer.id}' data-stickerID='${results[x][0]}'>I've spotted this sticker</button></center>`)
+                        <button class='leafletMarkerButton' id='spotButton-${pointer.id}' data-stickerID='${results[x][0]}'>I've spotted this sticker</button>`)
                     
                         pointer.pointer.on('popupopen', function (e) {                         
                             document.getElementById('spotButton-' + pointer.id).addEventListener('click', async (e) => {
