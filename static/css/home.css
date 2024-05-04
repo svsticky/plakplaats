@@ -269,10 +269,27 @@ body{
     padding: 4px;
 }
 
+
+/* leaflet popup styling */
+.leaflet-popup-content-wrapper .leaflet-popup-content {
+}
+
+.leaflet-popup-content-wrapper .leaflet-popup-content h1, h2 {
+    margin: 0 auto;
+}
+
+.leaflet-popup-content-wrapper .leaflet-popup-content h1 {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
 .leafletMarkerButton {
     background-color:#61518f;
     color:#ffffff;
     border: none;
+    border-radius: 5px;
+    padding: 0.5rem 0.5rem;
+    margin-top: 1rem;
 }
 
 /* Maybe add styling for when you hover or click a button? */
