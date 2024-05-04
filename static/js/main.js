@@ -159,7 +159,7 @@ function updateMap() {
                         let spotText = "";
                         if (results[x][7] === 1) {
                             spotText = "spot";
-                        }
+                        } 
                         else {
                             spotText = "spots";
                         }
@@ -583,11 +583,15 @@ var Overlay = L.Class.extend({
         this._nearYouTopText.appendChild(this._nearYouTopTextText);
         this._overlayElement.appendChild(this._nearYouTopText);
 
-        this._nearYouTopP = document.createElement('p');
-        this._nearYouTopP.id = 'nearYouMobileP';
-        this._nearYouTopPText = document.createTextNode(" Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Aliquam eleifend mi in nulla. Felis bibendum ut tristique et egestas. Est ante in nibh mauris cursus mattis. In fermentum posuere urna nec tincidunt praesent semper feugiat. Nulla facilisi morbi tempus iaculis urna id volutpat lacus. Et odio pellentesque diam volutpat. At volutpat diam ut venenatis tellus in. Ipsum nunc aliquet bibendum enim facilisis gravida. Porttitor lacus luctus accumsan tortor posuere ac ut consequat. Rutrum tellus pellentesque eu tincidunt tortor aliquam. Felis eget velit aliquet sagittis id consectetur purus ut. Dictum fusce ut placerat orci nulla pellentesque dignissim. Sapien eget mi proin sed libero. Sit amet facilisis magna etiam tempor orci eu lobortis. Ipsum dolor sit amet consectetur. Id eu nisl nunc mi ipsum faucibus vitae aliquet nec.uismod in pellentesque. Duis tristique sollicitudin nibh sit amet commodo nulla facilisi. Euismod elementum nisi quis eleifend. Quis vel eros donec ac odio tempor orci dapibus. Dolor sit amet consectetur adipiscing elit pellentesque habitant. Massa tincidunt dui ut ornare lectus sit amet. Dui vivamus arcu felis bibendum ut tristique. Amet tellus cras adipiscing enim eu turpis egestas pretium aenean. Vulputate enim nulla aliquet porttitor lacus luctus accumsan tortor. Tellus rutrum tellus pellentesque eu tincidunt tortor aliquam. Gravida quis blandit turpis cursus in hac habitasse platea dictumst. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Aliquam eleifend mi in nulla. Felis bibendum ut tristique et egestas. Est ante in nibh mauris cursus mattis. In fermentum posuere urna nec tincidunt praesent semper feugiat. Nulla facilisi morbi tempus iaculis urna id volutpat lacus. Et odio pellentesque diam volutpat. At volutpat diam ut venenatis tellus in. Ipsum nunc aliquet bibendum enim facilisis gravida. Porttitor lacus luctus accumsan tortor posuere ac ut consequat. Rutrum tellus pellentesque eu tincidunt tortor aliquam. Felis eget velit aliquet sagittis id consectetur purus ut. Dictum fusce ut placerat orci nulla pellentesque dignissim. Sapien eget mi proin sed libero. Sit amet facilisis magna etiam tempor orci eu lobortis. Ipsum dolor sit amet consectetur. Id eu nisl nunc mi ipsum faucibus vitae aliquet nec.uismod in pellentesque. Duis tristique sollicitudin nibh sit amet commodo nulla facilisi. Euismod elementum nisi quis eleifend. Quis vel eros donec ac odio tempor orci dapibus. Dolor sit amet consectetur adipiscing elit pellentesque habitant. Massa tincidunt dui ut ornare lectus sit amet. Dui vivamus arcu felis bibendum ut tristique. Amet tellus cras adipiscing enim eu turpis egestas pretium aenean. Vulputate enim nulla aliquet porttitor lacus luctus accumsan tortor. Tellus rutrum tellus pellentesque eu tincidunt tortor aliquam. Gravida quis blandit turpis cursus in hac habitasse platea dictumst.");
-        this._nearYouTopP.appendChild(this._nearYouTopPText);
-        this._overlayElement.appendChild(this._nearYouTopP);
+        // this._nearYouTopP = document.createElement('p');
+        // this._nearYouTopP.id = 'nearYouMobileP';
+        // this._nearYouTopPText = document.createTextNode(" Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Aliquam eleifend mi in nulla. Felis bibendum ut tristique et egestas. Est ante in nibh mauris cursus mattis. In fermentum posuere urna nec tincidunt praesent semper feugiat. Nulla facilisi morbi tempus iaculis urna id volutpat lacus. Et odio pellentesque diam volutpat. At volutpat diam ut venenatis tellus in. Ipsum nunc aliquet bibendum enim facilisis gravida. Porttitor lacus luctus accumsan tortor posuere ac ut consequat. Rutrum tellus pellentesque eu tincidunt tortor aliquam. Felis eget velit aliquet sagittis id consectetur purus ut. Dictum fusce ut placerat orci nulla pellentesque dignissim. Sapien eget mi proin sed libero. Sit amet facilisis magna etiam tempor orci eu lobortis. Ipsum dolor sit amet consectetur. Id eu nisl nunc mi ipsum faucibus vitae aliquet nec.uismod in pellentesque. Duis tristique sollicitudin nibh sit amet commodo nulla facilisi. Euismod elementum nisi quis eleifend. Quis vel eros donec ac odio tempor orci dapibus. Dolor sit amet consectetur adipiscing elit pellentesque habitant. Massa tincidunt dui ut ornare lectus sit amet. Dui vivamus arcu felis bibendum ut tristique. Amet tellus cras adipiscing enim eu turpis egestas pretium aenean. Vulputate enim nulla aliquet porttitor lacus luctus accumsan tortor. Tellus rutrum tellus pellentesque eu tincidunt tortor aliquam. Gravida quis blandit turpis cursus in hac habitasse platea dictumst. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Aliquam eleifend mi in nulla. Felis bibendum ut tristique et egestas. Est ante in nibh mauris cursus mattis. In fermentum posuere urna nec tincidunt praesent semper feugiat. Nulla facilisi morbi tempus iaculis urna id volutpat lacus. Et odio pellentesque diam volutpat. At volutpat diam ut venenatis tellus in. Ipsum nunc aliquet bibendum enim facilisis gravida. Porttitor lacus luctus accumsan tortor posuere ac ut consequat. Rutrum tellus pellentesque eu tincidunt tortor aliquam. Felis eget velit aliquet sagittis id consectetur purus ut. Dictum fusce ut placerat orci nulla pellentesque dignissim. Sapien eget mi proin sed libero. Sit amet facilisis magna etiam tempor orci eu lobortis. Ipsum dolor sit amet consectetur. Id eu nisl nunc mi ipsum faucibus vitae aliquet nec.uismod in pellentesque. Duis tristique sollicitudin nibh sit amet commodo nulla facilisi. Euismod elementum nisi quis eleifend. Quis vel eros donec ac odio tempor orci dapibus. Dolor sit amet consectetur adipiscing elit pellentesque habitant. Massa tincidunt dui ut ornare lectus sit amet. Dui vivamus arcu felis bibendum ut tristique. Amet tellus cras adipiscing enim eu turpis egestas pretium aenean. Vulputate enim nulla aliquet porttitor lacus luctus accumsan tortor. Tellus rutrum tellus pellentesque eu tincidunt tortor aliquam. Gravida quis blandit turpis cursus in hac habitasse platea dictumst.");
+        // this._nearYouTopP.appendChild(this._nearYouTopPText);
+        // this._overlayElement.appendChild(this._nearYouTopP);
+
+        for (let i = 0; i < 10; i++) {
+            this.createStickerDiv(i);
+        }
 
         document.body.appendChild(this._overlayElement);
         
@@ -614,11 +618,13 @@ var Overlay = L.Class.extend({
                 self._overlayElement.style.overflowY = 'hidden';
                 self._overlayElement.scrollTo(0, 0);
                 self._line.style.display = 'block';
+                // self._nearYouTopP.style.opacity = 0;
             } else {
                 self._overlayElement.style.bottom = '0';
                 self._overlayElement.style.borderRadius = '0px 0px 0px 0px';
                 self._overlayElement.style.overflowY = 'auto';
                 self._line.style.display = 'none';
+                // self._nearYouTopP.style.opacity = 1;
             }
         });
     },
@@ -627,7 +633,18 @@ var Overlay = L.Class.extend({
     options: {
         isActive: false,
     },
-  
+    
+    createStickerDiv: function (i) {
+        stickerDiv = document.createElement('div');
+        stickerDiv.id = `stickerDiv-${i}`;
+        
+        stickerDivH1 = document.createElement('h1');
+        stickerDivH1.id = `stickerDivH1-${i}`;
+        stickerDivH1.classList.add('stickerDivH1');
+        stickerDivH1Text = document.createTextNode(`stickerDivH1-${i}`);
+        stickerDivH1.appendChild(stickerDivH1Text);
+        this._overlayElement.appendChild(stickerDivH1);
+    }
     // toggle: function () {
     //     this.isActive = !this.isActive;
     //     if (this.isActive) {
