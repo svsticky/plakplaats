@@ -12,6 +12,7 @@ jobs:
   add-to-project:
     name: Add opened issue or PR to CommITCrowd project
     runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.fork == 'false'
     steps:
       - uses: actions/add-to-project@v0.5.0
         with:
