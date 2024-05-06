@@ -261,6 +261,28 @@ def getStickers():
     else:
         return json.dumps({'status': '400', 'error': 'Bounding box not defined or incomplete.'}), 400
 
+@app.route('/getNearYouStickers', methods=['GET'])
+def getNearYouStickers():
+    # Check token if required
+    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
+        if not checkToken(request.cookies.get('token')):
+            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
+    if (request.args.get('west') != '' and request.args.get('east') != '' and request.args.get('north') != '' and request.args.get('south') != ''):
+        # Get all the stickers within the bounding box
+        with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+            # create cursor
+            cursor = con.cursor()
+            # find results
+            # cursor.execute("SELECT * FROM stickers WHERE stickerLat BETWEEN %s AND %s AND stickerLon BETWEEN %s AND %s", (request.args.get('south'), request.args.get('north'), request.args.get('west'), request.args.get('east')))
+            
+            cursor.execute("SELECT * FROM stickers ORDER BY spots DESC LIMIT 10");
+
+            rows = cursor.fetchall()
+            
+            return json.dumps(rows, default=str)
+    else:
+        return json.dumps({'status': '400', 'error': 'Bounding box not defined or incomplete.'}), 400
+
 
 @app.route('/getUnverifiedStickers', methods=['GET'])
 def getUnverifiedStickers():

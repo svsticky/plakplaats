@@ -285,6 +285,10 @@ body{
     margin-bottom: 1rem;
 }
 
+.leaflet-popup-content-wrapper .leaflet-popup-content img {
+    border-radius: 5px;
+}
+
 .leafletMarkerButton {
     background-color:#61518f;
     color:#ffffff;
@@ -295,7 +299,6 @@ body{
     margin-left: auto;    
     margin-right: auto;
     width: 80%;
-
 }
 
 /* Maybe add styling for when you hover or click a button? */
@@ -340,6 +343,51 @@ body{
     transition-timing-function: 'ease-in';
 }
 
-.stickerDivH1 {
-    /* opacity: 0; */
+/* sticker divs styling */
+.stickerDiv {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #ffffff;
+    transition: background-color 0.8s;
+    transition-timing-function: 'ease-in';
+    margin-bottom: 2rem;
+    width: 80%;
+    border-radius: 5px;
 }
+
+.stickerDiv h3 {
+   font-weight: 600;
+}
+
+.stickerDiv .stickerDivImg {
+    width: 40%;
+    border-radius: 5px;
+}
+
+.stickerDiv .stickerDivButton {
+    background-color:#61518f;
+    color:#ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 0.5rem;
+    margin-left: auto;    
+    margin-right: auto;
+    margin-bottom: 0.5rem;
+    width: 30%;
+}
+
+.stickerDiv.revealed {
+    background-color: #e0e0e0;
+}
+
+.stickerDiv .stickerDivH1, .stickerDiv .stickerDivUser, .stickerDiv .stickerDivImg, .stickerDiv .stickerDivDate, .stickerDiv .stickerDivButton {
+    opacity: 0;
+    transition: opacity 0.8s;
+    transition-timing-function: 'ease-in';
+}
+
+.stickerDiv.revealed .stickerDivH1, .stickerDiv.revealed .stickerDivUser, .stickerDiv.revealed .stickerDivImg, .stickerDiv.revealed .stickerDivDate, .stickerDiv.revealed .stickerDivButton {
+    opacity: 1;
+}
+

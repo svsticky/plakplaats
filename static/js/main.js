@@ -303,7 +303,8 @@ function handleLocation(position){
             text += "</i><br>Click to enter manually."
             setLocationContainer(text, true);
         }
-    }   
+    }
+    console.log('https://nominatim.openstreetmap.org/reverse?lat=' + position.coords.latitude + '&lon=' + position.coords.longitude + '&format=json');
     addressRequest.open("GET", 'https://nominatim.openstreetmap.org/reverse?lat=' + position.coords.latitude + '&lon=' + position.coords.longitude + '&format=json', true);
     addressRequest.send();
 }
@@ -568,7 +569,6 @@ var Overlay = L.Class.extend({
         this._dragStartY = 0;
         this._overlayHeight = 0;
         
-        // create overlay here
         this._overlayElement = document.createElement('div');
         this._overlayElement.id = 'nearYouMobileOverlay';
 
@@ -582,12 +582,6 @@ var Overlay = L.Class.extend({
         this._nearYouTopTextText = document.createTextNode("Stickers near you");
         this._nearYouTopText.appendChild(this._nearYouTopTextText);
         this._overlayElement.appendChild(this._nearYouTopText);
-
-        // this._nearYouTopP = document.createElement('p');
-        // this._nearYouTopP.id = 'nearYouMobileP';
-        // this._nearYouTopPText = document.createTextNode(" Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Aliquam eleifend mi in nulla. Felis bibendum ut tristique et egestas. Est ante in nibh mauris cursus mattis. In fermentum posuere urna nec tincidunt praesent semper feugiat. Nulla facilisi morbi tempus iaculis urna id volutpat lacus. Et odio pellentesque diam volutpat. At volutpat diam ut venenatis tellus in. Ipsum nunc aliquet bibendum enim facilisis gravida. Porttitor lacus luctus accumsan tortor posuere ac ut consequat. Rutrum tellus pellentesque eu tincidunt tortor aliquam. Felis eget velit aliquet sagittis id consectetur purus ut. Dictum fusce ut placerat orci nulla pellentesque dignissim. Sapien eget mi proin sed libero. Sit amet facilisis magna etiam tempor orci eu lobortis. Ipsum dolor sit amet consectetur. Id eu nisl nunc mi ipsum faucibus vitae aliquet nec.uismod in pellentesque. Duis tristique sollicitudin nibh sit amet commodo nulla facilisi. Euismod elementum nisi quis eleifend. Quis vel eros donec ac odio tempor orci dapibus. Dolor sit amet consectetur adipiscing elit pellentesque habitant. Massa tincidunt dui ut ornare lectus sit amet. Dui vivamus arcu felis bibendum ut tristique. Amet tellus cras adipiscing enim eu turpis egestas pretium aenean. Vulputate enim nulla aliquet porttitor lacus luctus accumsan tortor. Tellus rutrum tellus pellentesque eu tincidunt tortor aliquam. Gravida quis blandit turpis cursus in hac habitasse platea dictumst. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Aliquam eleifend mi in nulla. Felis bibendum ut tristique et egestas. Est ante in nibh mauris cursus mattis. In fermentum posuere urna nec tincidunt praesent semper feugiat. Nulla facilisi morbi tempus iaculis urna id volutpat lacus. Et odio pellentesque diam volutpat. At volutpat diam ut venenatis tellus in. Ipsum nunc aliquet bibendum enim facilisis gravida. Porttitor lacus luctus accumsan tortor posuere ac ut consequat. Rutrum tellus pellentesque eu tincidunt tortor aliquam. Felis eget velit aliquet sagittis id consectetur purus ut. Dictum fusce ut placerat orci nulla pellentesque dignissim. Sapien eget mi proin sed libero. Sit amet facilisis magna etiam tempor orci eu lobortis. Ipsum dolor sit amet consectetur. Id eu nisl nunc mi ipsum faucibus vitae aliquet nec.uismod in pellentesque. Duis tristique sollicitudin nibh sit amet commodo nulla facilisi. Euismod elementum nisi quis eleifend. Quis vel eros donec ac odio tempor orci dapibus. Dolor sit amet consectetur adipiscing elit pellentesque habitant. Massa tincidunt dui ut ornare lectus sit amet. Dui vivamus arcu felis bibendum ut tristique. Amet tellus cras adipiscing enim eu turpis egestas pretium aenean. Vulputate enim nulla aliquet porttitor lacus luctus accumsan tortor. Tellus rutrum tellus pellentesque eu tincidunt tortor aliquam. Gravida quis blandit turpis cursus in hac habitasse platea dictumst.");
-        // this._nearYouTopP.appendChild(this._nearYouTopPText);
-        // this._overlayElement.appendChild(this._nearYouTopP);
 
         for (let i = 0; i < 10; i++) {
             this.createStickerDiv(i);
@@ -612,24 +606,19 @@ var Overlay = L.Class.extend({
         
         this._overlayElement.addEventListener('touchend', function(e) {
             var snapThreshold = -self._overlayHeight * 0.3; // Snap when dragged beyond 30% of the overlay height
+
+            // Under threshold -> snap back to the bottom
             if (parseInt(self._overlayElement.style.bottom) < snapThreshold) {
-                self._overlayElement.style.bottom = '-90%'; // Snap back to 20% visible
-                self._overlayElement.style.borderRadius = '15px 15px 0px 0px';
-                self._overlayElement.style.overflowY = 'hidden';
-                self._overlayElement.scrollTo(0, 0);
-                self._line.style.display = 'block';
-                // self._nearYouTopP.style.opacity = 0;
-            } else {
-                self._overlayElement.style.bottom = '0';
-                self._overlayElement.style.borderRadius = '0px 0px 0px 0px';
-                self._overlayElement.style.overflowY = 'auto';
-                self._line.style.display = 'none';
-                // self._nearYouTopP.style.opacity = 1;
+                self.closeOverlay();
+            }
+            // Above threshold -> reveal the overlay 
+            else {
+                self.openOverlay();
             }
         });
     },
   
-    // these are the default options
+    // Default options
     options: {
         isActive: false,
     },
@@ -637,24 +626,179 @@ var Overlay = L.Class.extend({
     createStickerDiv: function (i) {
         stickerDiv = document.createElement('div');
         stickerDiv.id = `stickerDiv-${i}`;
+        stickerDiv.classList.add('stickerDiv');
         
         stickerDivH1 = document.createElement('h1');
         stickerDivH1.id = `stickerDivH1-${i}`;
         stickerDivH1.classList.add('stickerDivH1');
         stickerDivH1Text = document.createTextNode(`stickerDivH1-${i}`);
         stickerDivH1.appendChild(stickerDivH1Text);
-        this._overlayElement.appendChild(stickerDivH1);
-    }
-    // toggle: function () {
-    //     this.isActive = !this.isActive;
-    //     if (this.isActive) {
-    //         this._overlayElement.style.bottom = '0'; // Slide up to 0 from the bottom
-    //         this._overlayElement.style.borderRadius = '0px 0px 0px 0px';
-    //     } else {
-    //         this._overlayElement.style.bottom = '-80%'; // Slide down to 20% visible
-    //         this._overlayElement.style.borderRadius = '15px 15px 0px 0px';
-    //     }
-    // },
+        stickerDiv.appendChild(stickerDivH1);
+
+        stickerDivUser = document.createElement('h3');
+        stickerDivUser.id = `stickerDivUser-${i}`;
+        stickerDivUser.classList.add('stickerDivUser');
+        stickerDivUserText = document.createTextNode(`Sticked by ???`);
+        stickerDivUser.appendChild(stickerDivUserText);
+        stickerDiv.appendChild(stickerDivUser);
+
+        stickerImg = document.createElement('img');
+        stickerImg.id = `stickerDivImg-${i}`;
+        stickerImg.classList.add('stickerDivImg');
+        stickerImg.src = "";
+        stickerDiv.appendChild(stickerImg);
+
+        stickerDivDate = document.createElement('h3');
+        stickerDivDate.id = `stickerDivDate-${i}`;
+        stickerDivDate.classList.add('stickerDivDate');
+        stickerDivDateText = document.createTextNode(`Posted ???`);
+        stickerDivDate.appendChild(stickerDivDateText);
+        stickerDiv.appendChild(stickerDivDate);
+
+        stickerDivNearby = document.createElement('h3');
+        stickerDivNearby.id = `stickerDivNearby-${i}`;
+        stickerDivNearby.classList.add('stickerDivNearby');
+        stickerDivNearbyText = document.createTextNode(`Nearby ???`);
+        stickerDivNearby.appendChild(stickerDivNearbyText);
+        stickerDiv.appendChild(stickerDivNearby);
+
+        stickerDivButton = document.createElement("button");
+        stickerDivButton.id = `stickerDivButton-${i}`;
+        stickerDivButton.classList.add('stickerDivButton');
+        stickerDivButton.innerHTML = "Open on map";
+        stickerDiv.appendChild(stickerDivButton);
+
+        this._overlayElement.appendChild(stickerDiv);
+    },
+
+    openOverlay: function () {
+        this.isActive = !this.isActive;
+        this._overlayElement.style.bottom = '0';
+        this._overlayElement.style.borderRadius = '0px 0px 0px 0px';
+        this._overlayElement.style.overflowY = 'auto';
+        this._line.style.display = 'none';
+        let stickerDivs = document.querySelectorAll('.stickerDiv');
+        stickerDivs.forEach(function(stickerDiv, index) {
+            setTimeout(function() {
+                stickerDiv.classList.add('revealed');
+            }, index * 400);
+        });
+        this.getNearYouData();
+    },
+
+    closeOverlay: function () {
+        this.isActive = !this.isActive;
+        this._overlayElement.style.bottom = '-90%';
+        this._overlayElement.style.borderRadius = '15px 15px 0px 0px';
+        this._overlayElement.style.overflowY = 'hidden';
+        this._overlayElement.scrollTo(0, 0);
+        this._line.style.display = 'block';
+        let stickerDivs = document.querySelectorAll('.stickerDiv');
+        stickerDivs.forEach(function(stickerDiv) {
+            stickerDiv.classList.remove('revealed');
+        });
+    },
+
+    getNearYouData: function () {
+        var self = this;
+
+        var request = new XMLHttpRequest();
+
+        var url = 'getNearYouStickers?north=' + mymap.getBounds().getNorth();
+        url += '&south=' + mymap.getBounds().getSouth();
+        url += '&west=' + mymap.getBounds().getWest();
+        url += '&east=' + mymap.getBounds().getEast();
+        request.open('GET', url, true); 
+        request.onreadystatechange = function(){
+            if(this.readyState == 4){
+                if(this.status == 200){
+                    var results = JSON.parse(this.responseText);
+                    let stickerDivs = document.querySelectorAll('.stickerDiv');
+                    let stickerDivH1s = document.querySelectorAll('.stickerDivH1');
+                    let stickerDivImgs = document.querySelectorAll('.stickerDivImg');
+                    let stickerDivDates = document.querySelectorAll('.stickerDivDate');
+                    let stickerDivButtons = document.querySelectorAll('.stickerDivButton');
+                    let stickerDivNearbys = document.querySelectorAll('.stickerDivNearby');
+                    
+                    for(var i = 0; i < stickerDivH1s.length; i++) {
+                        if (i < results.length) {
+                            stickerDivH1s[i].textContent = `Sticker ${results[i][0]}`;
+                            stickerDivImgs[i].src = results[i][4];
+                            stickerDivDates[i].textContent = `Posted ${dayjs().to(dayjs(results[i][6]))}`
+
+                            stickerDivButtons[i].dataset.id = results[i][0];
+                            stickerDivButtons[i].dataset.lat = results[i][1];
+                            stickerDivButtons[i].dataset.long = results[i][2];
+                            stickerDivButtons[i].addEventListener('click', function(){
+                                console.log("Button clicked!");
+                                self.closeOverlay();
+                                mymap.flyTo([this.getAttribute('data-lat'), this.getAttribute('data-long')], 18);
+                                let stickerID = this.getAttribute('data-id');
+
+                                // Recursive function to check if the pointer with the desired ID is present in the array
+                                function checkPointerAndOpenPopup(stickerID) {
+                                    for (var y = 0; y < pointersOnMap.length; y++) {
+                                        if (stickerID == pointersOnMap[y].id) {
+                                            pointersOnMap[y].pointer.openPopup();
+                                            return; // Exit the function if the pointer is found
+                                        }
+                                    }
+                                    // If the pointer is not found, schedule the function to run again after a short delay
+                                    setTimeout(function() {
+                                        checkPointerAndOpenPopup(stickerID);
+                                    }, 100);
+                                }
+                                
+                                // Call the recursive function to start checking for the pointer with the desired ID
+                                checkPointerAndOpenPopup(stickerID);
+                            });
+
+                            // Load nearby text (estimated address)
+                            // var stickerDivNearby = stickerDivNearbys[i];
+                            // var addressRequest = new XMLHttpRequest();
+                            // addressRequest.onreadystatechange = function(){
+                            //     if(this.readyState == 4 && this.status == 200){
+                            //         var addressJson = JSON.parse(addressRequest.responseText);
+                            //         console.log(addressJson);
+                            //         var text = "Nearby ";
+                            //         if(addressJson['address']['road'] != undefined){
+                            //             text += addressJson['address']['road'];
+                            //             if(addressJson['address']['house_number'] != undefined){
+                            //                 text += ' ' + addressJson['address']['house_number'];
+                            //             }
+                            //         }
+                            //         console.log(text);
+                            //         stickerDivNearby.textContent = text;
+                            //     } else {
+                            //         // Error handling for non-200 status codes
+                            //         // console.error('Request failed with status code ' + this.status);
+                            //     }
+                            // }
+                            // console.log('https://nominatim.openstreetmap.org/reverse?lat=' + results[i][1] + '&lon=' + results[i][2] + '&format=json');
+                            // addressRequest.open("GET", 'https://nominatim.openstreetmap.org/reverse?lat=' + results[i][1] + '&lon=' + results[i][2] + '&format=json', true);
+                            // addressRequest.send();
+                        }
+                        else {
+                            // Don't show the div if the amount of divs (10) > amount of stickers
+                            stickerDivs[i].style.display = 'none';                 
+                        }
+                    }
+                } else {
+                    console.error('Error while loading near you stickers!');
+                }
+            }
+        }
+        request.send();
+    },
+
+    toggle: function () {
+        this.isActive = !this.isActive;
+        if (this.isActive) {
+            this.openOverlay();
+        } else {
+            this.closeOverlay();
+        }
+    },
 });
 
 var overlay = new Overlay('#overlay');
