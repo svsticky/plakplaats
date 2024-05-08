@@ -677,12 +677,6 @@ var Overlay = L.Class.extend({
         this._overlayElement.style.borderRadius = '0px 0px 0px 0px';
         this._overlayElement.style.overflowY = 'auto';
         this._line.style.display = 'none';
-        let stickerDivs = document.querySelectorAll('.stickerDiv');
-        stickerDivs.forEach(function(stickerDiv, index) {
-            setTimeout(function() {
-                stickerDiv.classList.add('revealed');
-            }, index * 400);
-        });
         this.getNearYouData();
     },
 
@@ -700,14 +694,37 @@ var Overlay = L.Class.extend({
     },
 
     getNearYouData: function () {
+
+        this._userLon = 9.404223;
+        this._userLat = 52.359474;
+
+        // Replace this with actual user location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(this.handleOverlayLocation, showError);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+
+        this.requestDBStickers();
+    },
+
+    handleOverlayLocation: function (position) {
+        this._userlon = position.coords.longitude;
+        this._userLat = position.coords.latitude;
+        // console.log(position.coords.longitude, position.coords.latitude, position.coords.accuracy);
+        // console.log(this._userlon, this._userLat);
+        // this.requestDBStickers();
+    },
+
+    requestDBStickers: function () {
         var self = this;
 
         var request = new XMLHttpRequest();
 
-        var url = 'getNearYouStickers?north=' + mymap.getBounds().getNorth();
-        url += '&south=' + mymap.getBounds().getSouth();
-        url += '&west=' + mymap.getBounds().getWest();
-        url += '&east=' + mymap.getBounds().getEast();
+        var url = 'getNearYouStickers?';
+        url += 'lon=' + this._userLon;
+        url += '&lat=' + this._userLat;
+        
         request.open('GET', url, true); 
         request.onreadystatechange = function(){
             if(this.readyState == 4){
@@ -782,6 +799,13 @@ var Overlay = L.Class.extend({
                             // Don't show the div if the amount of divs (10) > amount of stickers
                             stickerDivs[i].style.display = 'none';                 
                         }
+                        // Show the divs
+                        let stickerDivs = document.querySelectorAll('.stickerDiv');
+                        stickerDivs.forEach(function(stickerDiv, index) {
+                            setTimeout(function() {
+                                stickerDiv.classList.add('revealed');
+                            }, index * 400);
+                        });
                     }
                 } else {
                     console.error('Error while loading near you stickers!');

@@ -381,13 +381,13 @@ body{
     background-color: #e0e0e0;
 }
 
-.stickerDiv .stickerDivH1, .stickerDiv .stickerDivUser, .stickerDiv .stickerDivImg, .stickerDiv .stickerDivDate, .stickerDiv .stickerDivButton {
+.stickerDiv .stickerDivH1, .stickerDiv .stickerDivUser, .stickerDiv .stickerDivImg, .stickerDiv .stickerDivDate, .stickerDiv .stickerDivNearby, .stickerDiv .stickerDivButton {
     opacity: 0;
     transition: opacity 0.8s;
     transition-timing-function: 'ease-in';
 }
 
-.stickerDiv.revealed .stickerDivH1, .stickerDiv.revealed .stickerDivUser, .stickerDiv.revealed .stickerDivImg, .stickerDiv.revealed .stickerDivDate, .stickerDiv.revealed .stickerDivButton {
+.stickerDiv.revealed .stickerDivH1, .stickerDiv.revealed .stickerDivUser, .stickerDiv.revealed .stickerDivImg, .stickerDiv.revealed .stickerDivDate, .stickerDiv.revealed .stickerDivNearby, .stickerDiv.revealed .stickerDivButton {
     opacity: 1;
 }
 

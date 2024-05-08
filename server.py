@@ -267,15 +267,27 @@ def getNearYouStickers():
     if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
         if not checkToken(request.cookies.get('token')):
             return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
-    if (request.args.get('west') != '' and request.args.get('east') != '' and request.args.get('north') != '' and request.args.get('south') != ''):
+    if (request.args.get('lon') != '' and request.args.get('lat') != ''):
         # Get all the stickers within the bounding box
         with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
             # create cursor
             cursor = con.cursor()
             # find results
-            # cursor.execute("SELECT * FROM stickers WHERE stickerLat BETWEEN %s AND %s AND stickerLon BETWEEN %s AND %s", (request.args.get('south'), request.args.get('north'), request.args.get('west'), request.args.get('east')))
-            
-            cursor.execute("SELECT * FROM stickers ORDER BY spots DESC LIMIT 10");
+            # cursor.execute("""SELECT *, ST_DistanceSphere(
+            #     ST_MakePoint(5.172445, 52.086240),
+            #     ST_MakePoint(stickerLon, stickerLat)
+            # ) AS distance
+            # FROM stickers
+            # ORDER BY distance ASC
+            # LIMIT 10""")
+
+            cursor.execute("""SELECT *, ST_DistanceSphere(
+                ST_MakePoint(%s, %s),
+                ST_MakePoint(stickerLon, stickerLat)
+            ) AS distance
+            FROM stickers
+            ORDER BY distance ASC
+            LIMIT 10""", (request.args.get('lon'), request.args.get('lat')))
 
             rows = cursor.fetchall()
             
