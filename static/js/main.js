@@ -694,36 +694,32 @@ var Overlay = L.Class.extend({
     },
 
     getNearYouData: function () {
-
-        this._userLon = 9.404223;
-        this._userLat = 52.359474;
-
-        // Replace this with actual user location
+        var self = this;
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(this.handleOverlayLocation, showError);
+            navigator.geolocation.getCurrentPosition(function(position) {
+                self.requestDBStickers(position);
+            }, showError);
         } else {
             alert("Geolocation is not supported by this browser.");
         }
-
-        this.requestDBStickers();
     },
 
-    handleOverlayLocation: function (position) {
-        this._userlon = position.coords.longitude;
-        this._userLat = position.coords.latitude;
-        // console.log(position.coords.longitude, position.coords.latitude, position.coords.accuracy);
-        // console.log(this._userlon, this._userLat);
-        // this.requestDBStickers();
-    },
-
-    requestDBStickers: function () {
+    requestDBStickers: function (position) {
         var self = this;
+
+        console.log("Your current position is:");
+        console.log(`Latitude : ${position.coords.latitude}`);
+        console.log(`Longitude: ${position.coords.longitude}`);
+
+        if (!position.coords.latitude || !position.coords.longitude) {
+            return;
+        }
 
         var request = new XMLHttpRequest();
 
         var url = 'getNearYouStickers?';
-        url += 'lon=' + this._userLon;
-        url += '&lat=' + this._userLat;
+        url += 'lon=' + position.coords.longitude;
+        url += '&lat=' + position.coords.latitude;
         
         request.open('GET', url, true); 
         request.onreadystatechange = function(){
@@ -800,7 +796,6 @@ var Overlay = L.Class.extend({
                             stickerDivs[i].style.display = 'none';                 
                         }
                         // Show the divs
-                        let stickerDivs = document.querySelectorAll('.stickerDiv');
                         stickerDivs.forEach(function(stickerDiv, index) {
                             setTimeout(function() {
                                 stickerDiv.classList.add('revealed');

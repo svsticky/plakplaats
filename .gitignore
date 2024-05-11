@@ -81,3 +81,6 @@ fabric.properties
 # .NET
 obj/
 bin/
+
+# Ignore user uploads
+uploads/

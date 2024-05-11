@@ -287,7 +287,7 @@ def getNearYouStickers():
             ) AS distance
             FROM stickers
             ORDER BY distance ASC
-            LIMIT 10""", (request.args.get('lon'), request.args.get('lat')))
+            LIMIT 10""", (float(request.args.get('lon')), float(request.args.get('lat'))))
 
             rows = cursor.fetchall()
             
