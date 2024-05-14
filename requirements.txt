@@ -1,0 +1,5 @@
+flask
+waitress
+requests
+psycopg2
+python-dotenv
