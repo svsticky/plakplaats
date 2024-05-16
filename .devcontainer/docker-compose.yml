@@ -1,0 +1,14 @@
+# Inherit but overwrite production configs with development configs
+
+include:
+  - path: ../docker-compose.yml
+
+services:
+  website-dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile.website
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres_db
