@@ -767,29 +767,30 @@ var Overlay = L.Class.extend({
                             });
 
                             // Load nearby text (estimated address)
-                            // var stickerDivNearby = stickerDivNearbys[i];
-                            // var addressRequest = new XMLHttpRequest();
-                            // addressRequest.onreadystatechange = function(){
-                            //     if(this.readyState == 4 && this.status == 200){
-                            //         var addressJson = JSON.parse(addressRequest.responseText);
-                            //         console.log(addressJson);
-                            //         var text = "Nearby ";
-                            //         if(addressJson['address']['road'] != undefined){
-                            //             text += addressJson['address']['road'];
-                            //             if(addressJson['address']['house_number'] != undefined){
-                            //                 text += ' ' + addressJson['address']['house_number'];
-                            //             }
-                            //         }
-                            //         console.log(text);
-                            //         stickerDivNearby.textContent = text;
-                            //     } else {
-                            //         // Error handling for non-200 status codes
-                            //         // console.error('Request failed with status code ' + this.status);
-                            //     }
-                            // }
-                            // console.log('https://nominatim.openstreetmap.org/reverse?lat=' + results[i][1] + '&lon=' + results[i][2] + '&format=json');
-                            // addressRequest.open("GET", 'https://nominatim.openstreetmap.org/reverse?lat=' + results[i][1] + '&lon=' + results[i][2] + '&format=json', true);
-                            // addressRequest.send();
+                            var stickerDivNearby = stickerDivNearbys[i];
+                            var addressRequest = new XMLHttpRequest();
+                            addressRequest.onreadystatechange = function(){
+                                if(this.readyState == 4 && this.status == 200){
+                                    var addressJson = JSON.parse(addressRequest.responseText);
+                                    console.log(addressJson);
+                                    var text = "Nearby ";
+                                    if(addressJson['address']['road'] != undefined){
+                                        text += addressJson['address']['road'];
+                                        if(addressJson['address']['house_number'] != undefined){
+                                            text += ' ' + addressJson['address']['house_number'];
+                                        }
+                                    }
+                                    console.log(text);
+                                    stickerDivNearby.textContent = text;
+                                } else {
+                                    // Error handling for non-200 status codes
+                                    
+                                    console.error('Request failed with status code ' + this.status + ', readystate: ' + this.readyState);
+                                }
+                            }
+                            console.log('https://nominatim.openstreetmap.org/reverse?lat=' + results[i][1] + '&lon=' + results[i][2] + '&format=json');
+                            addressRequest.open("GET", 'https://nominatim.openstreetmap.org/reverse?lat=' + results[i][1] + '&lon=' + results[i][2] + '&format=json', true);
+                            addressRequest.send();
                         }
                         else {
                             // Don't show the div if the amount of divs (10) > amount of stickers
