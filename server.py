@@ -13,6 +13,9 @@ from dotenv import load_dotenv
 import secrets
 import datetime
 
+if (not os.path.exists("./static/uploads")):
+    os.mkdir("./static/uploads")
+
 # Load env file for variable
 load_dotenv()
 
