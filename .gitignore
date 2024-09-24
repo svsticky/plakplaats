@@ -84,3 +84,5 @@ bin/
 
 # Ignore user uploads
 uploads/
+
+__pycache__
