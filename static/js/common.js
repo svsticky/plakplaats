@@ -22,5 +22,3 @@ var emailCode;
 
 var pointersOnMap = [];
 var logoIcons = [];
-
-dayjs.extend(window.dayjs_plugin_relativeTime)
