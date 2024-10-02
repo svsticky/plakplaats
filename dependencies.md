@@ -1,2 +1,0 @@
- - flask (`pip install flask`)
- - waitress (`pip install waitress`)
