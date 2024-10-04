@@ -1,63 +1,8 @@
-// This is a popup in the middle of the screen: 
-// var Overlay = L.Class.extend({
-//     // this is the constructor
-//     initialize: function (selector, options) {
-//         L.Util.setOptions(this, options);
-//         this._selector = selector;
-        
-//         // create overlay here
-//         this._overlayElement = document.createElement('div');
-//         this._overlayElement.id = 'overlay';
-//         this._overlayElement.style.position = 'fixed';
-//         this._overlayElement.style.top = '25%';
-//         this._overlayElement.style.left = '25%';
-//         this._overlayElement.style.width = '50%';
-//         this._overlayElement.style.height = '50%';
-//         this._overlayElement.style.backgroundColor = this.options.background;
-//         this._overlayElement.style.opacity = '0';
-//         this._overlayElement.style.transition = 'opacity 0.3s';
-//         this._overlayElement.style.zIndex = '-1';
-//         this._overlayElement.style.display = 'flex';
-//         this._overlayElement.style.alignItems = 'center';
-//         this._overlayElement.style.justifyContent = 'center';
-//         document.body.appendChild(this._overlayElement);
-//     },
-  
-//     // these are the default options
-//     options: {
-//         isActive: false,
-//         background: 'rgba(0, 0, 0, 1)',
-//     },
-  
-//     // this is a public function
-//     toggle: function () {
-//         this.isActive = !this.isActive;
-//         if (this.isActive) {
-//             this._overlayElement.style.opacity = '1';
-//             this._overlayElement.style.zIndex = '999';
-//         } else {
-//             this._overlayElement.style.opacity = '0';
-//             this._overlayElement.style.zIndex = '-1';
-//         }
-//     },
-// });
-
-// var overlay = new Overlay('#overlay', { background: 'rgba(0, 0, 0, 1)' });
-
-// nearYouButton.addEventListener('click', function(){
-//     console.log("near you clicked!");
-//     overlay.toggle();
-// });
-
-// nearYouMobileOverlay = document.createElement('div');
-// nearYouMobileOverlay.id = 'nearYouMobileOverlay';
-// document.body.appendChild(nearYouMobileOverlay);
-
 // Google maps style upwards drag overlay
 var Overlay = L.Class.extend({
-    // this is the constructor
+    // Overylay constructor
     initialize: function (selector, options) {
-        L.Util.setOptions(this, options);
+        this.isActive = false;
         this._selector = selector;
         this._dragStartY = 0;
         this._overlayHeight = 0;
@@ -105,15 +50,10 @@ var Overlay = L.Class.extend({
                 self.closeOverlay();
             }
             // Above threshold -> reveal the overlay 
-            else if (!self.isActive) {
+            else {
                 self.openOverlay();
             }
         });
-    },
-  
-    // Default options
-    options: {
-        isActive: false,
     },
     
     createStickerDiv: function (i) {
@@ -165,17 +105,18 @@ var Overlay = L.Class.extend({
     },
 
     openOverlay: function () {
-        this.isActive = !this.isActive;
         this._overlayElement.style.bottom = '0';
         this._overlayElement.style.borderRadius = '0px 0px 0px 0px';
         this._overlayElement.style.overflowY = 'auto';
         this._line.style.display = 'none';
-        this.getNearYouData();
-        console.log("opened overlay!");
+        if (!this.isActive) {
+            this.getNearYouData();
+        }
+        this.isActive = true;
     },
 
     closeOverlay: function () {
-        this.isActive = !this.isActive;
+        this.isActive = false;
         this._overlayElement.style.bottom = '-90%';
         this._overlayElement.style.borderRadius = '15px 15px 0px 0px';
         this._overlayElement.style.overflowY = 'hidden';
@@ -189,8 +130,10 @@ var Overlay = L.Class.extend({
 
     getNearYouData: function () {
         var self = this;
+        // Get user location
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
+                // Use user location to request nearby stickers from database
                 self.requestDBStickers(position);
             }, showError);
         } else {
@@ -198,127 +141,148 @@ var Overlay = L.Class.extend({
         }
     },
 
+    // Request nearby stickers from database
     requestDBStickers: function (position) {
         var self = this;
 
-        console.log("Your current position is:");
-        console.log(`Latitude : ${position.coords.latitude}`);
-        console.log(`Longitude: ${position.coords.longitude}`);
-
         if (!position.coords.latitude || !position.coords.longitude) {
-            return;
+            throw new Error("Location couldn't be accessed");
         }
 
-        var request = new XMLHttpRequest();
-
-        var url = 'getNearYouStickers?';
-        url += 'lon=' + position.coords.longitude;
-        url += '&lat=' + position.coords.latitude;
+        let nearYouStickersDBUrl = `getNearYouStickers?lon=${position.coords.longitude}&lat=${position.coords.latitude}`;
         
-        request.open('GET', url, true); 
-        request.onreadystatechange = function(){
-            if(this.readyState == 4){
-                if(this.status == 200){
-                    var results = JSON.parse(this.responseText);
-                    let stickerDivs = document.querySelectorAll('.stickerDiv');
-                    let stickerDivH1s = document.querySelectorAll('.stickerDivH1');
-                    let stickerDivImgs = document.querySelectorAll('.stickerDivImg');
-                    let stickerDivDates = document.querySelectorAll('.stickerDivDate');
-                    let stickerDivButtons = document.querySelectorAll('.stickerDivButton');
-                    let stickerDivNearbys = document.querySelectorAll('.stickerDivNearby');
-                    
-                    for(var i = 0; i < stickerDivH1s.length; i++) {
-                        if (i < results.length) {
-                            stickerDivH1s[i].textContent = `Sticker ${results[i][0]}`;
-                            stickerDivImgs[i].src = results[i][4];
-                            stickerDivDates[i].textContent = `Posted ${dayjs().to(dayjs(results[i][6]))}`
-
-                            stickerDivButtons[i].dataset.id = results[i][0];
-                            stickerDivButtons[i].dataset.lat = results[i][1];
-                            stickerDivButtons[i].dataset.long = results[i][2];
-                            stickerDivButtons[i].addEventListener('click', function(){
-                                console.log("Button clicked!");
-                                self.closeOverlay();
-                                mymap.flyTo([this.getAttribute('data-lat'), this.getAttribute('data-long')], 18);
-                                let stickerID = this.getAttribute('data-id');
-
-                                // Recursive function to check if the pointer with the desired ID is present in the array
-                                function checkPointerAndOpenPopup(stickerID) {
-                                    for (var y = 0; y < pointersOnMap.length; y++) {
-                                        if (stickerID == pointersOnMap[y].id) {
-                                            pointersOnMap[y].pointer.openPopup();
-                                            return; // Exit the function if the pointer is found
-                                        }
-                                    }
-                                    // If the pointer is not found, schedule the function to run again after a short delay
-                                    setTimeout(function() {
-                                        checkPointerAndOpenPopup(stickerID);
-                                    }, 100);
-                                }
-                                
-                                // Call the recursive function to start checking for the pointer with the desired ID
-                                checkPointerAndOpenPopup(stickerID);
-                            });
-
-                            // // Load nearby text (estimated address)
-                            // var stickerDivNearby = stickerDivNearbys[i];
-                            // var addressRequest = new XMLHttpRequest();
-                            // addressRequest.onreadystatechange = function(){
-                            //     if(this.readyState == 4 && this.status == 200){
-                            //         var addressJson = JSON.parse(addressRequest.responseText);
-                            //         console.log(addressJson);
-                            //         var text = "Nearby ";
-                            //         if(addressJson['address']['road'] != undefined){
-                            //             text += addressJson['address']['road'];
-                            //             if(addressJson['address']['house_number'] != undefined){
-                            //                 text += ' ' + addressJson['address']['house_number'];
-                            //             }
-                            //         }
-                            //         console.log(text);
-                            //         stickerDivNearby.textContent = text;
-                            //     } else {
-                            //         // Error handling for non-200 status codes
-                                    
-                            //         console.error('Request failed with status code ' + this.status + ', readystate: ' + this.readyState);
-                            //     }
-                            // }
-                            // console.log('https://nominatim.openstreetmap.org/reverse?lat=' + results[i][1] + '&lon=' + results[i][2] + '&format=json');
-                            // addressRequest.open("GET", 'https://nominatim.openstreetmap.org/reverse?lat=' + results[i][1] + '&lon=' + results[i][2] + '&format=json', true);
-                            // addressRequest.send();
-                        }
-                        else {
-                            // Don't show the div if the amount of divs (10) > amount of stickers
-                            stickerDivs[i].style.display = 'none';                 
-                        }
-                        // Show the divs
-                        stickerDivs.forEach(function(stickerDiv, index) {
-                            setTimeout(function() {
-                                stickerDiv.classList.add('revealed');
-                            }, index * 400);
-                        });
-                    }
-                } else {
-                    console.error('Error while loading near you stickers!');
+        fetch(nearYouStickersDBUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error while fetching near you stickers from database');
                 }
-            }
-        }
-        request.send();
+                return response.json();
+            })
+            .then(results => {
+                this.processDBStickers(results);
+            })
+            .catch(error => {
+                console.error(error.message);
+            });
     },
 
-    toggle: function () {
-        this.isActive = !this.isActive;
-        if (this.isActive) {
-            this.openOverlay();
-        } else {
-            this.closeOverlay();
+    // Use database results to fill all stickers with content
+    processDBStickers: function (results) {
+        // Get sticker DOM elements
+        let stickerDivs = document.querySelectorAll('.stickerDiv');
+        let stickerDivH1s = document.querySelectorAll('.stickerDivH1');
+        let stickerDivImgs = document.querySelectorAll('.stickerDivImg');
+        let stickerDivDates = document.querySelectorAll('.stickerDivDate');
+        let stickerDivButtons = document.querySelectorAll('.stickerDivButton');
+        let stickerDivNearbys = document.querySelectorAll('.stickerDivNearby');
+
+        // Iterate over sticker elements
+        for (let i = 0; i < stickerDivH1s.length; i++) {
+            if (i < results.length) {
+                let stickerData = results[i];
+
+                // Fill sticker with content
+                this.renderSticker(stickerDivH1s[i], stickerDivImgs[i], stickerDivDates[i], stickerData);
+
+                // Add the 'open on map' button click event
+                this.addOpenOnmapClickListener(stickerDivButtons[i], stickerData[0], stickerData[1], stickerData[2]);
+
+                // Fetch approximate address given the sticker coordinate
+                this.fetchStickerAddress(stickerData[1], stickerData[2], stickerDivNearbys[i]);
+            } else {
+                // Hide the sticker div when there are more divs than stickers
+                stickerDivs[i].style.display = 'none';
+            }
         }
+
+        // Show the near you stickers
+        this.revealStickers(stickerDivs);
+    },
+
+    // Fills individual stickers with content
+    renderSticker: function (stickerDivH1, stickerDivImg, stickerDivDate, stickerData) {
+        let [stickerID, lat, long, logoID, pictureURL, email, postTime, spots, verified] = stickerData;
+
+        stickerDivH1.textContent = `Sticker ${stickerID}`;
+        stickerDivImg.src = pictureURL;
+        stickerDivDate.textContent = `Posted ${dayjs().to(dayjs(postTime))}`;
+    },
+
+    // Add 'open on map' button event listener
+    addOpenOnmapClickListener: function (stickerDivButton, stickerID, lat, long) {
+        let self = this;
+        stickerDivButton.dataset.id = stickerID;
+        stickerDivButton.dataset.lat = lat;
+        stickerDivButton.dataset.long = long;
+    
+        stickerDivButton.addEventListener('click', function () {
+            let stickerID = this.getAttribute('data-id');
+            let lat = this.getAttribute('data-lat');
+            let long = this.getAttribute('data-long');
+    
+            self.handleOpenOnMapClick(stickerID, lat, long);
+        });
+    },
+
+    handleOpenOnMapClick: function (stickerID, lat, long) {
+        this.closeOverlay();
+        mymap.flyTo([lat, long], 18);
+
+        // Stickers are loaded in only when they're in you view
+        // Therefore, when 'flying' to a sticker we need to 'find' it before we can open it
+        // This recursive function checks whether the sticker is present, it not tries again later until it is present
+        
+        function checkPointerAndOpenPopup(stickerID) {
+            for (let y = 0; y < pointersOnMap.length; y++) {
+                if (stickerID == pointersOnMap[y].id) {
+                    pointersOnMap[y].pointer.openPopup();
+                    return; // Stop when the sticker is found and opened
+                }
+            }
+            // When the sticker isn't found, try again after a small pause
+            setTimeout(function () {
+                checkPointerAndOpenPopup(stickerID);
+            }, 100);
+        }
+    
+        // Search for sticker on map and open it
+        checkPointerAndOpenPopup(stickerID);
+    },
+
+    // Get approximate address of coordinates
+    fetchStickerAddress: function (lat, long, stickerDivNearby) {
+        let addressUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=json`;
+
+        fetch(addressUrl)
+            .then(addressResponse => {
+                if (!addressResponse.ok) {
+                    throw new Error(`Address request failed with status: ${addressResponse.status}`);
+                }
+                return addressResponse.json();
+            })
+            .then(addressJson => {
+                let text = "Nearby ";
+                if (addressJson['address']['road'] != undefined) {
+                    text += addressJson['address']['road'];
+                    if (addressJson['address']['house_number'] != undefined) {
+                        text += ' ' + addressJson['address']['house_number'];
+                    }
+                }
+                stickerDivNearby.textContent = text;
+            })
+            .catch(error => {
+                console.error('Error fetching nearby address:', error);
+            });
+    },
+
+    // Show all the stickers with a delay going from top (small delay) to bottom (large delay)
+    revealStickers: function (stickerDivs) {
+        stickerDivs.forEach(function (stickerDiv, index) {
+            setTimeout(function () {
+                stickerDiv.classList.add('revealed');
+            }, index * 400);
+        });
     },
 });
 
 var overlay = new Overlay('#overlay');
-
-// nearYouButton.addEventListener('click', function(){
-//     console.log("near you clicked!");
-//     overlay.toggle();
-// });
-
