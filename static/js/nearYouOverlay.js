@@ -1,4 +1,8 @@
 // Google maps style upwards drag overlay
+const SNAP_THRESHOLD = 0.3; // 30% of the overlay height
+const OVERLAY_HIDE_LIMIT = 0.8; // Limit to 80% below screen
+const STICKER_REVEAL_DELAY = 400; // Delay between sticker reveal animations
+
 var Overlay = L.Class.extend({
     // Overylay constructor
     initialize: function (selector, options) {
@@ -7,102 +11,97 @@ var Overlay = L.Class.extend({
         this._dragStartY = 0;
         this._overlayHeight = 0;
         
-        this._overlayElement = document.createElement('div');
-        this._overlayElement.id = 'nearYouMobileOverlay';
-
-        this._line = document.createElement('img');
-        this._line.id = 'nearYouMobileLine';
-        this._line.src = "./static/img/line.svg";
-        this._overlayElement.appendChild(this._line);
-
-        this._nearYouTopText = document.createElement('h1');
-        this._nearYouTopText.id = 'nearYouMobileTopText';
-        this._nearYouTopTextText = document.createTextNode("Stickers near you");
-        this._nearYouTopText.appendChild(this._nearYouTopTextText);
-        this._overlayElement.appendChild(this._nearYouTopText);
-
-        for (let i = 0; i < 10; i++) {
-            this.createStickerDiv(i);
-        }
-
+        this._overlayElement = this.createOverlayElement();
         document.body.appendChild(this._overlayElement);
-        
-        var self = this;
-        this._overlayElement.addEventListener('touchstart', function(e) {
-            self._dragStartY = e.touches[0].clientY;
-            self._overlayHeight = self._overlayElement.clientHeight;
-        });
-        
-        this._overlayElement.addEventListener('touchmove', function(e) {
-            var deltaY = e.touches[0].clientY - self._dragStartY;
-            var newBottom = Math.max(-self._overlayHeight * 0.8, -deltaY); // Limit to 80% below
-            self._overlayElement.style.bottom = newBottom + 'px';
-            if (self._overlayElement.scrollHeight - self._overlayElement.scrollTop === self._overlayElement.clientHeight) {
-                e.preventDefault(); // Prevent further scrolling
-            }
-        });
-        
-        this._overlayElement.addEventListener('touchend', function(e) {
-            var snapThreshold = -self._overlayHeight * 0.3; // Snap when dragged beyond 30% of the overlay height
 
-            // Under threshold -> snap back to the bottom
-            if (parseInt(self._overlayElement.style.bottom) < snapThreshold) {
-                self.closeOverlay();
-            }
-            // Above threshold -> reveal the overlay 
-            else {
-                self.openOverlay();
-            }
-        });
+        this.addTouchEventListeners();
+    },
+
+    // Create overlay structure
+    createOverlayElement: function () {
+        const overlayElement = document.createElement('div');
+        overlayElement.id = 'nearYouMobileOverlay';
+    
+        // Assign this._line here to make sure it's accessible
+        this._line = this.createElement('img', 'nearYouMobileLine', { src: './static/img/line.svg' });
+        overlayElement.appendChild(this._line);
+    
+        const titleText = this.createElement('h1', 'nearYouMobileTopText', { textContent: "Stickers near you" });
+        overlayElement.appendChild(titleText);
+    
+        for (let i = 0; i < 10; i++) {
+            this.createStickerDiv(i, overlayElement);
+        }
+    
+        return overlayElement;
+    },
+
+    // Helper to create elements with attributes
+    createElement: function (tagName, id, attributes = {}) {
+        const element = document.createElement(tagName);
+        element.id = id;
+        Object.assign(element, attributes);
+        return element;
     },
     
-    createStickerDiv: function (i) {
-        stickerDiv = document.createElement('div');
-        stickerDiv.id = `stickerDiv-${i}`;
-        stickerDiv.classList.add('stickerDiv');
-        
-        stickerDivH1 = document.createElement('h1');
-        stickerDivH1.id = `stickerDivH1-${i}`;
-        stickerDivH1.classList.add('stickerDivH1');
-        stickerDivH1Text = document.createTextNode(`stickerDivH1-${i}`);
-        stickerDivH1.appendChild(stickerDivH1Text);
-        stickerDiv.appendChild(stickerDivH1);
+    // Create individual sticker elements
+    createStickerDiv: function (i, parentElement) {
+        const stickerDiv = this.createElement('div', `stickerDiv-${i}`, { className: 'stickerDiv' });
 
-        stickerDivUser = document.createElement('h3');
-        stickerDivUser.id = `stickerDivUser-${i}`;
-        stickerDivUser.classList.add('stickerDivUser');
-        stickerDivUserText = document.createTextNode(`Sticked by ???`);
-        stickerDivUser.appendChild(stickerDivUserText);
-        stickerDiv.appendChild(stickerDivUser);
+        const title = this.createElement('h1', `stickerDivH1-${i}`, { textContent: `stickerDivH1-${i}`, className: 'stickerDivH1' });
+        stickerDiv.appendChild(title);
 
-        stickerImg = document.createElement('img');
-        stickerImg.id = `stickerDivImg-${i}`;
-        stickerImg.classList.add('stickerDivImg');
-        stickerImg.src = "";
-        stickerDiv.appendChild(stickerImg);
+        const user = this.createElement('h3', `stickerDivUser-${i}`, { textContent: 'Sticked by ???', className: 'stickerDivUser' });
+        stickerDiv.appendChild(user);
 
-        stickerDivDate = document.createElement('h3');
-        stickerDivDate.id = `stickerDivDate-${i}`;
-        stickerDivDate.classList.add('stickerDivDate');
-        stickerDivDateText = document.createTextNode(`Posted ???`);
-        stickerDivDate.appendChild(stickerDivDateText);
-        stickerDiv.appendChild(stickerDivDate);
+        const img = this.createElement('img', `stickerDivImg-${i}`, { src: '', className: 'stickerDivImg' });
+        stickerDiv.appendChild(img);
 
-        stickerDivNearby = document.createElement('h3');
-        stickerDivNearby.id = `stickerDivNearby-${i}`;
-        stickerDivNearby.classList.add('stickerDivNearby');
-        stickerDivNearbyText = document.createTextNode(`Nearby ???`);
-        stickerDivNearby.appendChild(stickerDivNearbyText);
-        stickerDiv.appendChild(stickerDivNearby);
+        const date = this.createElement('h3', `stickerDivDate-${i}`, { textContent: 'Posted ???', className: 'stickerDivDate' });
+        stickerDiv.appendChild(date);
 
-        stickerDivButton = document.createElement("button");
-        stickerDivButton.id = `stickerDivButton-${i}`;
-        stickerDivButton.classList.add('stickerDivButton');
-        stickerDivButton.innerHTML = "Open on map";
-        stickerDiv.appendChild(stickerDivButton);
+        const nearby = this.createElement('h3', `stickerDivNearby-${i}`, { textContent: 'Nearby ???', className: 'stickerDivNearby' });
+        stickerDiv.appendChild(nearby);
 
-        this._overlayElement.appendChild(stickerDiv);
+        const button = this.createElement('button', `stickerDivButton-${i}`, { innerHTML: 'Open on map', className: 'stickerDivButton' });
+        stickerDiv.appendChild(button);
+
+        parentElement.appendChild(stickerDiv);
     },
+
+    addTouchEventListeners: function () {
+        const self = this;
+
+        // Use named functions for event listeners
+        this._overlayElement.addEventListener('touchstart', this.onTouchStart.bind(self));
+        this._overlayElement.addEventListener('touchmove', this.onTouchMove.bind(self));
+        this._overlayElement.addEventListener('touchend', this.onTouchEnd.bind(self));
+    },
+
+    onTouchStart: function (e) {
+        this._dragStartY = e.touches[0].clientY;
+        this._overlayHeight = this._overlayElement.clientHeight;
+    },
+
+    onTouchMove: function (e) {
+        const deltaY = e.touches[0].clientY - this._dragStartY;
+        const newBottom = Math.max(-this._overlayHeight * OVERLAY_HIDE_LIMIT, -deltaY); // Limit to OVERLAY_HIDE_LIMIT% below
+        this._overlayElement.style.bottom = `${newBottom}px`;
+        if (this._overlayElement.scrollHeight - this._overlayElement.scrollTop === this._overlayElement.clientHeight) {
+            e.preventDefault(); // Prevent further scrolling
+        }
+    },
+
+    onTouchEnd: function () {
+        const snapThreshold = -this._overlayHeight * SNAP_THRESHOLD; // Snap when dragged beyond SNAP_THRESHOLD% of the overlay height
+
+        if (parseInt(this._overlayElement.style.bottom) < snapThreshold) {
+            this.closeOverlay();
+        } else {
+            this.openOverlay();
+        }
+    },
+
 
     openOverlay: function () {
         this._overlayElement.style.bottom = '0';
@@ -123,19 +122,26 @@ var Overlay = L.Class.extend({
         this._overlayElement.scrollTo(0, 0);
         this._line.style.display = 'block';
         let stickerDivs = document.querySelectorAll('.stickerDiv');
-        stickerDivs.forEach(function(stickerDiv) {
-            stickerDiv.classList.remove('revealed');
-        });
+        stickerDivs.forEach(div => div.classList.remove('revealed'));
+    },
+
+    handleGeolocationError: function (error) {
+        console.error(`Geolocation error: ${error.message}`);
+        alert("Geolocation is not supported by this browser.");
+    },
+
+    handleFetchError: function (error, url) {
+        console.error(`Error fetching from ${url}: ${error.message}`);
     },
 
     getNearYouData: function () {
-        var self = this;
-        // Get user location
+        const self = this;
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
+            navigator.geolocation.getCurrentPosition(
                 // Use user location to request nearby stickers from database
-                self.requestDBStickers(position);
-            }, showError);
+                position => self.requestDBStickers(position),
+                error => self.handleGeolocationError(error)
+            );
         } else {
             alert("Geolocation is not supported by this browser.");
         }
@@ -143,14 +149,11 @@ var Overlay = L.Class.extend({
 
     // Request nearby stickers from database
     requestDBStickers: function (position) {
-        var self = this;
-
         if (!position.coords.latitude || !position.coords.longitude) {
             throw new Error("Location couldn't be accessed");
         }
 
-        let nearYouStickersDBUrl = `getNearYouStickers?lon=${position.coords.longitude}&lat=${position.coords.latitude}`;
-        
+        const nearYouStickersDBUrl = `getNearYouStickers?lon=${position.coords.longitude}&lat=${position.coords.latitude}`;
         fetch(nearYouStickersDBUrl)
             .then(response => {
                 if (!response.ok) {
@@ -158,32 +161,26 @@ var Overlay = L.Class.extend({
                 }
                 return response.json();
             })
-            .then(results => {
-                this.processDBStickers(results);
-            })
-            .catch(error => {
-                console.error(error.message);
-            });
+            .then(results => this.processDBStickers(results))
+            .catch(error => this.handleFetchError(error, nearYouStickersDBUrl));
     },
 
     // Use database results to fill all stickers with content
     processDBStickers: function (results) {
         // Get sticker DOM elements
-        let stickerDivs = document.querySelectorAll('.stickerDiv');
-        let stickerDivH1s = document.querySelectorAll('.stickerDivH1');
-        let stickerDivImgs = document.querySelectorAll('.stickerDivImg');
-        let stickerDivDates = document.querySelectorAll('.stickerDivDate');
-        let stickerDivButtons = document.querySelectorAll('.stickerDivButton');
-        let stickerDivNearbys = document.querySelectorAll('.stickerDivNearby');
+        const stickerDivs = document.querySelectorAll('.stickerDiv');
+        const stickerDivH1s = document.querySelectorAll('.stickerDivH1');
+        const stickerDivImgs = document.querySelectorAll('.stickerDivImg');
+        const stickerDivDates = document.querySelectorAll('.stickerDivDate');
+        const stickerDivButtons = document.querySelectorAll('.stickerDivButton');
+        const stickerDivNearbys = document.querySelectorAll('.stickerDivNearby');
 
         // Iterate over sticker elements
-        for (let i = 0; i < stickerDivH1s.length; i++) {
+        stickerDivH1s.forEach((title, i) => {
             if (i < results.length) {
-                let stickerData = results[i];
-
+                const stickerData = results[i];
                 // Fill sticker with content
-                this.renderSticker(stickerDivH1s[i], stickerDivImgs[i], stickerDivDates[i], stickerData);
-
+                this.renderSticker(title, stickerDivImgs[i], stickerDivDates[i], stickerData);
                 // Add the 'open on map' button click event
                 this.addOpenOnmapClickListener(stickerDivButtons[i], stickerData[0], stickerData[1], stickerData[2]);
 
@@ -193,9 +190,9 @@ var Overlay = L.Class.extend({
                 // Hide the sticker div when there are more divs than stickers
                 stickerDivs[i].style.display = 'none';
             }
-        }
+        });
 
-        // Show the near you stickers
+        // Show all stickers
         this.revealStickers(stickerDivs);
     },
 
