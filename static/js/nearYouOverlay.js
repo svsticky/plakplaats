@@ -7,6 +7,7 @@ var Overlay = L.Class.extend({
     // Overylay constructor
     initialize: function (selector, options) {
         this.isActive = false;
+        this.currentlyMobile = isMobile(); 
         this._selector = selector;
         this._dragStartY = 0;
         this._overlayHeight = 0;
@@ -14,7 +15,14 @@ var Overlay = L.Class.extend({
         this._overlayElement = this.createOverlayElement();
         document.body.appendChild(this._overlayElement);
 
-        this.addTouchEventListeners();
+        this._desktopOpenButton = this.addDesktopOpenButton();
+
+        if (this.currentlyMobile) {
+            this.switchToMobile();
+        }
+        else {
+            this.switchToDesktop();
+        }
     },
 
     // Create overlay structure
@@ -22,7 +30,6 @@ var Overlay = L.Class.extend({
         const overlayElement = document.createElement('div');
         overlayElement.id = 'nearYouMobileOverlay';
     
-        // Assign this._line here to make sure it's accessible
         this._line = this.createElement('img', 'nearYouMobileLine', { src: './static/img/line.svg' });
         overlayElement.appendChild(this._line);
     
@@ -34,6 +41,83 @@ var Overlay = L.Class.extend({
         }
     
         return overlayElement;
+    },
+
+    addDesktopOpenButton: function () {
+        var self = this;
+
+        // Create a button to open/close the sidebar
+        let toggleButton = document.createElement('button');
+        toggleButton.style.display = 'none';
+        toggleButton.id = 'nearYouToggleButton';
+        toggleButton.innerHTML = 'Show Stickers';
+        document.body.appendChild(toggleButton);
+
+        toggleButton.addEventListener('click', function() {
+            if (self.isActive === false) {
+                self.openDesktopSidebar();
+            } else {
+                self.closeDesktopSidebar();
+            }
+        });
+
+
+        return toggleButton;
+    },
+
+    switchToMobile: function () {
+        this.currentlyMobile = true;
+        this.closeDesktopSidebar();
+        this._overlayElement.style.width = "100%";
+        this._overlayElement.classList.remove('desktop');
+        this._overlayElement.classList.add('mobile');
+
+        this._line.style.display
+        this.addTouchEventListeners();
+        console.log("added touch listeners!");
+
+        this._desktopOpenButton.style.display = 'none';
+    },
+
+    switchToDesktop: function () {
+        this.currentlyMobile = false;
+        this.closeMobileOverlay();
+        this._overlayElement.style.width = "0";
+        this._overlayElement.classList.remove('mobile');
+        this._overlayElement.classList.add('desktop');
+        this.removeTouchEventListeners();
+        console.log("removed touch listeners!");
+
+        this._line.style.display = 'none';
+        this._desktopOpenButton.style.display = 'block';
+    },
+
+    openDesktopSidebar: function () {
+        // this._overlayElement.style.width = '300px';
+        // this._overlayElement.style.borderRadius = '0px';
+        // this._overlayElement.style.overflowY = 'auto';
+        // this._line.style.display = 'none';
+        // this._overlayElement.style.top = '0';
+        // this._overlayElement.style.right = '0';
+        // this._overlayElement.style.right = '300px';
+        // this._overlayElement.style.right = '300px';
+        this._overlayElement.style.width = "500px";
+        this._overlayElement.style.marginLeft = "0";
+
+        if (!this.isActive) {
+            this.getNearYouData();
+        }
+        this.isActive = true;
+    },
+
+    closeDesktopSidebar: function () {
+        this.isActive = false;
+        this._overlayElement.style.width = "0";
+        this._overlayElement.style.marginLeft = "0";
+        // this._overlayElement.style.width = '0';
+        // this._overlayElement.style.borderRadius = '15px 15px 0px 0px';
+        // this._overlayElement.style.overflowY = 'hidden';
+        // this._line.style.display = 'block';
     },
 
     // Helper to create elements with attributes
@@ -78,6 +162,15 @@ var Overlay = L.Class.extend({
         this._overlayElement.addEventListener('touchend', this.onTouchEnd.bind(self));
     },
 
+    removeTouchEventListeners: function () {
+        const self = this;
+
+        // Use named functions for event listeners
+        this._overlayElement.removeEventListener('touchstart', this.onTouchStart.bind(self));
+        this._overlayElement.removeEventListener('touchmove', this.onTouchMove.bind(self));
+        this._overlayElement.removeEventListener('touchend', this.onTouchEnd.bind(self));
+    },
+
     onTouchStart: function (e) {
         this._dragStartY = e.touches[0].clientY;
         this._overlayHeight = this._overlayElement.clientHeight;
@@ -96,14 +189,14 @@ var Overlay = L.Class.extend({
         const snapThreshold = -this._overlayHeight * SNAP_THRESHOLD; // Snap when dragged beyond SNAP_THRESHOLD% of the overlay height
 
         if (parseInt(this._overlayElement.style.bottom) < snapThreshold) {
-            this.closeOverlay();
+            this.closeMobileOverlay();
         } else {
-            this.openOverlay();
+            this.openMobileOverlay();
         }
     },
 
 
-    openOverlay: function () {
+    openMobileOverlay: function () {
         this._overlayElement.style.bottom = '0';
         this._overlayElement.style.borderRadius = '0px 0px 0px 0px';
         this._overlayElement.style.overflowY = 'auto';
@@ -114,7 +207,8 @@ var Overlay = L.Class.extend({
         this.isActive = true;
     },
 
-    closeOverlay: function () {
+    closeMobileOverlay: function () {
+        console.log("closing moblie overlay!");
         this.isActive = false;
         this._overlayElement.style.bottom = '-90%';
         this._overlayElement.style.borderRadius = '15px 15px 0px 0px';
@@ -222,7 +316,7 @@ var Overlay = L.Class.extend({
     },
 
     handleOpenOnMapClick: function (stickerID, lat, long) {
-        this.closeOverlay();
+        this.closeMobileOverlay();
         mymap.flyTo([lat, long], 18);
 
         // Stickers are loaded in only when they're in you view
@@ -283,3 +377,12 @@ var Overlay = L.Class.extend({
 });
 
 var overlay = new Overlay('#overlay');
+
+window.addEventListener('resize', function() {
+    if (isMobile() && !overlay.currentlyMobile) {
+        console.log(overlay.currentlyMobile);
+        overlay.switchToMobile();
+    } else {
+        overlay.switchToDesktop();
+    }
+});

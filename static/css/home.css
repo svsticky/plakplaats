@@ -307,7 +307,7 @@ body{
 }
 
 /* nearYouMobileOverlay */
-#nearYouMobileOverlay {
+#nearYouMobileOverlay.mobile {
     position: fixed;
     z-index: 999;
     bottom: -90%; /* Initially at 10% visible */
@@ -326,6 +326,41 @@ body{
     border-radius: 30px 30px 0px 0px;
     box-shadow: 0px -3px 5px rgba(0, 0, 0, 0.5);
 }
+
+#nearYouMobileOverlay.desktop {
+    height: 90vh; /* 100% Full-height */
+    width: 0; /* 0 width - change this with JavaScript */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Stay on top */
+    top: 10vh;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: rgb(255, 255, 255); 
+    overflow-x: hidden; /* Disable horizontal scroll */
+    padding-top: 60px; /* Place content 60px from the top */
+    transition: 0.5s; /* 0.5 second transition effect to slide in the sidebar */
+    transition-timing-function: 'ease-in';
+}
+
+/* desktop button */
+#nearYouToggleButton {
+    position: fixed;
+    top: 15vh;
+    right: 50px;
+    z-index: 1000; /* Ensures it stays above other elements */
+    background-color:#61518f;
+    color:#ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 0.5rem;
+    margin-left: auto;    
+    margin-right: auto;
+    margin-bottom: 0.5rem;
+}
+
 
 #nearYouMobileLine {
     margin-top: 0.5rem;

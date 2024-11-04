@@ -15,6 +15,8 @@ const emailInput = document.getElementsByClassName('successEmail')[0];
 
 const nearYouButton = document.getElementsByClassName('nearYouButton')[0];
 
+const mobileThreshold = 768;
+
 var imageFile;
 var selectedLogo;
 var selectedLogoId;
@@ -22,3 +24,8 @@ var emailCode;
 
 var pointersOnMap = [];
 var logoIcons = [];
+
+// Define the function before the event listener
+function isMobile() {
+    return window.innerWidth <= mobileThreshold;
+}
