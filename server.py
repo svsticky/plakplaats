@@ -190,7 +190,6 @@ def editLogo():
         con.commit()
         return json.dumps({'status': '200', 'error': 'Logo updated!'}), 200
 
-
 @app.route('/deleteLogo', methods=['DELETE'])
 def deleteLogo():
     # Check if the request contains an valid admin token
@@ -360,8 +359,6 @@ def updateStickerSpots():
             return json.dumps({'status': '200', 'error': 'Updated spots count'}), 200
     else:
         return json.dumps({'status': '400', 'error': 'Updating sticker spots failed'}), 400
-
-
 
 def sendEmailUpdate():
     return 0  # TODO not implemented

@@ -7,12 +7,13 @@ var Overlay = L.Class.extend({
     // Overylay constructor
     initialize: function (selector, options) {
         this.isActive = false;
-        this.currentlyMobile = isMobile(); 
+        this.currentlyMobile = isMobile();
         this._selector = selector;
         this._dragStartY = 0;
         this._overlayHeight = 0;
         
         this._overlayElement = this.createOverlayElement();
+        
         document.body.appendChild(this._overlayElement);
 
         this._desktopOpenButton = this.addDesktopOpenButton();
@@ -40,6 +41,9 @@ var Overlay = L.Class.extend({
             this.createStickerDiv(i, overlayElement);
         }
     
+        overlayElement.classList.add('inactive');
+        overlayElement.classList.remove('active');
+        
         return overlayElement;
     },
 
@@ -47,13 +51,13 @@ var Overlay = L.Class.extend({
         var self = this;
 
         // Create a button to open/close the sidebar
-        let toggleButton = document.createElement('button');
-        toggleButton.style.display = 'none';
-        toggleButton.id = 'nearYouToggleButton';
-        toggleButton.innerHTML = 'Show Stickers';
-        document.body.appendChild(toggleButton);
+        let _desktopOpenButton = document.createElement('button');
+        _desktopOpenButton.classList.add('desktop');
+        _desktopOpenButton.id = 'nearYouDesktopToggleButton';
+        _desktopOpenButton.innerHTML = 'Show Stickers';
+        document.body.appendChild(_desktopOpenButton);
 
-        toggleButton.addEventListener('click', function() {
+        _desktopOpenButton.addEventListener('click', function() {
             if (self.isActive === false) {
                 self.openDesktopSidebar();
             } else {
@@ -61,48 +65,72 @@ var Overlay = L.Class.extend({
             }
         });
 
-
-        return toggleButton;
+        return _desktopOpenButton;
     },
 
     switchToMobile: function () {
         this.currentlyMobile = true;
         this.closeDesktopSidebar();
-        this._overlayElement.style.width = "100%";
+        console.log("SWITCHTOMOBILE");
         this._overlayElement.classList.remove('desktop');
         this._overlayElement.classList.add('mobile');
+        this._desktopOpenButton.classList.remove('desktop');
+        this._desktopOpenButton.classList.add('mobile');
+        this._line.classList.remove('desktop');
+        this._line.classList.add('mobile');
 
-        this._line.style.display
         this.addTouchEventListeners();
-        console.log("added touch listeners!");
-
-        this._desktopOpenButton.style.display = 'none';
     },
 
     switchToDesktop: function () {
         this.currentlyMobile = false;
         this.closeMobileOverlay();
-        this._overlayElement.style.width = "0";
         this._overlayElement.classList.remove('mobile');
         this._overlayElement.classList.add('desktop');
-        this.removeTouchEventListeners();
-        console.log("removed touch listeners!");
+        this._desktopOpenButton.classList.remove('mobile');
+        this._desktopOpenButton.classList.add('desktop');
+        this._line.classList.remove('mobile');
+        this._line.classList.add('desktop');
 
-        this._line.style.display = 'none';
-        this._desktopOpenButton.style.display = 'block';
+        this.removeTouchEventListeners();
+    },
+
+    openMobileOverlay: function () {
+        this._overlayElement.classList.add('active');
+        this._overlayElement.classList.remove('inactive');
+        this._line.classList.add('active');
+        this._line.classList.remove('inactive');
+
+        // This styling needs to be in the javascript because it needs to override the onTouchMove function
+        this._overlayElement.style.bottom = "0";
+
+        if (!this.isActive) {
+            this.getNearYouData();
+        }
+        
+        this.isActive = true;
+    },
+
+    closeMobileOverlay: function () {
+        this._overlayElement.classList.add('inactive');
+        this._overlayElement.classList.remove('active');
+        this._line.classList.add('inactive');
+        this._line.classList.remove('active');
+        this.isActive = false;
+
+        // This styling needs to be in the javascript because it needs to override the onTouchMove function
+        this._overlayElement.style.bottom = "-90%";
+
+        this._overlayElement.scrollTo(0, 0);
+        let stickerDivs = document.querySelectorAll('.stickerDiv');
+        stickerDivs.forEach(div => div.classList.remove('revealed'));
     },
 
     openDesktopSidebar: function () {
-        // this._overlayElement.style.width = '300px';
-        // this._overlayElement.style.borderRadius = '0px';
-        // this._overlayElement.style.overflowY = 'auto';
-        // this._line.style.display = 'none';
-        // this._overlayElement.style.top = '0';
-        // this._overlayElement.style.right = '0';
-        // this._overlayElement.style.right = '300px';
-        // this._overlayElement.style.right = '300px';
-        this._overlayElement.style.width = "500px";
-        this._overlayElement.style.marginLeft = "0";
+        this._overlayElement.classList.add('active');
+        this._overlayElement.classList.remove('inactive');
+        this._line.classList.add('active');
+        this._line.classList.remove('inactive');
 
         if (!this.isActive) {
             this.getNearYouData();
@@ -111,13 +139,14 @@ var Overlay = L.Class.extend({
     },
 
     closeDesktopSidebar: function () {
+        this._overlayElement.classList.add('inactive');
+        this._overlayElement.classList.remove('active');
+        this._line.classList.add('inactive');
+        this._line.classList.remove('active');
+
         this.isActive = false;
-        this._overlayElement.style.width = "0";
-        this._overlayElement.style.marginLeft = "0";
-        // this._overlayElement.style.width = '0';
-        // this._overlayElement.style.borderRadius = '15px 15px 0px 0px';
-        // this._overlayElement.style.overflowY = 'hidden';
-        // this._line.style.display = 'block';
+        let stickerDivs = document.querySelectorAll('.stickerDiv');
+        stickerDivs.forEach(div => div.classList.remove('revealed'));
     },
 
     // Helper to create elements with attributes
@@ -155,8 +184,6 @@ var Overlay = L.Class.extend({
 
     addTouchEventListeners: function () {
         const self = this;
-
-        // Use named functions for event listeners
         this._overlayElement.addEventListener('touchstart', this.onTouchStart.bind(self));
         this._overlayElement.addEventListener('touchmove', this.onTouchMove.bind(self));
         this._overlayElement.addEventListener('touchend', this.onTouchEnd.bind(self));
@@ -164,11 +191,15 @@ var Overlay = L.Class.extend({
 
     removeTouchEventListeners: function () {
         const self = this;
-
-        // Use named functions for event listeners
-        this._overlayElement.removeEventListener('touchstart', this.onTouchStart.bind(self));
-        this._overlayElement.removeEventListener('touchmove', this.onTouchMove.bind(self));
-        this._overlayElement.removeEventListener('touchend', this.onTouchEnd.bind(self));
+        // this._overlayElement.removeEventListener('touchstart', this.onTouchStart.bind(self));
+        // this._overlayElement.removeEventListener('touchmove', this.onTouchMove.bind(self));
+        // this._overlayElement.removeEventListener('touchend', this.onTouchEnd.bind(self));
+        var oldOverlay = this._overlayElement;
+        var newOverlay = oldOverlay.cloneNode(true);
+        oldOverlay.parentNode.replaceChild(newOverlay, oldOverlay);
+        this._overlayElement = newOverlay;
+        this._line = this._overlayElement.querySelector("#nearYouMobileLine");
+        this._desktopOpenButton = this.overlayElement.querySelector("#nearYouDesktopToggleButton");
     },
 
     onTouchStart: function (e) {
@@ -189,34 +220,12 @@ var Overlay = L.Class.extend({
         const snapThreshold = -this._overlayHeight * SNAP_THRESHOLD; // Snap when dragged beyond SNAP_THRESHOLD% of the overlay height
 
         if (parseInt(this._overlayElement.style.bottom) < snapThreshold) {
+            console.log("closing overlay");
             this.closeMobileOverlay();
         } else {
+            console.log("opening overlay");
             this.openMobileOverlay();
         }
-    },
-
-
-    openMobileOverlay: function () {
-        this._overlayElement.style.bottom = '0';
-        this._overlayElement.style.borderRadius = '0px 0px 0px 0px';
-        this._overlayElement.style.overflowY = 'auto';
-        this._line.style.display = 'none';
-        if (!this.isActive) {
-            this.getNearYouData();
-        }
-        this.isActive = true;
-    },
-
-    closeMobileOverlay: function () {
-        console.log("closing moblie overlay!");
-        this.isActive = false;
-        this._overlayElement.style.bottom = '-90%';
-        this._overlayElement.style.borderRadius = '15px 15px 0px 0px';
-        this._overlayElement.style.overflowY = 'hidden';
-        this._overlayElement.scrollTo(0, 0);
-        this._line.style.display = 'block';
-        let stickerDivs = document.querySelectorAll('.stickerDiv');
-        stickerDivs.forEach(div => div.classList.remove('revealed'));
     },
 
     handleGeolocationError: function (error) {
@@ -380,9 +389,10 @@ var overlay = new Overlay('#overlay');
 
 window.addEventListener('resize', function() {
     if (isMobile() && !overlay.currentlyMobile) {
-        console.log(overlay.currentlyMobile);
         overlay.switchToMobile();
-    } else {
+    }
+    
+    else if (!isMobile() && overlay.currentlyMobile) {
         overlay.switchToDesktop();
     }
 });

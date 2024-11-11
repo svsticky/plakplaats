@@ -310,28 +310,26 @@ body{
 #nearYouMobileOverlay.mobile {
     position: fixed;
     z-index: 999;
-    bottom: -90%; /* Initially at 10% visible */
+    bottom: -90%;
     left: 0;
     width: 100%;
-    height: 100%; /* Full screen height */
+    height: 100%;
     background-color: rgb(255, 255, 255);
-    /* border: 5px solid #61518f; */
-    transition: bottom 0.5s, border-radius 0.5s; /* Transition for sliding  */
+    transition: bottom 0.5s, border-radius 0.5s;
     transition-timing-function: 'ease-in';
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-     /* Enable scrolling if content exceeds screen height */
     border-radius: 30px 30px 0px 0px;
     box-shadow: 0px -3px 5px rgba(0, 0, 0, 0.5);
 }
 
 #nearYouMobileOverlay.desktop {
-    height: 90vh; /* 100% Full-height */
-    width: 0; /* 0 width - change this with JavaScript */
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Stay on top */
+    height: 90vh;
+    width: 0;
+    position: fixed;
+    z-index: 1;
     top: 10vh;
     right: 0;
     display: flex;
@@ -339,18 +337,43 @@ body{
     align-items: center;
     justify-content: flex-start;
     background-color: rgb(255, 255, 255); 
-    overflow-x: hidden; /* Disable horizontal scroll */
-    padding-top: 60px; /* Place content 60px from the top */
-    transition: 0.5s; /* 0.5 second transition effect to slide in the sidebar */
+    overflow-x: hidden;
+    padding-top: 60px;
+    transition: 0.5s;
     transition-timing-function: 'ease-in';
 }
 
+#nearYouMobileOverlay.desktop.active {
+    width: 500px;
+    margin-left: 0;
+}
+
+#nearYouMobileOverlay.desktop.inactive {
+    width: 0;
+    margin-left: 0;
+}
+
+#nearYouMobileOverlay.mobile.active {
+    /* top: 0; */
+    bottom: 0;
+    border-radius: 0px 0px 0px 0px;
+    overflow-y: auto;
+}
+
+#nearYouMobileOverlay.mobile.inactive {
+    /* top: 90%; */
+    bottom: -90%;
+    border-radius: 15px 15px 0px 0px;
+    overflow-y: hidden;
+}
+
 /* desktop button */
-#nearYouToggleButton {
+#nearYouDesktopToggleButton.desktop {
+    display: block;
     position: fixed;
     top: 15vh;
     right: 50px;
-    z-index: 1000; /* Ensures it stays above other elements */
+    z-index: 1000;
     background-color:#61518f;
     color:#ffffff;
     border: none;
@@ -361,10 +384,22 @@ body{
     margin-bottom: 0.5rem;
 }
 
+#nearYouDesktopToggleButton.mobile {
+    display: none;
+}
 
-#nearYouMobileLine {
+#nearYouMobileLine.mobile {
+    display: block;
     margin-top: 0.5rem;
     width: 10%;
+}
+
+#nearYouMobileLine.mobile.active {
+    display: none;
+}
+
+#nearYouMobileLine.desktop {
+    display: none;
 }
 
 #nearYouMobileTopText {
