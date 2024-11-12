@@ -234,7 +234,7 @@ var Overlay = L.Class.extend({
 
     handleGeolocationError: function (error) {
         console.error(`Geolocation error: ${error.message}`);
-        alert("Geolocation is not supported by this browser.");
+        alert(`Geolocation error: ${error.message}.`);
     },
 
     handleFetchError: function (error, url) {

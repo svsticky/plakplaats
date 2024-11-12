@@ -343,26 +343,21 @@ body{
 }
 
 #nearYouMobileOverlay.desktop.active {
-    /* width: 500px; */
     left: 60vw;
     margin-left: 0;
 }
 
 #nearYouMobileOverlay.desktop.inactive {
-    /* width: 0; */
-    /* margin-left: -500px; */
     left: 100vw;
 }
 
 #nearYouMobileOverlay.mobile.active {
-    /* top: 0; */
     bottom: 0;
     border-radius: 0px 0px 0px 0px;
     overflow-y: auto;
 }
 
 #nearYouMobileOverlay.mobile.inactive {
-    /* top: 90%; */
     bottom: -90%;
     border-radius: 15px 15px 0px 0px;
     overflow-y: hidden;
