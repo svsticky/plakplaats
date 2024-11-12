@@ -327,30 +327,31 @@ body{
 
 #nearYouMobileOverlay.desktop {
     height: 90vh;
-    width: 0;
+    width: 40vw;
     position: fixed;
     z-index: 1;
     top: 10vh;
-    right: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
     background-color: rgb(255, 255, 255); 
     overflow-x: hidden;
-    padding-top: 60px;
+    padding-top: 1rem;
     transition: 0.5s;
     transition-timing-function: 'ease-in';
 }
 
 #nearYouMobileOverlay.desktop.active {
-    width: 500px;
+    /* width: 500px; */
+    left: 60vw;
     margin-left: 0;
 }
 
 #nearYouMobileOverlay.desktop.inactive {
-    width: 0;
-    margin-left: 0;
+    /* width: 0; */
+    /* margin-left: -500px; */
+    left: 100vw;
 }
 
 #nearYouMobileOverlay.mobile.active {
@@ -372,7 +373,6 @@ body{
     display: block;
     position: fixed;
     top: 15vh;
-    right: 50px;
     z-index: 1000;
     background-color:#61518f;
     color:#ffffff;
@@ -382,28 +382,39 @@ body{
     margin-left: auto;    
     margin-right: auto;
     margin-bottom: 0.5rem;
+    transition: 0.5s;
+    transition-timing-function: 'ease-in';
+}
+
+#nearYouDesktopToggleButton.desktop.inactive {
+    right: 5vw;
+}
+
+#nearYouDesktopToggleButton.desktop.active {
+    right: 45vw;
 }
 
 #nearYouDesktopToggleButton.mobile {
     display: none;
 }
 
-#nearYouMobileLine.mobile {
+#nearYouMobileOverlay.mobile > #nearYouMobileLine {
     display: block;
     margin-top: 0.5rem;
     width: 10%;
 }
 
-#nearYouMobileLine.mobile.active {
+#nearYouMobileOverlay.mobile.active > #nearYouMobileLine {
     display: none;
 }
 
-#nearYouMobileLine.desktop {
+#nearYouMobileOverlay.desktop > #nearYouMobileLine {
     display: none;
 }
 
 #nearYouMobileTopText {
     margin-top: 0.5rem;
+    padding-bottom: 2rem;
 }
 
 #nearYouMobileP {

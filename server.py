@@ -176,7 +176,6 @@ def getLogos():
     #     results = cursor.execute('SELECT * FROM logos ORDER BY logoTitle DESC').fetchall()
     #     return json.dumps(results)
 
-
 @app.route('/editLogo', methods=['PATCH'])
 def editLogo():
     # Check if the request contains an valid admin token

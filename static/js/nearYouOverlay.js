@@ -71,13 +71,10 @@ var Overlay = L.Class.extend({
     switchToMobile: function () {
         this.currentlyMobile = true;
         this.closeDesktopSidebar();
-        console.log("SWITCHTOMOBILE");
         this._overlayElement.classList.remove('desktop');
         this._overlayElement.classList.add('mobile');
         this._desktopOpenButton.classList.remove('desktop');
         this._desktopOpenButton.classList.add('mobile');
-        this._line.classList.remove('desktop');
-        this._line.classList.add('mobile');
 
         this.addTouchEventListeners();
     },
@@ -89,8 +86,8 @@ var Overlay = L.Class.extend({
         this._overlayElement.classList.add('desktop');
         this._desktopOpenButton.classList.remove('mobile');
         this._desktopOpenButton.classList.add('desktop');
-        this._line.classList.remove('mobile');
-        this._line.classList.add('desktop');
+
+        this._overlayElement.style = "";
 
         this.removeTouchEventListeners();
     },
@@ -98,8 +95,10 @@ var Overlay = L.Class.extend({
     openMobileOverlay: function () {
         this._overlayElement.classList.add('active');
         this._overlayElement.classList.remove('inactive');
-        this._line.classList.add('active');
-        this._line.classList.remove('inactive');
+        this._desktopOpenButton.classList.add('active');
+        this._desktopOpenButton.classList.remove('inactive');
+
+        this._desktopOpenButton.textContent = "Hide Stickers";
 
         // This styling needs to be in the javascript because it needs to override the onTouchMove function
         this._overlayElement.style.bottom = "0";
@@ -114,8 +113,11 @@ var Overlay = L.Class.extend({
     closeMobileOverlay: function () {
         this._overlayElement.classList.add('inactive');
         this._overlayElement.classList.remove('active');
-        this._line.classList.add('inactive');
-        this._line.classList.remove('active');
+        this._desktopOpenButton.classList.add('inactive');
+        this._desktopOpenButton.classList.remove('active');
+
+        this._desktopOpenButton.textContent = "Show Stickers";
+
         this.isActive = false;
 
         // This styling needs to be in the javascript because it needs to override the onTouchMove function
@@ -129,8 +131,10 @@ var Overlay = L.Class.extend({
     openDesktopSidebar: function () {
         this._overlayElement.classList.add('active');
         this._overlayElement.classList.remove('inactive');
-        this._line.classList.add('active');
-        this._line.classList.remove('inactive');
+        this._desktopOpenButton.classList.add('active');
+        this._desktopOpenButton.classList.remove('inactive');
+
+        this._desktopOpenButton.textContent = "Hide Stickers";
 
         if (!this.isActive) {
             this.getNearYouData();
@@ -141,8 +145,10 @@ var Overlay = L.Class.extend({
     closeDesktopSidebar: function () {
         this._overlayElement.classList.add('inactive');
         this._overlayElement.classList.remove('active');
-        this._line.classList.add('inactive');
-        this._line.classList.remove('active');
+        this._desktopOpenButton.classList.add('inactive');
+        this._desktopOpenButton.classList.remove('active');
+
+        this._desktopOpenButton.textContent = "Show Stickers";
 
         this.isActive = false;
         let stickerDivs = document.querySelectorAll('.stickerDiv');
@@ -199,7 +205,7 @@ var Overlay = L.Class.extend({
         oldOverlay.parentNode.replaceChild(newOverlay, oldOverlay);
         this._overlayElement = newOverlay;
         this._line = this._overlayElement.querySelector("#nearYouMobileLine");
-        this._desktopOpenButton = this.overlayElement.querySelector("#nearYouDesktopToggleButton");
+        this._desktopOpenButton = document.querySelector("#nearYouDesktopToggleButton");
     },
 
     onTouchStart: function (e) {
@@ -220,10 +226,8 @@ var Overlay = L.Class.extend({
         const snapThreshold = -this._overlayHeight * SNAP_THRESHOLD; // Snap when dragged beyond SNAP_THRESHOLD% of the overlay height
 
         if (parseInt(this._overlayElement.style.bottom) < snapThreshold) {
-            console.log("closing overlay");
             this.closeMobileOverlay();
         } else {
-            console.log("opening overlay");
             this.openMobileOverlay();
         }
     },
