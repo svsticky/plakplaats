@@ -29,12 +29,12 @@ var Overlay = L.Class.extend({
     // Create overlay structure
     createOverlayElement: function () {
         const overlayElement = document.createElement('div');
-        overlayElement.id = 'nearYouMobileOverlay';
+        overlayElement.id = 'nearYouOverlay';
     
         this._line = this.createElement('img', 'nearYouMobileLine', { src: './static/img/line.svg' });
         overlayElement.appendChild(this._line);
     
-        const titleText = this.createElement('h1', 'nearYouMobileTopText', { textContent: "Stickers near you" });
+        const titleText = this.createElement('h1', 'nearYouTopText', { textContent: "Stickers near you" });
         overlayElement.appendChild(titleText);
     
         for (let i = 0; i < 10; i++) {

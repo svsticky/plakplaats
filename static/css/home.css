@@ -310,8 +310,8 @@ body{
     /* background-color:#be0202; */
 }
 
-/* nearYouMobileOverlay */
-#nearYouMobileOverlay.mobile {
+/* nearYouOverlay */
+#nearYouOverlay.mobile {
     position: fixed;
     z-index: 999;
     bottom: -90%;
@@ -330,7 +330,7 @@ body{
     box-shadow: 0px -3px 5px rgba(0, 0, 0, 0.5);
 }
 
-#nearYouMobileOverlay.desktop {
+#nearYouOverlay.desktop {
     height: 90vh;
     width: 40vw;
     position: fixed;
@@ -347,22 +347,22 @@ body{
     transition-timing-function: 'ease-in';
 }
 
-#nearYouMobileOverlay.desktop.active {
+#nearYouOverlay.desktop.active {
     left: 60vw;
     margin-left: 0;
 }
 
-#nearYouMobileOverlay.desktop.inactive {
+#nearYouOverlay.desktop.inactive {
     left: 100vw;
 }
 
-#nearYouMobileOverlay.mobile.active {
+#nearYouOverlay.mobile.active {
     bottom: 0;
     border-radius: 0px 0px 0px 0px;
     overflow-y: auto;
 }
 
-#nearYouMobileOverlay.mobile.inactive {
+#nearYouOverlay.mobile.inactive {
     bottom: -90%;
     border-radius: 15px 15px 0px 0px;
     overflow-y: hidden;
@@ -398,30 +398,23 @@ body{
     display: none;
 }
 
-#nearYouMobileOverlay.mobile > #nearYouMobileLine {
+#nearYouOverlay.mobile > #nearYouMobileLine {
     display: block;
     margin-top: 0.5rem;
     width: 10%;
 }
 
-#nearYouMobileOverlay.mobile.active > #nearYouMobileLine {
+#nearYouOverlay.mobile.active > #nearYouMobileLine {
     display: none;
 }
 
-#nearYouMobileOverlay.desktop > #nearYouMobileLine {
+#nearYouOverlay.desktop > #nearYouMobileLine {
     display: none;
 }
 
-#nearYouMobileTopText {
+#nearYouTopText {
     margin-top: 0.5rem;
     padding-bottom: 2rem;
-}
-
-#nearYouMobileP {
-    padding: 0 2rem;
-    opacity: 0;
-    transition: opacity 0.8s;
-    transition-timing-function: 'ease-in';
 }
 
 /* sticker divs styling */
