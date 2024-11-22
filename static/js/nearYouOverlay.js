@@ -4,7 +4,7 @@ const OVERLAY_HIDE_LIMIT = 0.8; // Limit to 80% below screen
 const STICKER_REVEAL_DELAY = 400; // Delay between sticker reveal animations
 
 var Overlay = L.Class.extend({
-    // Overylay constructor
+    // Overlay constructor
     initialize: function (selector, options) {
         this.isActive = false;
         this.currentlyMobile = isMobile();
@@ -92,70 +92,64 @@ var Overlay = L.Class.extend({
         this.removeTouchEventListeners();
     },
 
-    openMobileOverlay: function () {
-        this._overlayElement.classList.add('active');
-        this._overlayElement.classList.remove('inactive');
-        this._desktopOpenButton.classList.add('active');
-        this._desktopOpenButton.classList.remove('inactive');
-
-        this._desktopOpenButton.textContent = "Hide Stickers";
-
-        // This styling needs to be in the javascript because it needs to override the onTouchMove function
-        this._overlayElement.style.bottom = "0";
-
-        if (!this.isActive) {
-            this.getNearYouData();
-        }
+    toggleOverlay: function ({ isOpen, isMobile }) {
+        const activeClass = 'active';
+        const inactiveClass = 'inactive';
         
-        this.isActive = true;
-    },
-
-    closeMobileOverlay: function () {
-        this._overlayElement.classList.add('inactive');
-        this._overlayElement.classList.remove('active');
-        this._desktopOpenButton.classList.add('inactive');
-        this._desktopOpenButton.classList.remove('active');
-
-        this._desktopOpenButton.textContent = "Show Stickers";
-
-        this.isActive = false;
-
-        // This styling needs to be in the javascript because it needs to override the onTouchMove function
-        this._overlayElement.style.bottom = "-90%";
-
-        this._overlayElement.scrollTo(0, 0);
-        let stickerDivs = document.querySelectorAll('.stickerDiv');
-        stickerDivs.forEach(div => div.classList.remove('revealed'));
-    },
-
-    openDesktopSidebar: function () {
-        this._overlayElement.classList.add('active');
-        this._overlayElement.classList.remove('inactive');
-        this._desktopOpenButton.classList.add('active');
-        this._desktopOpenButton.classList.remove('inactive');
-
-        this._desktopOpenButton.textContent = "Hide Stickers";
-
-        if (!this.isActive) {
+        // Update overlay classes
+        this._overlayElement.classList.toggle(activeClass, isOpen);
+        this._overlayElement.classList.toggle(inactiveClass, !isOpen);
+        
+        // Update button classes
+        this._desktopOpenButton.classList.toggle(activeClass, isOpen);
+        this._desktopOpenButton.classList.toggle(inactiveClass, !isOpen);
+    
+        // Update button text
+        this._desktopOpenButton.textContent = isOpen ? "Hide Stickers" : "Show Stickers";
+    
+        // For mobile, set the bottom style for drag behavior
+        if (isMobile) {
+            this._overlayElement.style.bottom = isOpen ? "0" : "-90%";
+        }
+    
+        // Reset scroll and remove revealed stickers when closing
+        if (!isOpen) {
+            this._overlayElement.scrollTo(0, 0);
+            const stickerDivs = document.querySelectorAll('.stickerDiv');
+            stickerDivs.forEach(div => div.classList.remove('revealed'));
+        }
+    
+        // Fetch data only when opening and inactive
+        if (isOpen && !this.isActive) {
             this.getNearYouData();
         }
-        this.isActive = true;
+    
+        // Update activity state
+        this.isActive = isOpen;
     },
-
+    
+    openMobileOverlay: function () {
+        this.toggleOverlay({ isOpen: true, isMobile: true });
+        console.log("openMobileOverlay");
+    },
+    
+    closeMobileOverlay: function () {
+        this.toggleOverlay({ isOpen: false, isMobile: true });
+        console.log("closeMobileOverlay");
+    },
+    
+    openDesktopSidebar: function () {
+        this.toggleOverlay({ isOpen: true, isMobile: false });
+        console.log("openDesktopSidebar");
+    },
+    
     closeDesktopSidebar: function () {
-        this._overlayElement.classList.add('inactive');
-        this._overlayElement.classList.remove('active');
-        this._desktopOpenButton.classList.add('inactive');
-        this._desktopOpenButton.classList.remove('active');
-
-        this._desktopOpenButton.textContent = "Show Stickers";
-
-        this.isActive = false;
-        let stickerDivs = document.querySelectorAll('.stickerDiv');
-        stickerDivs.forEach(div => div.classList.remove('revealed'));
+        this.toggleOverlay({ isOpen: false, isMobile: false });
+        console.log("closeDesktopSidebar");
     },
+    
 
-    // Helper to create elements with attributes
+    // Helper function to create elements with attributes
     createElement: function (tagName, id, attributes = {}) {
         const element = document.createElement(tagName);
         element.id = id;
@@ -197,9 +191,6 @@ var Overlay = L.Class.extend({
 
     removeTouchEventListeners: function () {
         const self = this;
-        // this._overlayElement.removeEventListener('touchstart', this.onTouchStart.bind(self));
-        // this._overlayElement.removeEventListener('touchmove', this.onTouchMove.bind(self));
-        // this._overlayElement.removeEventListener('touchend', this.onTouchEnd.bind(self));
         var oldOverlay = this._overlayElement;
         var newOverlay = oldOverlay.cloneNode(true);
         oldOverlay.parentNode.replaceChild(newOverlay, oldOverlay);
