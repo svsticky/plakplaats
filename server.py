@@ -176,7 +176,6 @@ def getLogos():
     #     results = cursor.execute('SELECT * FROM logos ORDER BY logoTitle DESC').fetchall()
     #     return json.dumps(results)
 
-
 @app.route('/editLogo', methods=['PATCH'])
 def editLogo():
     # Check if the request contains an valid admin token
@@ -189,7 +188,6 @@ def editLogo():
         cursor.execute('UPDATE logos SET logoTitle=%s, logoColor=%s WHERE logoId=%s', (request.args.get('name'), request.args.get('color'), request.args.get('id')))
         con.commit()
         return json.dumps({'status': '200', 'error': 'Logo updated!'}), 200
-
 
 @app.route('/deleteLogo', methods=['DELETE'])
 def deleteLogo():
@@ -360,8 +358,6 @@ def updateStickerSpots():
             return json.dumps({'status': '200', 'error': 'Updated spots count'}), 200
     else:
         return json.dumps({'status': '400', 'error': 'Updating sticker spots failed'}), 400
-
-
 
 def sendEmailUpdate():
     return 0  # TODO not implemented

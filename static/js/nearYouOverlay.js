@@ -4,39 +4,152 @@ const OVERLAY_HIDE_LIMIT = 0.8; // Limit to 80% below screen
 const STICKER_REVEAL_DELAY = 400; // Delay between sticker reveal animations
 
 var Overlay = L.Class.extend({
-    // Overylay constructor
+    // Overlay constructor
     initialize: function (selector, options) {
         this.isActive = false;
+        this.currentlyMobile = isMobile();
         this._selector = selector;
         this._dragStartY = 0;
         this._overlayHeight = 0;
         
         this._overlayElement = this.createOverlayElement();
+        
         document.body.appendChild(this._overlayElement);
 
-        this.addTouchEventListeners();
+        this._desktopOpenButton = this.addDesktopOpenButton();
+
+        if (this.currentlyMobile) {
+            this.switchToMobile();
+        }
+        else {
+            this.switchToDesktop();
+        }
     },
 
     // Create overlay structure
     createOverlayElement: function () {
         const overlayElement = document.createElement('div');
-        overlayElement.id = 'nearYouMobileOverlay';
+        overlayElement.id = 'nearYouOverlay';
     
-        // Assign this._line here to make sure it's accessible
         this._line = this.createElement('img', 'nearYouMobileLine', { src: './static/img/line.svg' });
         overlayElement.appendChild(this._line);
     
-        const titleText = this.createElement('h1', 'nearYouMobileTopText', { textContent: "Stickers near you" });
+        const titleText = this.createElement('h1', 'nearYouTopText', { textContent: "Stickers near you" });
         overlayElement.appendChild(titleText);
     
         for (let i = 0; i < 10; i++) {
             this.createStickerDiv(i, overlayElement);
         }
     
+        overlayElement.classList.add('inactive');
+        overlayElement.classList.remove('active');
+        
         return overlayElement;
     },
 
-    // Helper to create elements with attributes
+    addDesktopOpenButton: function () {
+        var self = this;
+
+        // Create a button to open/close the sidebar
+        let _desktopOpenButton = document.createElement('button');
+        _desktopOpenButton.classList.add('desktop');
+        _desktopOpenButton.id = 'nearYouDesktopToggleButton';
+        _desktopOpenButton.innerHTML = 'Show Stickers';
+        document.body.appendChild(_desktopOpenButton);
+
+        _desktopOpenButton.addEventListener('click', function() {
+            if (self.isActive === false) {
+                self.openDesktopSidebar();
+            } else {
+                self.closeDesktopSidebar();
+            }
+        });
+
+        return _desktopOpenButton;
+    },
+
+    switchToMobile: function () {
+        this.currentlyMobile = true;
+        this.closeDesktopSidebar();
+        this._overlayElement.classList.remove('desktop');
+        this._overlayElement.classList.add('mobile');
+        this._desktopOpenButton.classList.remove('desktop');
+        this._desktopOpenButton.classList.add('mobile');
+
+        this.addTouchEventListeners();
+    },
+
+    switchToDesktop: function () {
+        this.currentlyMobile = false;
+        this.closeMobileOverlay();
+        this._overlayElement.classList.remove('mobile');
+        this._overlayElement.classList.add('desktop');
+        this._desktopOpenButton.classList.remove('mobile');
+        this._desktopOpenButton.classList.add('desktop');
+
+        this._overlayElement.style = "";
+
+        this.removeTouchEventListeners();
+    },
+
+    toggleOverlay: function ({ isOpen, isMobile }) {
+        const activeClass = 'active';
+        const inactiveClass = 'inactive';
+        
+        // Update overlay classes
+        this._overlayElement.classList.toggle(activeClass, isOpen);
+        this._overlayElement.classList.toggle(inactiveClass, !isOpen);
+        
+        // Update button classes
+        this._desktopOpenButton.classList.toggle(activeClass, isOpen);
+        this._desktopOpenButton.classList.toggle(inactiveClass, !isOpen);
+    
+        // Update button text
+        this._desktopOpenButton.textContent = isOpen ? "Hide Stickers" : "Show Stickers";
+    
+        // For mobile, set the bottom style for drag behavior
+        if (isMobile) {
+            this._overlayElement.style.bottom = isOpen ? "0" : "-90%";
+        }
+    
+        // Reset scroll and remove revealed stickers when closing
+        if (!isOpen) {
+            this._overlayElement.scrollTo(0, 0);
+            const stickerDivs = document.querySelectorAll('.stickerDiv');
+            stickerDivs.forEach(div => div.classList.remove('revealed'));
+        }
+    
+        // Fetch data only when opening and inactive
+        if (isOpen && !this.isActive) {
+            this.getNearYouData();
+        }
+    
+        // Update activity state
+        this.isActive = isOpen;
+    },
+    
+    openMobileOverlay: function () {
+        this.toggleOverlay({ isOpen: true, isMobile: true });
+        console.log("openMobileOverlay");
+    },
+    
+    closeMobileOverlay: function () {
+        this.toggleOverlay({ isOpen: false, isMobile: true });
+        console.log("closeMobileOverlay");
+    },
+    
+    openDesktopSidebar: function () {
+        this.toggleOverlay({ isOpen: true, isMobile: false });
+        console.log("openDesktopSidebar");
+    },
+    
+    closeDesktopSidebar: function () {
+        this.toggleOverlay({ isOpen: false, isMobile: false });
+        console.log("closeDesktopSidebar");
+    },
+    
+
+    // Helper function to create elements with attributes
     createElement: function (tagName, id, attributes = {}) {
         const element = document.createElement(tagName);
         element.id = id;
@@ -71,11 +184,19 @@ var Overlay = L.Class.extend({
 
     addTouchEventListeners: function () {
         const self = this;
-
-        // Use named functions for event listeners
         this._overlayElement.addEventListener('touchstart', this.onTouchStart.bind(self));
         this._overlayElement.addEventListener('touchmove', this.onTouchMove.bind(self));
         this._overlayElement.addEventListener('touchend', this.onTouchEnd.bind(self));
+    },
+
+    removeTouchEventListeners: function () {
+        const self = this;
+        var oldOverlay = this._overlayElement;
+        var newOverlay = oldOverlay.cloneNode(true);
+        oldOverlay.parentNode.replaceChild(newOverlay, oldOverlay);
+        this._overlayElement = newOverlay;
+        this._line = this._overlayElement.querySelector("#nearYouMobileLine");
+        this._desktopOpenButton = document.querySelector("#nearYouDesktopToggleButton");
     },
 
     onTouchStart: function (e) {
@@ -96,38 +217,15 @@ var Overlay = L.Class.extend({
         const snapThreshold = -this._overlayHeight * SNAP_THRESHOLD; // Snap when dragged beyond SNAP_THRESHOLD% of the overlay height
 
         if (parseInt(this._overlayElement.style.bottom) < snapThreshold) {
-            this.closeOverlay();
+            this.closeMobileOverlay();
         } else {
-            this.openOverlay();
+            this.openMobileOverlay();
         }
-    },
-
-
-    openOverlay: function () {
-        this._overlayElement.style.bottom = '0';
-        this._overlayElement.style.borderRadius = '0px 0px 0px 0px';
-        this._overlayElement.style.overflowY = 'auto';
-        this._line.style.display = 'none';
-        if (!this.isActive) {
-            this.getNearYouData();
-        }
-        this.isActive = true;
-    },
-
-    closeOverlay: function () {
-        this.isActive = false;
-        this._overlayElement.style.bottom = '-90%';
-        this._overlayElement.style.borderRadius = '15px 15px 0px 0px';
-        this._overlayElement.style.overflowY = 'hidden';
-        this._overlayElement.scrollTo(0, 0);
-        this._line.style.display = 'block';
-        let stickerDivs = document.querySelectorAll('.stickerDiv');
-        stickerDivs.forEach(div => div.classList.remove('revealed'));
     },
 
     handleGeolocationError: function (error) {
         console.error(`Geolocation error: ${error.message}`);
-        alert("Geolocation is not supported by this browser.");
+        alert(`Geolocation error: ${error.message}.`);
     },
 
     handleFetchError: function (error, url) {
@@ -222,7 +320,7 @@ var Overlay = L.Class.extend({
     },
 
     handleOpenOnMapClick: function (stickerID, lat, long) {
-        this.closeOverlay();
+        this.closeMobileOverlay();
         mymap.flyTo([lat, long], 18);
 
         // Stickers are loaded in only when they're in you view
@@ -283,3 +381,13 @@ var Overlay = L.Class.extend({
 });
 
 var overlay = new Overlay('#overlay');
+
+window.addEventListener('resize', function() {
+    if (isMobile() && !overlay.currentlyMobile) {
+        overlay.switchToMobile();
+    }
+    
+    else if (!isMobile() && overlay.currentlyMobile) {
+        overlay.switchToDesktop();
+    }
+});

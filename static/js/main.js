@@ -64,7 +64,6 @@
 // }
 // logoSourceRequest.send();
 
-
 //Update email
 function updateEmail(){
     if(emailInput.value != ''){
