@@ -479,13 +479,15 @@ button, .addSubmitButton {
     background-color: var(--element-background-color);
 }
 
-.stickerDiv .stickerDivH1, .stickerDiv .stickerDivUser, .stickerDiv .stickerDivImg, .stickerDiv .stickerDivDate, .stickerDiv .stickerDivNearby, .stickerDiv .stickerDivButton {
-    opacity: 0;
+.stickerDiv, .stickerDiv > * {
     transition: opacity 0.8s;
     transition-timing-function: 'ease-in';
 }
 
-.stickerDiv.revealed .stickerDivH1, .stickerDiv.revealed .stickerDivUser, .stickerDiv.revealed .stickerDivImg, .stickerDiv.revealed .stickerDivDate, .stickerDiv.revealed .stickerDivNearby, .stickerDiv.revealed .stickerDivButton {
-    opacity: 1;
+.stickerDiv:not(.revealed), .stickerDiv:not(.revealed) > *:not(.revealed) {
+    opacity: 0;
 }
 
+.stickerDiv.revealed, .stickerDiv > *.revealed {
+    opacity: 1;
+}
