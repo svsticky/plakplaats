@@ -77,6 +77,7 @@ function updateMap() {
                         <img width='200px' src='${results[x][4]}'>
                         <h2>${results[x][7]} ${spotText}</h2>
                         <h2>Posted ${dayjs().to(dayjs(results[x][6]))}</h2>
+                        <h2>Board year: ${results[x][8]}</h2>
                         <button class='leafletMarkerButton' id='spotButton-${pointer.id}' data-stickerID='${results[x][0]}'>I've spotted this sticker</button>`)
                     
                         pointer.pointer.on('popupopen', function (e) {                         
