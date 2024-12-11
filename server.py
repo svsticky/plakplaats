@@ -37,7 +37,6 @@ con = psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES
 
 cursor = con.cursor()
 
-cursor.execute("DROP TABLE stickers")
 cursor.execute("CREATE TABLE IF NOT EXISTS stickers (stickerID SERIAL PRIMARY KEY, stickerLat Decimal(8,6), stickerLon Decimal(9,6), logoID INT, pictureUrl VARCHAR(255), adderEmail VARCHAR(255), postTime TIMESTAMP, spots INT, boardYear INT, verified INT)")
 
 con.commit()

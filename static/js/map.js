@@ -48,7 +48,7 @@ function updateMap() {
                     if(isNotOnMap){
                         //Not on map, add the pointer
                         var stickyIcon = L.icon({
-                            iconUrl: '/static/img/marker.png',
+                            iconUrl: `/static/img/markers/marker-${results[x][8]}.svg`,
                             shadowUrl: '/static/img/markerShadow.png',
                             iconSize: [38, 52],
                             shadowSize: [52, 52],
@@ -77,7 +77,9 @@ function updateMap() {
                         <img width='200px' src='${results[x][4]}'>
                         <h2>${results[x][7]} ${spotText}</h2>
                         <h2>Posted ${dayjs().to(dayjs(results[x][6]))}</h2>
-                        <h2>Board year: ${results[x][8]}</h2>
+                        <div class='markerBoardYearDiv'>
+                        <h2 class='markerBoardYearText'>Board year:</h2><h2 class='marker-B${results[x][8]} markerBoardYear'>${results[x][8]}</h2>
+                        </div>
                         <button class='leafletMarkerButton' id='spotButton-${pointer.id}' data-stickerID='${results[x][0]}'>I've spotted this sticker</button>`)
                     
                         pointer.pointer.on('popupopen', function (e) {                         
