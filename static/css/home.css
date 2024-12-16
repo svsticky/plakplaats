@@ -1,7 +1,27 @@
 /* SETTINGS */
 :root {
-    /* Color Variables */
+    /* Board Color Variables */
 	--board-color: #197052; /* primary color of the current board of Sticky */
+    --board-18-color: rgb(97, 81, 143); /* #61518f */
+    --board-17-color: rgb(41, 115, 143); /* #29738f */
+    --board-16-color: rgb(128, 8, 22); /* #800816 */
+    --board-15-color: rgb(254, 114, 21); /* #fe7215 */
+    --board-14-color: rgb(197, 63, 120); /* #c53f78 */
+    --board-13-color: rgb(32, 115, 13); /* #20730d */
+    --board-12-color: rgb(0, 0, 120); /* #000078 */
+    --board-11-color: rgb(206, 32, 41); /* #ce2029 */
+    --board-10-color: rgb(255, 127, 0); /* #ff7f00 */
+    --board-9-color: rgb(70, 196, 255); /* #46c4ff */
+    --board-8-color: rgb(72, 42, 129); /* #482a81 */
+    --board-7-color: rgb(108, 17, 34); /* #6c1122 */
+    --board-6-color: rgb(65, 105, 225); /* #4169e1 */
+    --board-5-color: rgb(170, 170, 170); /* #aaaaaa */
+    --board-4-color: rgb(183, 224, 147); /* #b7e093 */
+    --board-3-color: rgb(170, 170, 170); /* #aaaaaa */
+    --board-2-color: rgb(170, 170, 170); /* #aaaaaa */
+    --board-1-color: rgb(255, 127, 0); /* #ff7f00 */
+
+    /* Miscellaneous Color Variables */
     --secondary-color: #ffffff; /* light color that works in combination with primary board color */
     --background-color: #ffffff; /* general light background color  */
     --element-background-color: #e0e0e0; /* Light grey color for sticker div background */
@@ -90,7 +110,7 @@ button, .addSubmitButton {
     background-color: var(--background-color);
     position: fixed;
     z-index: 2;
-    top: -500px;
+    top: -100%;
     width: 100%;
     max-width: 500px;
     display: flex;
@@ -279,6 +299,99 @@ button, .addSubmitButton {
     transition: background-color 0.2s;
 }
 
+.boarYearInput {
+    display: flex;
+    margin: 15 20px;
+}
+
+#boardYearInputSelect {
+    margin-left: 1rem;
+}
+
+#boardYearInputSelect option {
+    color: var(--light-text-color);
+}
+
+#boardYearInputSelect option:hover {
+    background-color: #00ff33;
+}
+
+#boardYearInputSelect option:nth-child(1), .marker-B1 {
+    background: var(--board-1-color);
+}
+
+#boardYearInputSelect option:nth-child(2), .marker-B2 {
+    background: var(--board-2-color);
+}
+
+#boardYearInputSelect option:nth-child(3), .marker-B3 {
+    background: var(--board-3-color);
+}
+
+#boardYearInputSelect option:nth-child(4), .marker-B4 {
+    background: var(--board-4-color);
+}
+
+#boardYearInputSelect option:nth-child(5), .marker-B5 {
+    background: var(--board-5-color);
+}
+
+#boardYearInputSelect option:nth-child(6), .marker-B6 {
+    background: var(--board-6-color);
+}
+
+#boardYearInputSelect option:nth-child(7), .marker-B7 {
+    background: var(--board-7-color);
+}
+
+#boardYearInputSelect option:nth-child(8), .marker-B8 {
+    background: var(--board-8-color);
+}
+
+#boardYearInputSelect option:nth-child(9), .marker-B9 {
+    background: var(--board-9-color);
+}
+
+#boardYearInputSelect option:nth-child(10), .marker-B10 {
+    background: var(--board-10-color);
+}
+
+#boardYearInputSelect option:nth-child(11), .marker-B11 {
+    background: var(--board-11-color);
+}
+
+#boardYearInputSelect option:nth-child(12), .marker-B12 {
+    background: var(--board-12-color);
+}
+
+#boardYearInputSelect option:nth-child(13), .marker-B13 {
+    background: var(--board-13-color);
+}
+
+#boardYearInputSelect option:nth-child(14), .marker-B14 {
+    background: var(--board-14-color);
+}
+
+#boardYearInputSelect option:nth-child(15), .marker-B15 {
+    background: var(--board-15-color);
+}
+
+#boardYearInputSelect option:nth-child(16), .marker-B16 {
+    background: var(--board-16-color);
+}
+
+#boardYearInputSelect option:nth-child(17), .marker-B17 {
+    background: var(--board-17-color);
+}
+
+#boardYearInputSelect option:nth-child(18), .marker-B18 {
+    background: var(--board-18-color);
+}
+
+#boardYearInputSelect option:nth-child(19), .marker-B19 {
+    background: var(--board-color);
+}
+
 /* .logoElementSelected{
     background-color: rgba(155, 155, 155, 0.329);
 } */
@@ -286,6 +399,7 @@ button, .addSubmitButton {
 .addSubmitButtonPressed{
     animation: submitPressed 2s infinite;
 }
+
 
 /* Sticker adding: adding succes */
 .successView{
@@ -359,6 +473,24 @@ button, .addSubmitButton {
     margin-left: auto;    
     margin-right: auto;
     width: 80%;
+}
+
+.markerBoardYearDiv {
+    display: flex;
+    width: 100%;
+}
+
+.markerBoardYearText {
+    /* width: 70%;\ */
+}
+
+.markerBoardYear {
+    color: var(--light-text-color);
+    border-radius: 2rem;
+    text-align: center;
+    width: 2rem;
+    margin: 0 0.5rem;
+    justify-self: center;
 }
 
 /* Maybe add styling for when you hover or click a button? */
