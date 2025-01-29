@@ -2,7 +2,6 @@
 // Create a map
 var mymap = L.map('map').setView([52.087299, 5.165430], 13);
 
-L.addla
 
 // Give the map a source
 L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
