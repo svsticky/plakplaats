@@ -9,7 +9,7 @@ addIcon.addEventListener('click', function(){
         addIcon.classList.add('addIconClose');
     } else {
         //Close add view
-        closeAddView();
+        closeAddView(true);
         closeSuccessView();
         addIsOpen = false;
         addIcon.classList.remove('addIconClose');
@@ -27,8 +27,10 @@ function openAddView(reset){
     addView.classList.add('openView');
 }
 
-function closeAddView(){
+function closeAddView(reset){
     addView.classList.remove('openView');
+    if (reset)
+        resetView();
 }
 
 function openSuccessView(){
@@ -53,6 +55,6 @@ function resetView(){
     setLocationContainer("", false);
     imageFile = null;
     submitButton.classList.remove('addSubmitButtonPressed');
-    pickManualLocation(false, true, null);
+    setPicker(false);
     setManualLocationInput(false);
 }

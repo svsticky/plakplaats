@@ -124,7 +124,7 @@ function updateMap() {
 
 // Link clicking the map to the adding a marker
 function onMapClick(e) {
-    pickManualLocation(false, false, e);
+    pickManualLocation(e);
 }
 
 mymap.on('click', onMapClick);

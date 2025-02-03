@@ -88,21 +88,17 @@ function setManualLocationInput(state){
     }
 }
 
-//manages manually picking a location by clikcing the map
-function pickManualLocation(buttonClicked, reset, location) {
-    if (reset){
-        pickingLocation = false;
-        return;
-    }
-
-    if (buttonClicked) {
-        pickingLocation = true;
-        closeAddView();
-        return;
-    }
-
+// Manages manually picking a location by clikcing the map
+function pickManualLocation(location) {
     if (pickingLocation) {
         handleLocation(location.latlng.lat, location.latlng.lng);
         openAddView(false);
     }
+}
+
+// Set the picking state
+function setPicker(state) {
+    pickingLocation = state;
+    if (state) 
+        closeAddView(false);
 }
