@@ -35,7 +35,7 @@ function handleLocation(lat, lon){
                     text += ' ' + addressJson['address']['house_number'];
                 }
             }
-            text += "</i><br>Click to enter manually."
+            text += "</i><br>Click to pick manually."
             setLocationContainer(text, true);
         }
     }
