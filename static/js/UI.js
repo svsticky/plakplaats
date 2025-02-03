@@ -3,7 +3,7 @@ var addIsOpen = false;
 addIcon.addEventListener('click', function(){
     if(!addIsOpen){
         //Open add view
-        openAddView();
+        openAddView(true);
         addIsOpen = true;
         //Change icon
         addIcon.classList.add('addIconClose');
@@ -17,12 +17,14 @@ addIcon.addEventListener('click', function(){
     }
 });
 //Open view
-function openAddView(){
-    resetView();
+function openAddView(reset){
+    if (reset) {
+        resetView();
+        setTimeout(function(){
+            getLocation();
+        }, 500);
+    }
     addView.classList.add('openView');
-    setTimeout(function(){
-        getLocation();
-    }, 500);
 }
 
 function closeAddView(){
@@ -51,5 +53,6 @@ function resetView(){
     setLocationContainer("", false);
     imageFile = null;
     submitButton.classList.remove('addSubmitButtonPressed');
-    setManualLocationInput(false);  
+    pickManualLocation(false, true, null);
+    setManualLocationInput(false);
 }

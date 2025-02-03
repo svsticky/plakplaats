@@ -2,6 +2,7 @@
 // Create a map
 var mymap = L.map('map').setView([52.087299, 5.165430], 13);
 
+
 // Give the map a source
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -16,6 +17,7 @@ L.control.locate().addTo(mymap);
 
 // Update the map so it always renders the markers on page load 
 updateMap();
+
 
 function updateMap() {
     //Remove pointers that fell of the map
@@ -119,3 +121,10 @@ function updateMap() {
     }
     request.send();
 }
+
+// Link clicking the map to the adding a marker
+function onMapClick(e) {
+    pickManualLocation(false, false, e);
+}
+
+mymap.on('click', onMapClick);

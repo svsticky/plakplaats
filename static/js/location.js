@@ -1,20 +1,28 @@
 // *****LOCATION
+
+let pickingLocation = false;
+
 function getLocation(){
     //Get the permissions
     setLocationContainer("Please grant location permission...");
     
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(handleLocation, showError);
+        navigator.geolocation.getCurrentPosition(handleGeoLocation, showError);
     } else {
         alert("Geolocation is not supported by this browser.");
     }
 }
 
-function handleLocation(position){
+function handleGeoLocation(location) {
+    handleLocation(location.coords.latitude, location.coords.longitude);
+}
+
+function handleLocation(lat, lon){
     //Set the values in the inputs
     setLocationContainer("Loading location...");
-    latitudeInput.value = position.coords.latitude;
-    longitudeInput.value = position.coords.longitude;
+    latitudeInput.value = lat;
+    longitudeInput.value = lon;
+    setManualLocationInput(true);
     //Retrieve estimated address
     var addressRequest = new XMLHttpRequest();
     addressRequest.onreadystatechange = function(){
@@ -31,8 +39,8 @@ function handleLocation(position){
             setLocationContainer(text, true);
         }
     }
-    console.log('https://nominatim.openstreetmap.org/reverse?lat=' + position.coords.latitude + '&lon=' + position.coords.longitude + '&format=json');
-    addressRequest.open("GET", 'https://nominatim.openstreetmap.org/reverse?lat=' + position.coords.latitude + '&lon=' + position.coords.longitude + '&format=json', true);
+    console.log('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json');
+    addressRequest.open("GET", 'https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json', true);
     addressRequest.send();
 }
 
@@ -68,12 +76,33 @@ function setManualLocationInput(state){
     if(state == true){
         latitudeInput.style.display = 'block';
         longitudeInput.style.display = 'block';
+        
         document.getElementsByClassName('locationInputDes')[0].style.display = 'block';
         document.getElementsByClassName('locationInputDes')[1].style.display = 'block';
     } else {
         latitudeInput.style.display = 'none';
         longitudeInput.style.display = 'none';
+
         document.getElementsByClassName('locationInputDes')[0].style.display = 'none';
         document.getElementsByClassName('locationInputDes')[1].style.display = 'none';
+    }
+}
+
+//manages manually picking a location by clikcing the map
+function pickManualLocation(buttonClicked, reset, location) {
+    if (reset){
+        pickingLocation = false;
+        return;
+    }
+
+    if (buttonClicked) {
+        pickingLocation = true;
+        closeAddView();
+        return;
+    }
+
+    if (pickingLocation) {
+        handleLocation(location.latlng.lat, location.latlng.lng);
+        openAddView(false);
     }
 }
