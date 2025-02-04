@@ -20,9 +20,9 @@ function handleGeoLocation(location) {
 function handleLocation(lat, lon){
     //Set the values in the inputs
     setLocationContainer("Loading location...");
+    pickingLocation = false;
     latitudeInput.value = lat;
     longitudeInput.value = lon;
-    setManualLocationInput(true);
     //Retrieve estimated address
     var addressRequest = new XMLHttpRequest();
     addressRequest.onreadystatechange = function(){
@@ -92,6 +92,7 @@ function setManualLocationInput(state){
 function pickManualLocation(location) {
     if (pickingLocation) {
         handleLocation(location.latlng.lat, location.latlng.lng);
+        setManualLocationInput(true);
         openAddView(false);
     }
 }
