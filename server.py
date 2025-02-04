@@ -33,11 +33,18 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 UPLOAD_DIRECTORY = "static/uploads"
 
 
+userName = ""
+
 con = psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT)
 
 cursor = con.cursor()
 
+# cursor.execute("DROP TABLE tokens")
+# cursor.execute("DROP TABLE adminTokens")
+
 cursor.execute("CREATE TABLE IF NOT EXISTS stickers (stickerID SERIAL PRIMARY KEY, stickerLat Decimal(8,6), stickerLon Decimal(9,6), logoID INT, pictureUrl VARCHAR(255), adderEmail VARCHAR(255), postTime TIMESTAMP, spots INT, boardYear INT, verified INT)")
+cursor.execute("CREATE TABLE IF NOT EXISTS tokens (token TEXT, expirationTime INT)")
+cursor.execute("CREATE TABLE IF NOT EXISTS adminTokens (token TEXT, expirationTime INT)")
 
 con.commit()
 
@@ -45,20 +52,38 @@ cursor.close()
 con.close()
 
 
+# @app.route('/')
+# def stickerMap():
+#     if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
+#         # Check if cookie is avalable
+#         if request.cookies.get('token') is not None:
+#             # Check token
+#             if checkToken(request.cookies.get('token')):
+#                 return render_template('home.html', color=BOARD_COLOR)
+#             else:
+#                 return redirect('/auth', code=302)
+#         else:
+#             return "redirecting... <script>if(window.localStorage.getItem('token') != null){ document.cookie = 'token=' + window.localStorage.getItem('token'); window.location.reload(); } else { window.location.href = '/auth' }</script>"
+#     else:
+#         return render_template('home.html', color=BOARD_COLOR)
+
+
 @app.route('/')
 def stickerMap():
     if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        # Check if cookie is avalable
-        if request.cookies.get('token') is not None:
-            # Check token
-            if checkToken(request.cookies.get('token')):
-                return render_template('home.html', color=BOARD_COLOR)
-            else:
-                return redirect('/auth', code=302)
+        # Check if a valid token cookie is available
+        token = request.cookies.get('token')
+        if token and checkToken(token):
+            return render_template('home.html', color=BOARD_COLOR)
         else:
-            return "redirecting... <script>if(window.localStorage.getItem('token') != null){ document.cookie = 'token=' + window.localStorage.getItem('token'); window.location.reload(); } else { window.location.href = '/auth' }</script>"
+            # Clear cookies and instruct the client to clear localStorage
+            resp = flask.make_response("redirecting... <script>localStorage.removeItem('token'); window.location.href = '/auth';</script>")
+            resp.set_cookie('token', '', expires=0)
+            resp.set_cookie('adminToken', '', expires=0)
+            return resp
     else:
         return render_template('home.html', color=BOARD_COLOR)
+
 
 
 @app.route('/admin', methods=['GET'])
@@ -112,6 +137,10 @@ def auth():
                 page = "redirecting <script>window.localStorage.setItem('token', '" + token + "'); window.location.href = '../admin'</script>"
             resp = flask.make_response(page)
             # Check if the user is a admin
+
+            print("tokenResponse:")
+            print(tokenResponse)
+
             if tokenResponse['credentials_type'] == "Admin":
                 adminToken = secrets.token_urlsafe(30)
                 expirationTime = round(time.time()) + int(os.getenv("ADMIN_EXPIRES_IN"))
@@ -122,8 +151,78 @@ def auth():
             resp.set_cookie('token', token)
             # Remove the admin redirect token if needed
             resp.set_cookie('adminRefresh', '', expires=0)
+
+            # userInfo = getUserName(tokenResponse)
+            # print("userInfo:")
+            # print(userInfo)
+            global userName
+            userName = tokenResponse['id_token']
+
             return resp
 
+# @app.route('/logout', methods=['GET'])
+# def logout():
+#     # Get the user's tokens from cookies
+#     token = request.cookies.get('token')
+#     admin_token = request.cookies.get('adminToken')
+    
+#     # Connect to the database to remove tokens
+#     with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+#         cursor = con.cursor()
+        
+#         # Remove the user's tokens from the database
+#         if token:
+#             cursor.execute("DELETE FROM tokens WHERE token = %s", (token,))
+#         if admin_token:
+#             cursor.execute("DELETE FROM adminTokens WHERE token = %s", (admin_token,))
+        
+#         con.commit()
+    
+#     # Create a response to clear cookies
+#     resp = flask.make_response(redirect('/auth'))
+#     resp.set_cookie('token', '', expires=0)
+#     resp.set_cookie('adminToken', '', expires=0)
+
+#     return resp
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    # Get the user's tokens from cookies
+    token = request.cookies.get('token')
+    admin_token = request.cookies.get('adminToken')
+    
+    # Connect to the database to remove tokens
+    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+        cursor = con.cursor()
+        
+        # Remove the user's tokens from the database
+        if token:
+            cursor.execute("DELETE FROM tokens WHERE token = %s", (token,))
+        if admin_token:
+            cursor.execute("DELETE FROM adminTokens WHERE token = %s", (admin_token,))
+        
+        con.commit()
+    
+    # Create a response to clear cookies
+    resp = flask.make_response("Logged out successfully. <script>localStorage.removeItem('token'); window.location.href = '/auth';</script>")
+    resp.set_cookie('token', '', expires=0)
+    resp.set_cookie('adminToken', '', expires=0)
+
+    return resp
+
+
+
+# def getUserName(tokenResponse):
+#     url = 'https://koala.dev.svsticky.nl/oauth/userinfo'
+#     headers = {'Authorization': f"Bearer {tokenResponse['access_token']}"}
+#     print("headers:")
+#     print(headers)
+#     response = requests.get(url, headers=headers)
+#     print("response.status_code")
+#     print(response.status_code)
+#     print("response.text")
+#     print(response.text)
+#     return response.content
 
 @app.route('/upload', methods=['GET', 'POST'])
 def uploadSticker():
@@ -200,7 +299,6 @@ def deleteLogo():
         cursor.execute('DELETE FROM logos WHERE logoId=%s', (request.args.get('id'),))
         con.commit()
         return json.dumps({'status': '200', 'error': 'Logo deleted!'}), 200
-
 
 @app.route('/addLogo', methods=['POST'])
 def addLogo():
@@ -375,7 +473,6 @@ def checkToken(token):
         else:
             return False
 
-
 def checkAdminToken(token):
     # Check if the token is not null
     if token is None:
@@ -407,6 +504,16 @@ def checkFileName(name):
         counter += 1
     return newName
 
+
+@app.route('/getUserName', methods=['GET'])
+def getUserName():
+    # Check token if required
+    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
+        if not checkToken(request.cookies.get('token')):
+            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
+
+    global userName
+    return json.dumps({'status': '200', 'username': userName}), 200
 
 # only runs when executed as script, not when used as module
 if __name__ == "__main__":

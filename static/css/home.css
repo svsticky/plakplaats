@@ -71,13 +71,18 @@ button, .addSubmitButton {
     z-index: 5;
     box-shadow: 0px 3px 5px var(--shadow-color);
     background-color: var(--board-color);
+    color: var(--light-text-color);
 }
 
-.addIcon{
-    margin-right: 20px;
+.addIcon {
     margin-left: auto;
+    margin-right: 0;
     transform: rotate(0deg);
     transition: transform 0.2s;
+}
+
+.addIcon:hover {
+    cursor: pointer;
 }
 
 .addIcon > line {
@@ -86,6 +91,17 @@ button, .addSubmitButton {
 
 .addIconClose{
     transform: rotate(45deg);
+}
+
+#navUserName {
+    font-weight: 500;
+    margin-right: 20px;
+    margin-left: 20px;
+    align-self: center;
+}
+
+#navUserName:hover {
+    cursor: pointer;
 }
 
 /* Map */
