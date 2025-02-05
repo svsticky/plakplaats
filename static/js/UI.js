@@ -33,6 +33,13 @@ function closeAddView(reset){
         resetView();
 }
 
+function setOverlay(state){
+    if (state)
+        document.getElementById("mapOverlay").style.display = "block";
+    else
+        document.getElementById("mapOverlay").style.display = "none";
+}
+
 function openSuccessView(){
     successView.classList.add('openView');
 }

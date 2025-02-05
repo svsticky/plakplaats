@@ -20,7 +20,7 @@ function handleGeoLocation(location) {
 function handleLocation(lat, lon){
     //Set the values in the inputs
     setLocationContainer("Loading location...");
-    pickingLocation = false;
+    setPicker(false)
     latitudeInput.value = lat;
     longitudeInput.value = lon;
     //Retrieve estimated address
@@ -100,6 +100,7 @@ function pickManualLocation(location) {
 // Set the picking state
 function setPicker(state) {
     pickingLocation = state;
+    setOverlay(state);
     if (state) 
         closeAddView(false);
 }
