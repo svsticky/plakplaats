@@ -46,20 +46,23 @@ function handleLocation(lat, lon){
 }
 
 function showError(error) {
+    let text = "";
     switch(error.code) {
         case error.PERMISSION_DENIED:
-            setLocationContainer("Location permission denied, please enter manually.");
+            text += "Location permission denied";
         break;
         case error.POSITION_UNAVAILABLE:
-            setLocationContainer("Location information is unavailable, please enter manually.");
+            text += "Location information is unavailable"
         break;
         case error.TIMEOUT:
-            setLocationContainer("The request to get user location timed out, please enter manually.");
+            text += "The request to get user location timed out"
         break;
         case error.UNKNOWN_ERROR:
-            setLocationContainer("An unknown error occurred, please enter manually");
+            text += "An unknown error occurred"
         break;
     }
+    text += ",\ please click to add manually."
+    setLocationContainer(text);
 }
 
 function setLocationContainer(text, found=false){
