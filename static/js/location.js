@@ -14,7 +14,8 @@ function getLocation(){
 }
 
 function handleGeoLocation(location) {
-    handleLocation(location.coords.latitude, location.coords.longitude);
+    if (!pickingLocation)
+        handleLocation(location.coords.latitude, location.coords.longitude);
 }
 
 function handleLocation(lat, lon){
