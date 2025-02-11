@@ -226,8 +226,8 @@ var Overlay = L.Class.extend({
     },
 
     handleGeolocationError: function (error) {
-        console.error(`Geolocation error: ${error.message}`);
-        alert(`Geolocation error: ${error.message}.`);
+        getError(error);
+        
     },
 
     handleFetchError: function (error, url) {
@@ -240,7 +240,7 @@ var Overlay = L.Class.extend({
             navigator.geolocation.getCurrentPosition(
                 // Use user location to request nearby stickers from database
                 position => self.requestDBStickers(position),
-                error => self.handleGeolocationError(error)
+                error => window.alert(getError(error))
             );
         } else {
             alert("Geolocation is not supported by this browser.");

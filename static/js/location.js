@@ -7,7 +7,8 @@ function getLocation(){
     setLocationContainer("Please grant location permission...");
     
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(handleGeoLocation, showError);
+        navigator.geolocation.getCurrentPosition(handleGeoLocation, (error) => 
+            {setLocationContainer(getError(error) + ", please press to add manually.");});
     } else {
         alert("Geolocation is not supported by this browser.");
     }
@@ -45,24 +46,17 @@ function handleLocation(lat, lon){
     addressRequest.send();
 }
 
-function showError(error) {
-    let text = "";
+function getError(error) {
     switch(error.code) {
         case error.PERMISSION_DENIED:
-            text += "Location permission denied";
-        break;
+            return "Location permission denied";
         case error.POSITION_UNAVAILABLE:
-            text += "Location information is unavailable"
-        break;
+            return "Location information is unavailable"
         case error.TIMEOUT:
-            text += "The request to get user location timed out"
-        break;
+            return "The request to get user location timed out"
         case error.UNKNOWN_ERROR:
-            text += "An unknown error occurred"
-        break;
+            return "An unknown error occurred"
     }
-    text += ",\ please press to add manually."
-    setLocationContainer(text);
 }
 
 function setLocationContainer(text, found=false){
