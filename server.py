@@ -37,8 +37,7 @@ con = psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES
 
 cursor = con.cursor()
 
-cursor.execute("CREATE TABLE IF NOT EXISTS stickers (stickerID SERIAL PRIMARY KEY, stickerLat Decimal(8,6), stickerLon Decimal(9,6), logoID INT, pictureUrl VARCHAR(255), adderEmail VARCHAR(255), postTime TIMESTAMP, spots INT, verified INT)")
-# cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail, verified) VALUES (52.1630587, 5.402001, 1, 'zwart 1920x1080.png', 'aron.den.ouden@gmail.com', 1)")
+cursor.execute("CREATE TABLE IF NOT EXISTS stickers (stickerID SERIAL PRIMARY KEY, stickerLat Decimal(8,6), stickerLon Decimal(9,6), logoID INT, pictureUrl VARCHAR(255), adderEmail VARCHAR(255), postTime TIMESTAMP, spots INT, boardYear INT, verified INT)")
 
 con.commit()
 
@@ -152,7 +151,7 @@ def uploadSticker():
 
                         cursor = con.cursor()
                         # cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail) VALUES (%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], request.form['logoId'], os.path.join(UPLOAD_DIRECTORY, filename), emailCode))
-                        cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail, postTime, spots, verified) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], 1, os.path.join(UPLOAD_DIRECTORY, filename), emailCode, currentTime, 0, 1))
+                        cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail, postTime, spots, boardYear, verified) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], 1, os.path.join(UPLOAD_DIRECTORY, filename), emailCode, currentTime, 0, request.form['boardYear'], 1))
                         con.commit()
                         return json.dumps({'status': '200', 'error': 'Sticker added to database.', 'emailCode': emailCode}), 200
                 else:
@@ -176,7 +175,6 @@ def getLogos():
     #     results = cursor.execute('SELECT * FROM logos ORDER BY logoTitle DESC').fetchall()
     #     return json.dumps(results)
 
-
 @app.route('/editLogo', methods=['PATCH'])
 def editLogo():
     # Check if the request contains an valid admin token
@@ -189,7 +187,6 @@ def editLogo():
         cursor.execute('UPDATE logos SET logoTitle=%s, logoColor=%s WHERE logoId=%s', (request.args.get('name'), request.args.get('color'), request.args.get('id')))
         con.commit()
         return json.dumps({'status': '200', 'error': 'Logo updated!'}), 200
-
 
 @app.route('/deleteLogo', methods=['DELETE'])
 def deleteLogo():
@@ -360,8 +357,6 @@ def updateStickerSpots():
             return json.dumps({'status': '200', 'error': 'Updated spots count'}), 200
     else:
         return json.dumps({'status': '400', 'error': 'Updating sticker spots failed'}), 400
-
-
 
 def sendEmailUpdate():
     return 0  # TODO not implemented

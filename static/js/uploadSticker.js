@@ -108,5 +108,6 @@ function submit(){
     formdata.append('lat', latitudeInput.value);
     formdata.append('lon', longitudeInput.value);
     formdata.append('logoId', selectedLogoId);
+    formdata.append('boardYear', boardYearInput.value);
     request.send(formdata);
 }

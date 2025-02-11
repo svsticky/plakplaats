@@ -8,12 +8,15 @@ const longitudeInput = document.getElementById('longitudeInput');
 const locationContainerText = document.getElementsByClassName('locationContainerText')[0];
 const locationIcon = document.getElementsByClassName('locationIcon')[0];
 const locationContainerSpinner = document.getElementsByClassName('locationContainerSpinner')[0];
+const boardYearInput = document.getElementById('boardYearInputSelect');
 const submitButton = document.getElementsByClassName('addSubmitButton')[0];
 const addLogoSelector = document.getElementsByClassName('addLogoSelector')[0];
 const addIcon = document.getElementsByClassName('addIcon')[0];
 const emailInput = document.getElementsByClassName('successEmail')[0];
 
 const nearYouButton = document.getElementsByClassName('nearYouButton')[0];
+
+const mobileThreshold = 768;
 
 var imageFile;
 var selectedLogo;
@@ -23,4 +26,7 @@ var emailCode;
 var pointersOnMap = [];
 var logoIcons = [];
 
-dayjs.extend(window.dayjs_plugin_relativeTime)
+// Define the function before the event listener
+function isMobile() {
+    return window.innerWidth <= mobileThreshold;
+}

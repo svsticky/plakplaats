@@ -1,3 +1,45 @@
+/* SETTINGS */
+:root {
+    /* Board Color Variables */
+	--board-color: #197052; /* primary color of the current board of Sticky */
+    --board-18-color: rgb(97, 81, 143); /* #61518f */
+    --board-17-color: rgb(41, 115, 143); /* #29738f */
+    --board-16-color: rgb(128, 8, 22); /* #800816 */
+    --board-15-color: rgb(254, 114, 21); /* #fe7215 */
+    --board-14-color: rgb(197, 63, 120); /* #c53f78 */
+    --board-13-color: rgb(32, 115, 13); /* #20730d */
+    --board-12-color: rgb(0, 0, 120); /* #000078 */
+    --board-11-color: rgb(206, 32, 41); /* #ce2029 */
+    --board-10-color: rgb(255, 127, 0); /* #ff7f00 */
+    --board-9-color: rgb(70, 196, 255); /* #46c4ff */
+    --board-8-color: rgb(72, 42, 129); /* #482a81 */
+    --board-7-color: rgb(108, 17, 34); /* #6c1122 */
+    --board-6-color: rgb(65, 105, 225); /* #4169e1 */
+    --board-5-color: rgb(170, 170, 170); /* #aaaaaa */
+    --board-4-color: rgb(183, 224, 147); /* #b7e093 */
+    --board-3-color: rgb(170, 170, 170); /* #aaaaaa */
+    --board-2-color: rgb(170, 170, 170); /* #aaaaaa */
+    --board-1-color: rgb(255, 127, 0); /* #ff7f00 */
+
+    /* Miscellaneous Color Variables */
+    --secondary-color: #ffffff; /* light color that works in combination with primary board color */
+    --background-color: #ffffff; /* general light background color  */
+    --element-background-color: #e0e0e0; /* Light grey color for sticker div background */
+    --dark-text-color: #000000;
+    --lighter-text-color: #646464;
+    --light-text-color: #ffffff;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --border-see-through-color: rgba(0, 0, 0, 0.3);
+    --border-drop-image-see-through-color: rgba(255, 255, 255, 0.3);
+    --drop-image-see-through-color: rgba(2, 1, 1, 0.5);
+    --error-color: rgba(255, 0, 0, 0.6);
+
+    /* Dimensions */
+    --navbar-height: 10vh;
+    --sidebar-width: 40vw;
+}
+
+/* General */
 *{
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     box-sizing: border-box;
@@ -11,19 +53,24 @@ html {
 }
 
 body{
-    /* margin: 0px; */
     height: 100%;
 }
 
+button, .addSubmitButton {
+    background-color: var(--board-color);
+    color: var(--secondary-color);
+}
+
+/* Nav bar */
 .navBar{
     position: relative;
-    /* height: 80px; */
-    height: 10vh;
+    height: var(--navbar-height);
     display: flex;
     flex-direction: row;
     align-items: center;
     z-index: 5;
-    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px 3px 5px var(--shadow-color);
+    background-color: var(--board-color);
 }
 
 .addIcon{
@@ -31,6 +78,10 @@ body{
     margin-left: auto;
     transform: rotate(0deg);
     transition: transform 0.2s;
+}
+
+.addIcon > line {
+    stroke: var(--background-color);
 }
 
 .addIconClose{
@@ -64,11 +115,12 @@ body{
 }
 
 #map{
-    height: calc(100% - 80px);
+    height: 100%;
     width: 100%;
     z-index: 1;
 }
 
+/* Sticker adding */
 .addContainer{
     width: 100%;
     height: 100%;
@@ -80,10 +132,10 @@ body{
 }
 
 .addView{
-    background-color: white;
+    background-color: var(--background-color);
     position: fixed;
     z-index: 2;
-    top: -500px;
+    top: -100%;
     width: 100%;
     max-width: 500px;
     display: flex;
@@ -93,18 +145,20 @@ body{
 }
 
 .openView{
-    top: 80px !important;
+    top: var(--navbar-height) !important;
 }
 
 .addViewTitle{
+    color: var(--dark-text-color);
     font-size: 30px;
     font-weight: bold;
     padding-top: 10px;
     padding-left: 20px;
 }
 
+/* Sticker adding: location */
 .locationContainer{
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--element-background-color);
     margin-left: 20px;
     margin-right: 20px;
     margin-top: 15px;
@@ -121,21 +175,16 @@ body{
     display: none;
 }
 
-/* location icon */
-@keyframes outerAnim {
-    from{
-        transform: scale(1);
-        opacity: 1;
-    }
-    to{
-        transform: scale(2.5);
-        opacity: 0;
-    }
-}
-
 .locationIcon{
     margin: 10px;
     min-width: 40px;
+}
+
+.locationContainerCircle{
+    stroke: var(--board-color);
+}
+.circle{
+    fill: var(--board-color);
 }
 
 .outerCircle{
@@ -147,8 +196,38 @@ body{
     margin-top: 10px;
     margin-bottom: 10px;
     font-size: 15px;
-    color: rgb(100,100,100);
+    color: var(--lighter-text-color);
     cursor: pointer;
+}
+
+/* Sticker adding: location animation */
+@keyframes outerAnim {
+    from{
+        transform: scale(1);
+        opacity: 1;
+    }
+    to{
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+.addSubmitButtonPressed {
+    background: linear-gradient(-45deg, rgb(200,200,200), var(--board-color));
+    background-size: 200% 400%;
+    animation: submitPressed 2s ease infinite;
+}
+
+@keyframes submitPressed{
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .addInputDes{
@@ -180,23 +259,25 @@ body{
     align-items: center;
     justify-content: center;
 
-    border: 4px dashed rgba(0, 0, 0, 0.3);
-    background-color: white;
-    color: grey;
+    border: 4px dashed var(--border-see-through-color);
+    background-color: var(--background-color);
+    color: var(--lighter-text-color);
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s, border 0.2s;
 }
 
+/* Sticker adding: drag and drop image */
 .highlight{
-    background-color: rgba(0, 0, 0, 0.6);
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    color: white;
+    background-color: var(--drop-image-see-through-color);
+    border: 4px solid var(--border-drop-image-see-through-color);
+    color: var(--light-text-color);
 }
 
+/* Sticker adding */
 .imageError{
-    background-color: rgba(255, 0, 0, 0.6);
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    color: white;
+    background-color: var(--error-color);
+    border: 4px solid var(--border-drop-image-see-through-color);
+    color: var(--light-text-color);
 }
 
 .addImageTextHidden{
@@ -213,7 +294,7 @@ body{
     display: block !important;
 }
 
-.addSubmitButton{
+.addSubmitButton {
     margin-top: 10px;
     width: 100%;
     height: 40px;
@@ -221,7 +302,6 @@ body{
     justify-content: center;
     border-radius: 0px 0px 20px 20px;
     display: flex;
-    color: white;
     font-weight: bold;
     cursor: pointer;
 }
@@ -243,16 +323,111 @@ body{
     transition: background-color 0.2s;
 }
 
-.logoElementSelected{
-    background-color: rgba(155, 155, 155, 0.329);
+.boarYearInput {
+    display: flex;
+    margin: 15 20px;
 }
+
+#boardYearInputSelect {
+    margin-left: 1rem;
+}
+
+#boardYearInputSelect option {
+    color: var(--light-text-color);
+}
+
+#boardYearInputSelect option:hover {
+    background-color: #00ff33;
+}
+
+#boardYearInputSelect option:nth-child(1), .marker-B1 {
+    background: var(--board-1-color);
+}
+
+#boardYearInputSelect option:nth-child(2), .marker-B2 {
+    background: var(--board-2-color);
+}
+
+#boardYearInputSelect option:nth-child(3), .marker-B3 {
+    background: var(--board-3-color);
+}
+
+#boardYearInputSelect option:nth-child(4), .marker-B4 {
+    background: var(--board-4-color);
+}
+
+#boardYearInputSelect option:nth-child(5), .marker-B5 {
+    background: var(--board-5-color);
+}
+
+#boardYearInputSelect option:nth-child(6), .marker-B6 {
+    background: var(--board-6-color);
+}
+
+#boardYearInputSelect option:nth-child(7), .marker-B7 {
+    background: var(--board-7-color);
+}
+
+#boardYearInputSelect option:nth-child(8), .marker-B8 {
+    background: var(--board-8-color);
+}
+
+#boardYearInputSelect option:nth-child(9), .marker-B9 {
+    background: var(--board-9-color);
+}
+
+#boardYearInputSelect option:nth-child(10), .marker-B10 {
+    background: var(--board-10-color);
+}
+
+#boardYearInputSelect option:nth-child(11), .marker-B11 {
+    background: var(--board-11-color);
+}
+
+#boardYearInputSelect option:nth-child(12), .marker-B12 {
+    background: var(--board-12-color);
+}
+
+#boardYearInputSelect option:nth-child(13), .marker-B13 {
+    background: var(--board-13-color);
+}
+
+#boardYearInputSelect option:nth-child(14), .marker-B14 {
+    background: var(--board-14-color);
+}
+
+#boardYearInputSelect option:nth-child(15), .marker-B15 {
+    background: var(--board-15-color);
+}
+
+#boardYearInputSelect option:nth-child(16), .marker-B16 {
+    background: var(--board-16-color);
+}
+
+#boardYearInputSelect option:nth-child(17), .marker-B17 {
+    background: var(--board-17-color);
+}
+
+#boardYearInputSelect option:nth-child(18), .marker-B18 {
+    background: var(--board-18-color);
+}
+
+#boardYearInputSelect option:nth-child(19), .marker-B19 {
+    background: var(--board-color);
+}
+
+/* .logoElementSelected{
+    background-color: rgba(155, 155, 155, 0.329);
+} */
 
 .addSubmitButtonPressed{
     animation: submitPressed 2s infinite;
 }
 
+
+/* Sticker adding: adding succes */
 .successView{
-    background-color: white;
+    background-color: var(--background-color);
     position: fixed;
     z-index: 2;
     top: -300px;
@@ -269,10 +444,11 @@ body{
     margin-left: 22px;
     margin-right: 22px;
     font-size: 14px;
-    color:rgb(49, 49, 49)
+    color:var(--dark-text-color);
 }
 
 .successEmail{
+    background-color: var(--background-color);
     margin-top: 15px;
     margin-left: 20px;
     margin-right: 20px;
@@ -282,28 +458,26 @@ body{
     font-size: 18px;
     padding-left: 10px;
     border-radius: 10px;
-    border: solid 1px rgba(200,200,200);
+    border: solid 1px var(--border-see-through-color);
     outline: none;
     transition: border-color 0.2s;
 }
 
+/* Sticker adding: adding failed */
 .invalid{
-    border-color: rgb(248, 50, 50);
+    border-color: var(--error-color);
 }
 
 .customDivIcon{
-    background-color: white;
+    background-color: var(--background-color);
     border-radius: 50%;
     padding: 4px;
 }
-
 
 /* leaflet popup styling */
 .leaflet-popup-content-wrapper .leaflet-popup-content {
     display: flex;
     flex-direction: column;
-    /* justify-content: center;
-    align-items: center; */
 }
 
 .leaflet-popup-content-wrapper .leaflet-popup-content h1 {
@@ -316,8 +490,6 @@ body{
 }
 
 .leafletMarkerButton {
-    background-color:#61518f;
-    color:#ffffff;
     border: none;
     border-radius: 5px;
     padding: 0.5rem 0.5rem;
@@ -327,46 +499,134 @@ body{
     width: 80%;
 }
 
+.markerBoardYearDiv {
+    display: flex;
+    width: 100%;
+}
+
+.markerBoardYearText {
+    /* width: 70%;\ */
+}
+
+.markerBoardYear {
+    color: var(--light-text-color);
+    border-radius: 2rem;
+    text-align: center;
+    width: 2rem;
+    margin: 0 0.5rem;
+    justify-self: center;
+}
+
 /* Maybe add styling for when you hover or click a button? */
 .leafletMarkerButton:hover {
     /* background-color:#be0202; */
 }
 
-/* nearYouMobileOverlay */
-#nearYouMobileOverlay {
+/* nearYouOverlay */
+#nearYouOverlay.mobile {
     position: fixed;
     z-index: 999;
-    bottom: -90%; /* Initially at 10% visible */
     left: 0;
     width: 100%;
-    height: 100%; /* Full screen height */
-    background-color: rgb(255, 255, 255);
-    /* border: 5px solid #61518f; */
+    height: 100%;
+    background-color: var(--background-color);
     transition: bottom 0.5s, border-radius 0.5s; /* Transition for sliding  */
     transition-timing-function: 'ease-in';
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-     /* Enable scrolling if content exceeds screen height */
     border-radius: 30px 30px 0px 0px;
-    box-shadow: 0px -3px 5px rgba(0, 0, 0, 0.5);
+    box-shadow: 0px -3px 5px var(--navbar-shadow-color);
 }
 
-#nearYouMobileLine {
+#nearYouOverlay.desktop {
+    height: calc(100vh - var(--navbar-height));
+    width: var(--sidebar-width);
+    position: fixed;
+    z-index: 1;
+    top: var(--navbar-height);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: var(--background-color); 
+    overflow-x: hidden;
+    padding-top: 1rem;
+    transition: 0.5s;
+    transition-timing-function: 'ease-in';
+}
+
+#nearYouOverlay.desktop.active {
+    left: calc(100vw - var(--sidebar-width));
+    margin-left: 0;
+}
+
+#nearYouOverlay.desktop.inactive {
+    left: 100vw;
+}
+
+#nearYouOverlay.mobile.active {
+    bottom: 0;
+    border-radius: 0px 0px 0px 0px;
+    overflow-y: auto;
+}
+
+#nearYouOverlay.mobile.inactive {
+    bottom: -90%;
+    border-radius: 15px 15px 0px 0px;
+    overflow-y: hidden;
+}
+
+/* desktop button */
+#nearYouDesktopToggleButton.desktop {
+    display: block;
+    position: fixed;
+    top: calc(var(--navbar-height) + 5vh);
+    z-index: 1000;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 0.5rem;
+    margin-left: auto;    
+    margin-right: auto;
+    margin-bottom: 0.5rem;
+    transition: 0.5s;
+    transition-timing-function: 'ease-in';
+}
+
+#nearYouDesktopToggleButton.desktop.inactive {
+    right: 5vw;
+}
+
+#nearYouDesktopToggleButton.desktop.active {
+    right: calc(var(--sidebar-width) + 5vw);
+}
+
+#nearYouDesktopToggleButton.mobile {
+    display: none;
+}
+
+
+/* nearYouMobileLine */
+#nearYouOverlay.mobile > #nearYouMobileLine {
+    display: block;
     margin-top: 0.5rem;
     width: 10%;
 }
 
-#nearYouMobileTopText {
-    margin-top: 0.5rem;
+#nearYouOverlay.mobile.active > #nearYouMobileLine {
+    display: none;
 }
 
-#nearYouMobileP {
-    padding: 0 2rem;
-    opacity: 0;
-    transition: opacity 0.8s;
-    transition-timing-function: 'ease-in';
+#nearYouOverlay.desktop > #nearYouMobileLine {
+    display: none;
+}
+
+/* nearYouTopText */
+#nearYouTopText {
+    margin-top: 0.5rem;
+    padding-bottom: 2rem;
+    color: var(--dark-text-color);
 }
 
 /* sticker divs styling */
@@ -374,7 +634,8 @@ body{
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #ffffff;
+    background-color: var(--background-color);
+    color: var(--dark-text-color);
     transition: background-color 0.8s;
     transition-timing-function: 'ease-in';
     margin-bottom: 2rem;
@@ -392,8 +653,6 @@ body{
 }
 
 .stickerDiv .stickerDivButton {
-    background-color:#61518f;
-    color:#ffffff;
     border: none;
     border-radius: 5px;
     padding: 0.5rem 0.5rem;
@@ -404,16 +663,18 @@ body{
 }
 
 .stickerDiv.revealed {
-    background-color: #e0e0e0;
+    background-color: var(--element-background-color);
 }
 
-.stickerDiv .stickerDivH1, .stickerDiv .stickerDivUser, .stickerDiv .stickerDivImg, .stickerDiv .stickerDivDate, .stickerDiv .stickerDivNearby, .stickerDiv .stickerDivButton {
-    opacity: 0;
+.stickerDiv, .stickerDiv > * {
     transition: opacity 0.8s;
     transition-timing-function: 'ease-in';
 }
 
-.stickerDiv.revealed .stickerDivH1, .stickerDiv.revealed .stickerDivUser, .stickerDiv.revealed .stickerDivImg, .stickerDiv.revealed .stickerDivDate, .stickerDiv.revealed .stickerDivNearby, .stickerDiv.revealed .stickerDivButton {
-    opacity: 1;
+.stickerDiv:not(.revealed), .stickerDiv:not(.revealed) > *:not(.revealed) {
+    opacity: 0;
 }
 
+.stickerDiv.revealed, .stickerDiv > *.revealed {
+    opacity: 1;
+}
