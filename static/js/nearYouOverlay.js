@@ -139,6 +139,8 @@ var Overlay = L.Class.extend({
     },
     
     openDesktopSidebar: function () {
+        resetView();
+        closeAddView();
         this.toggleOverlay({ isOpen: true, isMobile: false });
         console.log("openDesktopSidebar");
     },

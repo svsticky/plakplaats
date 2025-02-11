@@ -63,5 +63,9 @@ function resetView(){
     imageFile = null;
     submitButton.classList.remove('addSubmitButtonPressed');
     setPicker(false);
+    closeAddView();
+    closeSuccessView();
+    addIcon.classList.remove('addIconClose');
+    overlay.toggleOverlay({ isOpen: false, isMobile: false });
     setManualLocationInput(false);
 }

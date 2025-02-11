@@ -36,7 +36,7 @@ function handleLocation(lat, lon){
                     text += ' ' + addressJson['address']['house_number'];
                 }
             }
-            text += "</i><br>Click to pick manually."
+            text += "</i><br>Press to pick manually."
             setLocationContainer(text, true);
         }
     }
@@ -61,7 +61,7 @@ function showError(error) {
             text += "An unknown error occurred"
         break;
     }
-    text += ",\ please click to add manually."
+    text += ",\ please press to add manually."
     setLocationContainer(text);
 }
 
