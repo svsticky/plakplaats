@@ -4,10 +4,11 @@ var mymap = L.map('map').setView([52.087299, 5.165430], 13);
 
 
 // Give the map a source
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    attribution: '© OpenStreetMap contributors, Tiles style by Humanitarian OpenStreetMap Team hosted by OpenStreetMap France'
 }).addTo(mymap);
+
 
 // Update the pointers
 mymap.on('moveend', updateMap);
