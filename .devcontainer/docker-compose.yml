@@ -1,0 +1,16 @@
+# Inherit but overwrite production configs with development configs
+
+include:
+  - path: ../docker-compose.yml
+
+services:
+  website-dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile.website
+    environment:
+      STICKER_MAP_PORT: 3000 # TODO read this from .env
+    # ports:
+    #   - "3000:3000"
+    depends_on:
+      - db

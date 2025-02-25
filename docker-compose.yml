@@ -1,0 +1,34 @@
+services:
+  website:
+    build:
+      dockerfile: Dockerfile.website
+    environment:
+      POSTGRES_HOST: db
+    ports:
+      - "3000:$STICKER_MAP_PORT"
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true # Restart when database restarts to ensure connection
+
+  db:
+    image: postgres:17rc1
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "1024:5432" # TODO Do not use the same port as the global postgres instance?
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+# TODO persistent data door volumes
+# TODO working dir (bijzonder type mount)?
+# TODO healthcheck
+# TODO sync .env en sample.env
+# TODO update readme

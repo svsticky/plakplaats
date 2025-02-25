@@ -13,24 +13,28 @@ from dotenv import load_dotenv
 import secrets
 import datetime
 
-if (not os.path.exists("./static/uploads")):
-    os.mkdir("./static/uploads")
-
 # Load env file for variable
 load_dotenv()
 
 # Create flask app
 app = flask.Flask(__name__)
 
-POSTGRES_HOST = os.getenv("POSTGRES_HOST")
-POSTGRES_DBNAME = os.getenv("POSTGRES_DBNAME")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST") # Set by docker compose # TODO this breaks local versions
+POSTGRES_DBNAME = os.getenv("POSTGRES_DB")
 POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PASS = os.getenv("POSTGRES_PASS")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+
+POSTGRES_PASS = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_PORT = 5432
 
 BOARD_COLOR = os.getenv("STICKER_MAP_COLOR")
+STICKER_MAP_PORT = os.getenv("STICKER_MAP_PORT")
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 UPLOAD_DIRECTORY = "static/uploads"
+
+if (not os.path.exists(UPLOAD_DIRECTORY)):
+    os.mkdir(UPLOAD_DIRECTORY)
+
 
 
 con = psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT)
@@ -78,7 +82,7 @@ def auth():
         # Check if login with koala is enabled
         if os.getenv("LOGIN_WITH_KOALA") == "True":
             # Construct login url
-            url = os.getenv("KOALA_URL") + "/api/oauth/authorize?client_id=" + os.getenv("KOALA_CLIENT_UID") + "&redirect_uri=" + os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth&response_type=code"
+            url = os.getenv("KOALA_URL") + "/api/oauth/authorize?client_id=" + os.getenv("KOALA_CLIENT_UID") + "&redirect_uri=" + os.getenv("STICKER_MAP_URL") + ":" + STICKER_MAP_PORT + "/auth&response_type=code"
             resp = flask.make_response(render_template('authKoala.html', color=BOARD_COLOR, loginUrl=url))
             if request.args.get('adminRefresh') is not None:
                 resp.set_cookie('adminRefresh', "1")
@@ -88,7 +92,7 @@ def auth():
     else:
         # Handle code
         # Create post request to koala server
-        tokenUrl = os.getenv("KOALA_URL") + "/api/oauth/token?grant_type=authorization_code&code=" + request.args.get('code') + "&client_id=" + os.getenv("KOALA_CLIENT_UID") + "&client_secret=" + os.getenv("KOALA_CLIENT_SECRET") + "&redirect_uri="+ os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth" 
+        tokenUrl = os.getenv("KOALA_URL") + "/api/oauth/token?grant_type=authorization_code&code=" + request.args.get('code') + "&client_id=" + os.getenv("KOALA_CLIENT_UID") + "&client_secret=" + os.getenv("KOALA_CLIENT_SECRET") + "&redirect_uri="+ os.getenv("STICKER_MAP_URL") + ":" + STICKER_MAP_PORT + "/auth" 
         tokenResponse = json.loads(requests.post(tokenUrl).text)
         # Check if the response is valid, redirect back if not
         if 'credentials_type' not in tokenResponse:
@@ -411,4 +415,5 @@ def checkFileName(name):
 # only runs when executed as script, not when used as module
 if __name__ == "__main__":
     from waitress import serve
-    serve(app, host='0.0.0.0', port='7050')
+    serve(app, host='0.0.0.0', port=STICKER_MAP_PORT)
+

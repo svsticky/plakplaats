@@ -1,0 +1,26 @@
+FROM python:latest
+WORKDIR /home/plakplaats
+
+# Install build dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libpq-dev gcc
+RUN rm -rf /var/lib/apt/lists/*
+
+# Install required python packages
+COPY uv.lock ./
+RUN uv sync
+
+# Copy over remaining files
+COPY . .
+
+# Document which ports will be used
+ARG STICKER_MAP_PORT
+EXPOSE $STICKER_MAP_PORT
+
+# Give a warm welcome
+ENV SHELL="/bin/bash"
+RUN echo "echo 'You are in the plakplaats devcontainer!'" >> /etc/bash.bashrc
+RUN echo "echo 'Start the server with: python src/server.py'" >> /etc/bash.bashrc
+
+# Do not run anything, but do not close the container either
+CMD ["tail", "-f", "/dev/null"]
