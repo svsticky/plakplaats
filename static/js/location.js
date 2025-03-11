@@ -1,6 +1,7 @@
 // *****LOCATION
 
 let pickingLocation = false;
+let statePicked = false;
 
 function getLocation(){
     //Get the permissions
@@ -15,7 +16,7 @@ function getLocation(){
 }
 
 function handleGeoLocation(location) {
-    if (!pickingLocation)
+    if (!pickingLocation && !statePicked)
         handleLocation(location.coords.latitude, location.coords.longitude);
 }
 
@@ -23,6 +24,7 @@ function handleLocation(lat, lon){
     //Set the values in the inputs
     setLocationContainer("Loading location...");
     setPicker(false)
+    statePicked = true;
     latitudeInput.value = lat;
     longitudeInput.value = lon;
     //Retrieve estimated address
@@ -98,6 +100,8 @@ function pickManualLocation(location) {
 // Set the picking state
 function setPicker(state) {
     pickingLocation = state;
+    if (statePicked)
+        statePicked = false;
     setOverlay(state);
     if (state) 
         closeAddView(false);
