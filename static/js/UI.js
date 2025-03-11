@@ -3,13 +3,13 @@ var addIsOpen = false;
 addIcon.addEventListener('click', function(){
     if(!addIsOpen){
         //Open add view
-        openAddView();
+        openAddView(true);
         addIsOpen = true;
         //Change icon
         addIcon.classList.add('addIconClose');
     } else {
         //Close add view
-        closeAddView();
+        closeAddView(true);
         closeSuccessView();
         addIsOpen = false;
         addIcon.classList.remove('addIconClose');
@@ -17,16 +17,27 @@ addIcon.addEventListener('click', function(){
     }
 });
 //Open view
-function openAddView(){
-    resetView();
+function openAddView(reset){
+    if (reset) {
+        resetView();
+        setTimeout(function(){
+            getLocation();
+        }, 500);
+    }
     addView.classList.add('openView');
-    setTimeout(function(){
-        getLocation();
-    }, 500);
 }
 
-function closeAddView(){
+function closeAddView(reset){
     addView.classList.remove('openView');
+    if (reset)
+        resetView();
+}
+
+function setOverlay(state){
+    if (state)
+        document.getElementById("mapOverlay").style.display = "block";
+    else
+        document.getElementById("mapOverlay").style.display = "none";
 }
 
 function openSuccessView(){
@@ -51,5 +62,10 @@ function resetView(){
     setLocationContainer("", false);
     imageFile = null;
     submitButton.classList.remove('addSubmitButtonPressed');
-    setManualLocationInput(false);  
+    setPicker(false);
+    closeAddView();
+    closeSuccessView();
+    addIcon.classList.remove('addIconClose');
+    overlay.toggleOverlay({ isOpen: false, isMobile: false });
+    setManualLocationInput(false);
 }

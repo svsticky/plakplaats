@@ -19,6 +19,7 @@ L.control.locate().addTo(mymap);
 // Update the map so it always renders the markers on page load 
 updateMap();
 
+
 function updateMap() {
     //Remove pointers that fell of the map
     pointersOnMap = pointersOnMap.filter(function(pointer){
@@ -124,3 +125,5 @@ function updateMap() {
     }
     request.send();
 }
+
+mymap.on('click', (e) => pickManualLocation(e));
