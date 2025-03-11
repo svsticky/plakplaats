@@ -88,7 +88,7 @@ function setManualLocationInput(state){
     }
 }
 
-// Manages manually picking a location by clikcing the map
+// Manages manually picking a location, called by clikcing the map
 function pickManualLocation(location) {
     if (pickingLocation) {
         handleLocation(location.latlng.lat, location.latlng.lng);
