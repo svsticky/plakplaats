@@ -28,7 +28,7 @@
         <div class="addContainer">
             <div class="addView">
                 <span class="addViewTitle">Add a sticker</span>
-                <div class="locationContainer">
+                <div class="locationContainer" onclick="setPicker(true)">
                     <svg class="locationContainerSpinner" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="shape-rendering: auto;" width="40px" height="40px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
                         <circle class="locationContainerCircle" cx="50" cy="50" fill="none" stroke="#e15b64" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138">
                             <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" values="0 50 50;360 50 50" keyTimes="0;1"></animateTransform>
@@ -38,7 +38,7 @@
                         <circle class="outerCircle circle" cx="50" cy="50" r="20" fill="blue"></circle>
                         <circle class="circle" cx="50" cy="50" r="20" fill="blue" stroke="white" stroke-width="3px"></circle>   
                       </svg>
-                    <span class="locationContainerText" onclick="setPicker(true)"></span>
+                    <span class="locationContainerText"></span>
                 </div>
                 <span class="addInputDes locationInputDes">Latitude</span>
                 <input type="number" class="addInput" id="latitudeInput">
