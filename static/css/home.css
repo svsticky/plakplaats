@@ -680,9 +680,11 @@ button, .addSubmitButton {
 }
 
 .error:not(.revealed) {
-    display: none;
+    /* display: none; */
+    opacity: 0;
 }
 
 .error.revealed {
-    display: block;
+    /* display: block; */
+    opacity: 1;
 }

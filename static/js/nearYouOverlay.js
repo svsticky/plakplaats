@@ -236,10 +236,11 @@ var Overlay = L.Class.extend({
 
     getNearYouData: function () {
         const self = this;
-        const errorHeader = this.createElement('h3', `stickerDivH1-${i}`,
+        const errorHeader = this.createElement('h3', 'errorHeader',
             { textContent: 'placeholder', className: 'error' });
-        stickerDiv.classList.remove('revealed');    
-        this._overlayElement.appendChild(errorHeader);
+        errorHeader.classList.add('revealed');    
+        document.getElementById('nearYouOverlay').appendChild(errorHeader);
+        
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
