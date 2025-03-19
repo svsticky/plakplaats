@@ -672,9 +672,17 @@ button, .addSubmitButton {
 }
 
 .stickerDiv:not(.revealed), .stickerDiv:not(.revealed) > *:not(.revealed) {
-    opacity: 0;
+    display: none;
 }
 
 .stickerDiv.revealed, .stickerDiv > *.revealed {
-    opacity: 1;
+    display: block;
+}
+
+.error:not(.revealed) {
+    display: none;
+}
+
+.error.revealed {
+    display: block;
 }

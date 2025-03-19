@@ -236,11 +236,19 @@ var Overlay = L.Class.extend({
 
     getNearYouData: function () {
         const self = this;
+        const errorHeader = this.createElement('h3', `stickerDivH1-${i}`,
+            { textContent: 'placeholder', className: 'error' });
+        stickerDiv.classList.remove('revealed');    
+        this._overlayElement.appendChild(errorHeader);
+
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 // Use user location to request nearby stickers from database
                 position => self.requestDBStickers(position),
-                error => window.alert(getError(error))
+                error => {
+                    errorHeader.textContent = getError(error);
+                    stickerDiv.classList.add('revealed');
+                }
             );
         } else {
             alert("Geolocation is not supported by this browser.");
