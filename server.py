@@ -37,7 +37,19 @@ con = psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES
 
 cursor = con.cursor()
 
-cursor.execute("CREATE TABLE IF NOT EXISTS stickers (stickerID SERIAL PRIMARY KEY, stickerLat Decimal(8,6), stickerLon Decimal(9,6), logoID INT, pictureUrl VARCHAR(255), adderEmail VARCHAR(255), postTime TIMESTAMP, spots INT, boardYear INT, verified INT)")
+cursor.execute("""CREATE TABLE IF NOT EXISTS stickers (
+    stickerID SERIAL PRIMARY KEY, 
+    userID int, 
+    stickerLat Decimal(8,6), 
+    stickerLon Decimal(9,6), 
+    logoID INT, 
+    pictureUrl VARCHAR(255), 
+    adderEmail VARCHAR(255), 
+    postTime TIMESTAMP, 
+    spots INT, 
+    boardYear INT, 
+    verified INT)  
+    """)
 
 con.commit()
 
@@ -288,6 +300,32 @@ def getNearYouStickers():
             FROM stickers
             ORDER BY distance ASC
             LIMIT 10""", (float(request.args.get('lon')), float(request.args.get('lat'))))
+
+            rows = cursor.fetchall()
+            
+            return json.dumps(rows, default=str)
+    else:
+        return json.dumps({'status': '400', 'error': 'Bounding box not defined or incomplete.'}), 400
+
+@app.route('/getOwnStickers/<int:userid>', methods=['GET'])
+def geOwnStickers(userid):
+    # Check token if required
+    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
+        if not checkToken(request.cookies.get('token')):
+            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
+    if (request.args.get('lon') != '' and request.args.get('lat') != ''):
+        # Get all the stickers within the bounding box
+        with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+            # create cursor
+            cursor = con.cursor()
+
+            # find results
+            cursor.execute("""
+            SELECT *
+            FROM stickers
+            WHERE userid IS %s
+            ORDER BY postTime ASC""", 
+            userid)
 
             rows = cursor.fetchall()
             
