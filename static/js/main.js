@@ -97,6 +97,7 @@ function updateEmail(){
     }
 }
 
+
 function checkEmail(email){
     if(email.includes('@') && email.includes('.')){
         return true;
@@ -105,3 +106,13 @@ function checkEmail(email){
         return false;
     }
 }
+
+//Close all menus when the escape key is pressed
+function escapeKey() {
+    document.addEventListener("keydown", (event) => {
+        if (event.key == "Escape")
+            resetView();
+    });
+}
+
+escapeKey();
