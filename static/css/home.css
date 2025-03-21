@@ -686,5 +686,4 @@ button, .addSubmitButton {
 .error.revealed {
     display: block;
     color: #FF0000;
-    font-family: Arial, Helvetica, sans-serif;
 }
