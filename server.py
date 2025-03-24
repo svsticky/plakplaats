@@ -307,8 +307,8 @@ def getNearYouStickers():
     else:
         return json.dumps({'status': '400', 'error': 'Bounding box not defined or incomplete.'}), 400
 
-@app.route('/getOwnStickers/<int:userid>', methods=['GET'])
-def geOwnStickers(userid):
+@app.route('/getOwnStickers', methods=['GET'])
+def geOwnStickers():
     # Check token if required
     if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
         if not checkToken(request.cookies.get('token')):
@@ -325,7 +325,7 @@ def geOwnStickers(userid):
             FROM stickers
             WHERE userid IS %s
             ORDER BY postTime ASC""", 
-            userid)
+            request.args.get('userID'))
 
             rows = cursor.fetchall()
             
