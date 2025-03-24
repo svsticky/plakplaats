@@ -75,7 +75,7 @@ function resetView(){
     setSubmitbutton("")
 }
 
-//Sets the text of the submit button under the email screen according to the content of the inputbx
+//Sets the text of the submit button under the email input according to the content of the input
 function setSubmitbutton(text) {
     const submitText = document.getElementsByClassName('addSubmitButton')[1];
     if (text == "")
