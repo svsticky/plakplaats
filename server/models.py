@@ -18,3 +18,9 @@ class Sticker(Base):
     spots:      Mapped[int]      = mapped_column(default=0)
     boardyear:  Mapped[int]
     verified:   Mapped[bool]     = mapped_column(default=False)
+
+    # run:
+    #    to autogenerate a migration if this file changes:
+    #        uv run alembic revision --autogenerate -m ""
+    #    to run migrations (run on new clone):
+    #       uv run alembic upgrade head
