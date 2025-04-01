@@ -53,7 +53,7 @@ class PopUp{
 		button.style.backgroundColor = bgColor;						//Add color to the background
 		button.style.color = textColor;								//Add the text color
 		button.addEventListener('click', action);					//Add the function to the button
-		this.#popUpButtons.appendChild(button);					//Add the button to the button container
+		this.#popUpButtons.appendChild(button);						//Add the button to the button container
 
 	}
 

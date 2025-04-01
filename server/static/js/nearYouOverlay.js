@@ -298,7 +298,18 @@ var Overlay = L.Class.extend({
 
     // Fills individual stickers with content
     renderSticker: function (stickerDivH1, stickerDivImg, stickerDivDate, stickerData) {
-        let [stickerID, lat, long, logoID, pictureURL, email, postTime, spots, verified] = stickerData;
+        // let [stickerID, lat, long, logoID, pictureURL, email, postTime, spots, verified] = stickerData;
+        const {
+            id: stickerID,
+            latitude: lat,
+            longitude: long,
+            logo: logoID,
+            picture: pictureURL,
+            adderemail: email,
+            posttime: postTime,
+            spots,
+            verified
+        } = stickerData;
 
         stickerDivH1.textContent = `Sticker ${stickerID}`;
         stickerDivImg.src = pictureURL;
