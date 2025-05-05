@@ -1,0 +1,21 @@
+FROM python:alpine
+WORKDIR /home/plakplaats
+
+# Install build dependencies
+RUN apk add --no-cache postgresql-libs
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev
+
+# Copy the files responsible for listing dependencies
+COPY requirements.txt ./
+
+# Cache the python dependencies
+RUN python3 -m pip install -r requirements.txt --no-cache-dir
+
+# Remove previously installed build dependencies, they are not needed anymore
+RUN apk del .build-deps
+
+# Copy the source code
+COPY src src
+
+EXPOSE 3000
+CMD ["python", "src/server.py"]
