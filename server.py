@@ -103,7 +103,7 @@ def auth():
         # Check if login with koala is enabled
         if os.getenv("LOGIN_WITH_KOALA") == "True":
             # Construct login url
-            url = os.getenv("KOALA_URL") + "/api/oauth/authorize?client_id=" + os.getenv("KOALA_CLIENT_UID") + "&redirect_uri=" + os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth&response_type=code"
+            url = os.getenv("KOALA_URL") + "/api/oauth/authorize?client_id=" + os.getenv("KOALA_CLIENT_UID") + "&scope=openid profile email member-read&redirect_uri=" + os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth&response_type=code"
             resp = flask.make_response(render_template('authKoala.html', color=BOARD_COLOR, loginUrl=url))
             if request.args.get('adminRefresh') is not None:
                 resp.set_cookie('adminRefresh', "1")
@@ -113,8 +113,13 @@ def auth():
     else:
         # Handle code
         # Create post request to koala server
-        tokenUrl = os.getenv("KOALA_URL") + "/api/oauth/token?grant_type=authorization_code&code=" + request.args.get('code') + "&client_id=" + os.getenv("KOALA_CLIENT_UID") + "&client_secret=" + os.getenv("KOALA_CLIENT_SECRET") + "&redirect_uri="+ os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth" 
-        tokenResponse = json.loads(requests.post(tokenUrl).text)
+        tokenUrl = os.getenv("KOALA_URL") + "/api/oauth/token"        
+        redirectURI = os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth"
+        postRequestData = {"grant_type" : "authorization_code", "code" : request.args.get('code'), "redirect_uri" : redirectURI}
+        tokenResponse = requests.post(tokenUrl, data = postRequestData, auth = (os.getenv("KOALA_CLIENT_UID"), os.getenv("KOALA_CLIENT_SECRET")))
+        print(tokenResponse.headers)
+        print(tokenResponse.text)
+        tokenResponse = json.loads(tokenResponse.text)
         # Check if the response is valid, redirect back if not
         if 'credentials_type' not in tokenResponse:
             return redirect('/auth', code=302)
