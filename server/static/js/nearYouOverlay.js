@@ -36,6 +36,9 @@ var Overlay = L.Class.extend({
     
         const titleText = this.createElement('h1', 'nearYouTopText', { textContent: "Stickers near you" });
         overlayElement.appendChild(titleText);
+
+        const errorMessage = this.createElement('h2', 'errorMessage', { textContent: 'placeholder', className: 'error' });  
+        overlayElement.appendChild(errorMessage);
     
         for (let i = 0; i < 10; i++) {
             this.createStickerDiv(i, overlayElement);
@@ -236,11 +239,20 @@ var Overlay = L.Class.extend({
 
     getNearYouData: function () {
         const self = this;
+        const errorMessage = document.getElementsByClassName('error')[0];
+        if (errorMessage.classList.contains('revealed'))
+            errorMessage.classList.remove('revealed');
+        
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 // Use user location to request nearby stickers from database
-                position => self.requestDBStickers(position),
-                error => window.alert(getError(error))
+                position => {
+                    self.requestDBStickers(position)
+                },
+                error => {
+                    errorMessage.textContent = getError(error);
+                    errorMessage.classList.add('revealed');
+                }
             );
         } else {
             alert("Geolocation is not supported by this browser.");
