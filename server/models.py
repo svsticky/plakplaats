@@ -24,3 +24,6 @@ class Sticker(Base):
     #        uv run alembic revision --autogenerate -m ""
     #    to run migrations (run on new clone):
     #       uv run alembic upgrade head
+    #    to downgrade the database:
+    #       uv run alembic downgrade base
+    
