@@ -154,7 +154,7 @@ def uploadSticker():
     # Check if request is sent with HTTP Post method
     if request.method == 'POST':
         # Check if all required parameters are available and good
-        if request.form['lat'] != '' and request.form['lon'] != '' and request.form['logoId'] != '':
+        if request.form['lat'] != '' and request.form['lon'] != '':
             if 'image' in request.files and request.files['image'].filename != '':
                 file = request.files['image']
                 if (file and allowed_file(file.filename)):
@@ -168,7 +168,6 @@ def uploadSticker():
                         sticker = Sticker(
                             longitude  = float(request.form['lon']),
                             latitude   = float(request.form['lat']),
-                            logo       = 1,
                             picture    = os.path.join(UPLOAD_ROOT_URL, filename),
                             adderemail = emailCode,
                             boardyear  = request.form['boardYear'],
@@ -183,62 +182,9 @@ def uploadSticker():
             else:
                 return json.dumps({'status': '400', 'error': 'You must upload a picture.'}), 400
         else:
-            return json.dumps({'status': '400', 'error': 'Location or logo not defined.'}), 400
+            return json.dumps({'status': '400', 'error': 'Location not defined.'}), 400
     else:
         return json.dumps({'status': '405', 'error': 'HTTP Method not allowed.'}), 405
-
-
-# @app.route('/logos', methods=['GET'])
-# def getLogos():
-    # Check token if required
-    # if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-    #     if not checkToken(request.args.get('token')):
-            # return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
-    # with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-    #     cursor = con.cursor()
-    #     results = cursor.execute('SELECT * FROM logos ORDER BY logoTitle DESC').fetchall()
-    #     return json.dumps(results)
-
-# @app.route('/editLogo', methods=['PATCH'])
-# def editLogo():
-#     # Check if the request contains an valid admin token
-#     if not checkAdminToken(request.cookies.get('adminToken')):
-#         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
-#     if request.args.get("id") == None or request.args.get('name') == None or request.args.get('color') == None:
-#         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
-#     with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-#         cursor = con.cursor();
-#         cursor.execute('UPDATE logos SET logoTitle=%s, logoColor=%s WHERE logoId=%s', (request.args.get('name'), request.args.get('color'), request.args.get('id')))
-#         con.commit()
-#         return json.dumps({'status': '200', 'error': 'Logo updated!'}), 200
-
-# @app.route('/deleteLogo', methods=['DELETE'])
-# def deleteLogo():
-#     # Check if the request contains an valid admin token
-#     if not checkAdminToken(request.cookies.get('adminToken')):
-#         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
-#     if request.args.get("id") is None:
-#         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
-#     with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-#         cursor = con.cursor()
-#         cursor.execute('DELETE FROM logos WHERE logoId=%s', (request.args.get('id'),))
-#         con.commit()
-#         return json.dumps({'status': '200', 'error': 'Logo deleted!'}), 200
-
-
-# @app.route('/addLogo', methods=['POST'])
-# def addLogo():
-#     # Check if the request contains an valid admin token
-#     if not checkAdminToken(request.cookies.get('adminToken')):
-#         return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
-#     if request.args.get('name') == None or request.args.get('color') == None:
-#         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
-#     with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-#         cursor = con.cursor()
-#         cursor.execute('INSERT INTO logos (logoTitle, logoColor) VALUES (%s,%s)', (request.args.get('name'), request.args.get('color')))
-#         con.commit()
-#         return json.dumps({'status': '200', 'error': 'Logo added!'}), 200
-
 
 # @app.route('/addEmail', methods=['PATCH'])
 # def addEmail():
