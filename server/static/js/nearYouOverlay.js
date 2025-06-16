@@ -8,11 +8,13 @@ var Overlay = L.Class.extend({
     initialize: function (selector, options) {
         this.isActive = false;
         this.currentlyMobile = isMobile();
+        this.ownStickers = false;
         this._selector = selector;
         this._dragStartY = 0;
         this._overlayHeight = 0;
         
         this._overlayElement = this.createOverlayElement();
+        this._viewOwnButton = this.addViewOwnButton();
         
         document.body.appendChild(this._overlayElement);
 
@@ -71,6 +73,37 @@ var Overlay = L.Class.extend({
         return _desktopOpenButton;
     },
 
+    addViewOwnButton: function () {
+        var self = this;
+
+        // Create a button to open/close the sidebar
+        let _viewOwnStickersButton = document.createElement('button');
+        _viewOwnStickersButton.id = 'viewOwnStickersToggleButton';
+        _viewOwnStickersButton.innerHTML = 'Shown My Stickers';
+        self.appendChild(_viewOwnStickersButton);
+
+        _viewOwnStickersButton.addEventListener('click', function() {
+            self.switchStickerView();
+        });
+
+        return _viewOwnStickersButton;
+    },
+
+    switchStickerView: function() {
+        this.ownStickers = !this.ownStickers;
+        this._overlayElement.scrollTo(0, 0);
+        const stickerDivs = document.querySelectorAll('.stickerDiv');
+        stickerDivs.forEach(div => div.classList.remove('revealed'));
+
+        // Reset scroll and reload revealed stickers
+        if (!isOpen) {
+            const stickerDivs = document.querySelectorAll('.stickerDiv');
+            stickerDivs.forEach(div => div.classList.remove('revealed'));
+        }
+
+        this.getStickerData();
+    },
+
     switchToMobile: function () {
         this.currentlyMobile = true;
         this.closeDesktopSidebar();
@@ -124,7 +157,7 @@ var Overlay = L.Class.extend({
     
         // Fetch data only when opening and inactive
         if (isOpen && !this.isActive) {
-            this.getNearYouData();
+            this.getStickerData();
         }
     
         // Update activity state
@@ -230,14 +263,13 @@ var Overlay = L.Class.extend({
 
     handleGeolocationError: function (error) {
         getError(error);
-        
     },
 
     handleFetchError: function (error, url) {
         console.error(`Error fetching from ${url}: ${error.message}`);
     },
 
-    getNearYouData: function () {
+    getStickerData: function () {
         const self = this;
         const errorMessage = document.getElementsByClassName('error')[0];
         if (errorMessage.classList.contains('revealed'))
@@ -400,7 +432,7 @@ var Overlay = L.Class.extend({
         stickerDivs.forEach(function (stickerDiv, index) {
             setTimeout(function () {
                 stickerDiv.classList.add('revealed');
-            }, index * 400);
+            }, index * STICKER_REVEAL_DELAY);
         });
     },
 });
