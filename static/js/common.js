@@ -27,31 +27,12 @@ var emailCode;
 var pointersOnMap = [];
 var logoIcons = [];
 
-const userNameUrl = `getUserName`;
-fetch(userNameUrl)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Error while fetching the username.');
-        }
-        return response.json(); // Parse the JSON from the response
-    })
-    .then(data => {
-        if (data.status === '200') {
-            navUserName.textContent = data.username; // Set the username text
-            navUserName.addEventListener("click", function() {
-                const userResponse = confirm("Do you want to log out?");
-                if (userResponse) {
-                    logOut();
-                } else {
-                    // Don't do anything
-                }
-            });
-        } else {
-            console.error(`Error: ${data.error}`);
-        }
-    })
-    .catch(error => console.error(`Error fetching from ${userNameUrl}: ${error.message}`));
-
+navUserName.addEventListener("click", function () {
+    const userResponse = confirm("Do you want to log out?");
+    if (userResponse) {
+        logOut();
+    }
+});
 
 function logOut() {
     const logOutUrl = `/logout`;
@@ -60,12 +41,11 @@ function logOut() {
             if (!response.ok) {
                 throw new Error('Error while logging out.');
             }
-            window.localStorage.removeItem('token');
-            window.location.href = '/auth';
+            window.location.href = '/login';
         })
         .catch(error => console.error(`Error logging out: ${error.message}`));
 }
-    
+
 
 // Define the function before the event listener
 function isMobile() {

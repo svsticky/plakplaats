@@ -1,240 +1,230 @@
 import flask
 from flask import request
+from flask import jsonify
 from flask import render_template
 import requests
 import psycopg2
-import time
 import json
-from decimal import Decimal
 import os
 from werkzeug.utils import redirect, secure_filename
 import random
 from dotenv import load_dotenv
-import secrets
 import datetime
+
+import json
+from functools import wraps
+
+import requests
+from flask import Flask
+from flask import jsonify
+from flask import url_for
+from jwt.algorithms import RSAAlgorithm
+
+from flask_jwt_extended import current_user
+from flask_jwt_extended import JWTManager
+from flask_jwt_extended import verify_jwt_in_request
+
+import os, requests, flask, json
+from flask import Flask, request, redirect, url_for, render_template, jsonify
+from functools import wraps
+from flask_jwt_extended import (
+    JWTManager,
+    verify_jwt_in_request,
+    current_user,
+)
+from jwt.algorithms import RSAAlgorithm
+from dotenv import load_dotenv
+from urllib.parse import urlparse
 
 if (not os.path.exists("./static/uploads")):
     os.mkdir("./static/uploads")
 
-# Load env file for variable
 load_dotenv()
 
-# Create flask app
-app = flask.Flask(__name__)
+class Config:
+    # OIDC info
+    OIDC_ISSUER_BASE   = os.getenv("KOALA_URL")
+    OIDC_CLIENT_ID     = os.getenv("KOALA_CLIENT_UID")
+    OIDC_CLIENT_SECRET = os.getenv("KOALA_CLIENT_SECRET")
+    OIDC_SCOPES        = os.getenv("OIDC_SCOPES")
 
-POSTGRES_HOST = os.getenv("POSTGRES_HOST")
-POSTGRES_DBNAME = os.getenv("POSTGRES_DBNAME")
-POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PASS = os.getenv("POSTGRES_PASS")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+    # Flask‑JWT‑Extended config
+    JWT_ALGORITHM        = "RS256"
+    JWT_PUBLIC_KEY       = None   # gets filled in at startup
+    JWT_TOKEN_LOCATION   = ["cookies"]
+    JWT_ACCESS_COOKIE_PATH = "/"
+    JWT_COOKIE_SECURE    = True
 
-BOARD_COLOR = os.getenv("STICKER_MAP_COLOR")
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-UPLOAD_DIRECTORY = "static/uploads"
+    # Postgres config
+    POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+    POSTGRES_DBNAME = os.getenv("POSTGRES_DBNAME")
+    POSTGRES_USER = os.getenv("POSTGRES_USER")
+    POSTGRES_PASS = os.getenv("POSTGRES_PASS")
+    POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 
+    # Miscellaneous
+    BOARD_COLOR = os.getenv("STICKER_MAP_COLOR")
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+    UPLOAD_DIRECTORY = "static/uploads"
 
-userName = ""
+# ─── Flask + JWT init ────────────────────────────────────────────────────
+app = Flask(__name__)
+app.config.from_object(Config)
 
-con = psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT)
+disc = requests.get(f"{app.config['OIDC_ISSUER_BASE']}/.well-known/openid-configuration", verify=True).json()
+jwks = requests.get(disc["jwks_uri"], verify=True).json()
+app.config["JWT_PUBLIC_KEY"] = RSAAlgorithm.from_jwk(json.dumps(jwks["keys"][0]))
+
+jwt = JWTManager(app)
+
+con = psycopg2.connect(host=Config.POSTGRES_HOST, dbname=Config.POSTGRES_DBNAME, user=Config.POSTGRES_USER, password=Config.POSTGRES_PASS, port=Config.POSTGRES_PORT)
 
 cursor = con.cursor()
 
-# cursor.execute("DROP TABLE tokens")
-# cursor.execute("DROP TABLE adminTokens")
-
 cursor.execute("CREATE TABLE IF NOT EXISTS stickers (stickerID SERIAL PRIMARY KEY, stickerLat Decimal(8,6), stickerLon Decimal(9,6), logoID INT, pictureUrl VARCHAR(255), adderEmail VARCHAR(255), postTime TIMESTAMP, spots INT, boardYear INT, verified INT)")
-cursor.execute("CREATE TABLE IF NOT EXISTS tokens (token TEXT, expirationTime INT)")
-cursor.execute("CREATE TABLE IF NOT EXISTS adminTokens (token TEXT, expirationTime INT)")
 
 con.commit()
 
 cursor.close()
 con.close()
 
+class User:
+    def __init__(self, sub, email, is_super_admin, full_name):
+        self.sub        = sub
+        self.email      = email
+        self.is_super_admin  = is_super_admin
+        self.full_name  = full_name
 
-# @app.route('/')
-# def stickerMap():
-#     if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-#         # Check if cookie is avalable
-#         if request.cookies.get('token') is not None:
-#             # Check token
-#             if checkToken(request.cookies.get('token')):
-#                 return render_template('home.html', color=BOARD_COLOR)
-#             else:
-#                 return redirect('/auth', code=302)
-#         else:
-#             return "redirecting... <script>if(window.localStorage.getItem('token') != null){ document.cookie = 'token=' + window.localStorage.getItem('token'); window.location.reload(); } else { window.location.href = '/auth' }</script>"
-#     else:
-#         return render_template('home.html', color=BOARD_COLOR)
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data):
+    return User(
+        sub       = int(jwt_data["sub"]),
+        email     = jwt_data.get("email"),
+        is_super_admin = jwt_data.get("is_admin"),
+        full_name = jwt_data.get("full_name", "")
+    )
 
+# ─── Helper decorators ────────────────────────────────────────────────────
+def _login_redirect():
+    next_url = request.url
+    path = urlparse(next_url).path
+    if path == '/':
+        return redirect(url_for("login"))
+    return redirect(url_for("login", next=path))
 
+@jwt.unauthorized_loader
+def redirect_missing_token(error_string):
+    return _login_redirect()
+
+@jwt.invalid_token_loader
+def redirect_invalid_token(error_string):
+    return _login_redirect()
+
+@jwt.expired_token_loader
+def redirect_expired_token(jwt_header, jwt_payload):
+    return _login_redirect()
+
+# ─── Wrappers for authorization ───────────────────────────────
+def login_required(fn):
+    @wraps(fn)
+    def wrapper(*a, **kw):
+        verify_jwt_in_request()
+        return fn(*a, **kw)
+    return wrapper
+
+def admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        adminList = [3, 412]
+        approved = (current_user.sub in adminList) or current_user.is_super_admin
+        if not approved:
+             return "User does not have admin rights", 403
+        return fn(*args, **kwargs)
+    return wrapper
+
+def super_admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        if not current_user.is_super_admin:
+            return "User does not have super admin rights", 403
+        return fn(*args, **kwargs)
+    return wrapper
+
+# ─── Frontend Routes ─────────────────────────────────────────────
 @app.route('/')
+@login_required
 def stickerMap():
-    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        # Check if a valid token cookie is available
-        token = request.cookies.get('token')
-        if token and checkToken(token):
-            return render_template('home.html', color=BOARD_COLOR)
-        else:
-            # Clear cookies and instruct the client to clear localStorage
-            resp = flask.make_response("redirecting... <script>localStorage.removeItem('token'); window.location.href = '/auth';</script>")
-            resp.set_cookie('token', '', expires=0)
-            resp.set_cookie('adminToken', '', expires=0)
-            return resp
-    else:
-        return render_template('home.html', color=BOARD_COLOR)
+    return render_template('home.html', username=current_user.full_name)
 
+@app.route("/admin")
+@admin_required
+def admin_dashboard():
+    return render_template("admin.html")
 
+@app.route("/superadmin")
+@super_admin_required
+def superadmin_dashboard():
+    return jsonify(msg="🚀 Welcome, superadmin!"), 200
 
-@app.route('/admin', methods=['GET'])
-def admin():
-    # It is not needed to store or retrieve the adminToken from localStorage
-    # because it is not intended to survive a new session
-    if checkAdminToken(request.cookies.get('adminToken')):
-        return render_template('admin.html', color=BOARD_COLOR)
-    else:
-        return redirect('/auth?adminRefresh=1')
-
-
-@app.route('/auth', methods=['GET'])
-def auth():
-    # The request contains a code after loggin in.
-    if request.args.get('code') is None:
-        # Check if login with koala is enabled
-        if os.getenv("LOGIN_WITH_KOALA") == "True":
-            # Construct login url
-            url = os.getenv("KOALA_URL") + "/api/oauth/authorize?client_id=" + os.getenv("KOALA_CLIENT_UID") + "&scope=openid profile email member-read&redirect_uri=" + os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth&response_type=code"
-            resp = flask.make_response(render_template('authKoala.html', color=BOARD_COLOR, loginUrl=url))
-            if request.args.get('adminRefresh') is not None:
-                resp.set_cookie('adminRefresh', "1")
-            return resp
-        else:
-            return 'Logging in without koala is not yet supported.'
-    else:
-        # Handle code
-        # Create post request to koala server
-        tokenUrl = os.getenv("KOALA_URL") + "/api/oauth/token"        
-        redirectURI = os.getenv("STICKER_MAP_URL") + ":" + os.getenv("STICKER_MAP_PORT") + "/auth"
-        postRequestData = {"grant_type" : "authorization_code", "code" : request.args.get('code'), "redirect_uri" : redirectURI}
-        tokenResponse = requests.post(tokenUrl, data = postRequestData, auth = (os.getenv("KOALA_CLIENT_UID"), os.getenv("KOALA_CLIENT_SECRET")))
-        print(tokenResponse.headers)
-        print(tokenResponse.text)
-        tokenResponse = json.loads(tokenResponse.text)
-        # Check if the response is valid, redirect back if not
-        if 'credentials_type' not in tokenResponse:
-            return redirect('/auth', code=302)
-        # Connect to db
-        with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-            cursor = con.cursor()
-            # Check if the user already has (normal) key stored. (Admin refresh session)
-            token = ""
-            if not checkToken(request.cookies.get('token')):
-                # Create a (normal) token for user
-                token = secrets.token_urlsafe(30)
-                cursor.execute("INSERT INTO tokens VALUES (%s)", (token,))
-            else:
-                # User already has a valid token, re-use this one
-                token = request.cookies.get('token')
-            # Create a response
-            page = "redirecting <script>window.localStorage.setItem('token', '" + token + "'); window.location.href = '../'</script>"
-            # Check if the user came from the home page
-            if request.cookies.get('adminRefresh') is not None:
-                page = "redirecting <script>window.localStorage.setItem('token', '" + token + "'); window.location.href = '../admin'</script>"
-            resp = flask.make_response(page)
-            # Check if the user is a admin
-
-            print("tokenResponse:")
-            print(tokenResponse)
-
-            if tokenResponse['credentials_type'] == "Admin":
-                adminToken = secrets.token_urlsafe(30)
-                expirationTime = round(time.time()) + int(os.getenv("ADMIN_EXPIRES_IN"))
-                cursor.execute("INSERT INTO adminTokens VALUES(%s,%s)", (adminToken, expirationTime))
-                resp.set_cookie('adminToken', adminToken)
-            con.commit()
-            # Save token as cookie
-            resp.set_cookie('token', token)
-            # Remove the admin redirect token if needed
-            resp.set_cookie('adminRefresh', '', expires=0)
-
-            # userInfo = getUserName(tokenResponse)
-            # print("userInfo:")
-            # print(userInfo)
-            global userName
-            userName = tokenResponse['id_token']
-
-            return resp
-
-# @app.route('/logout', methods=['GET'])
-# def logout():
-#     # Get the user's tokens from cookies
-#     token = request.cookies.get('token')
-#     admin_token = request.cookies.get('adminToken')
-    
-#     # Connect to the database to remove tokens
-#     with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-#         cursor = con.cursor()
-        
-#         # Remove the user's tokens from the database
-#         if token:
-#             cursor.execute("DELETE FROM tokens WHERE token = %s", (token,))
-#         if admin_token:
-#             cursor.execute("DELETE FROM adminTokens WHERE token = %s", (admin_token,))
-        
-#         con.commit()
-    
-#     # Create a response to clear cookies
-#     resp = flask.make_response(redirect('/auth'))
-#     resp.set_cookie('token', '', expires=0)
-#     resp.set_cookie('adminToken', '', expires=0)
-
-#     return resp
-
-@app.route('/logout', methods=['GET'])
+@app.route("/logout")
 def logout():
-    # Get the user's tokens from cookies
-    token = request.cookies.get('token')
-    admin_token = request.cookies.get('adminToken')
-    
-    # Connect to the database to remove tokens
-    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-        cursor = con.cursor()
-        
-        # Remove the user's tokens from the database
-        if token:
-            cursor.execute("DELETE FROM tokens WHERE token = %s", (token,))
-        if admin_token:
-            cursor.execute("DELETE FROM adminTokens WHERE token = %s", (admin_token,))
-        
-        con.commit()
-    
-    # Create a response to clear cookies
-    resp = flask.make_response("Logged out successfully. <script>localStorage.removeItem('token'); window.location.href = '/auth';</script>")
-    resp.set_cookie('token', '', expires=0)
-    resp.set_cookie('adminToken', '', expires=0)
-
+    next_url = request.args.get("next") or url_for("stickerMap")
+    resp = flask.make_response(redirect(next_url))
+    resp.delete_cookie("access_token_cookie", path="/")
     return resp
 
+# ─── OpenID /auth Flow ───────────────────────────────────────────────────
+@app.route("/login")
+def login():
+    code = request.args.get("code")
+    if not code:
+        next_url = request.args.get("next") or url_for("stickerMap")
+        auth_url = (
+            f"{Config.OIDC_ISSUER_BASE}/api/oauth/authorize"
+            f"?client_id={Config.OIDC_CLIENT_ID}"
+            f"&scope={Config.OIDC_SCOPES}"
+            f"&redirect_uri={url_for('login', _external=True)}"
+            f"&response_type=code"
+            f"&state={next_url}"
+        )
+        return render_template("login.html", loginUrl=auth_url)
 
+    next_url = request.args.get("next") or url_for("stickerMap")
 
-# def getUserName(tokenResponse):
-#     url = 'https://koala.dev.svsticky.nl/oauth/userinfo'
-#     headers = {'Authorization': f"Bearer {tokenResponse['access_token']}"}
-#     print("headers:")
-#     print(headers)
-#     response = requests.get(url, headers=headers)
-#     print("response.status_code")
-#     print(response.status_code)
-#     print("response.text")
-#     print(response.text)
-#     return response.content
+    # Exchange code for tokens
+    token_response = requests.post(
+        f"{Config.OIDC_ISSUER_BASE}/api/oauth/token",
+        data={
+            "grant_type":   "authorization_code",
+            "code":         code,
+            "redirect_uri": url_for('login', _external=True)
+        },
+        auth=(Config.OIDC_CLIENT_ID, Config.OIDC_CLIENT_SECRET)
+    ).json()
 
+    # Redirect user to login when there is no id_token
+    id_token = token_response.get("id_token")
+    if not id_token:
+        return redirect(url_for("login"))
+
+    next_url = request.args.get("state") or url_for("stickerMap")
+
+    # Set the Koala ID‑token as the cookie
+    resp = flask.make_response(redirect(next_url))
+    resp.set_cookie(
+        "access_token_cookie",
+        id_token,
+        httponly=True,
+        secure=Config.JWT_COOKIE_SECURE,
+        path="/"
+    )
+    return resp
+
+# ─── Backend routes ───────────────────────────────────────────────────
 @app.route('/upload', methods=['GET', 'POST'])
 def uploadSticker():
-    # Check token if required
-    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        if not checkToken(request.cookies.get('token')):
-            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
     # Check if request is sent with HTTP Post method
     if request.method == 'POST':
         # Check if all required parameters are available and good
@@ -245,17 +235,17 @@ def uploadSticker():
                     # Create a save to use filename
                     filename = checkFileName(secure_filename(file.filename))
                     # Save file
-                    file.save(os.path.join(UPLOAD_DIRECTORY, filename))
+                    file.save(os.path.join(Config.UPLOAD_DIRECTORY, filename))
                     # create db entry
-                    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+                    with psycopg2.connect(host=Config.POSTGRES_HOST, dbname=Config.POSTGRES_DBNAME, user=Config.POSTGRES_USER, password=Config.POSTGRES_PASS, port=Config.POSTGRES_PORT) as con:
                         emailCode = random.randrange(9999999, 999999999)
 
                         sampleEmail = "joe@joecompany.com"
                         currentTime = str(datetime.datetime.now())
 
                         cursor = con.cursor()
-                        # cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail) VALUES (%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], request.form['logoId'], os.path.join(UPLOAD_DIRECTORY, filename), emailCode))
-                        cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail, postTime, spots, boardYear, verified) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], 1, os.path.join(UPLOAD_DIRECTORY, filename), emailCode, currentTime, 0, request.form['boardYear'], 1))
+                        # cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail) VALUES (%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], request.form['logoId'], os.path.join(Config.UPLOAD_DIRECTORY, filename), emailCode))
+                        cursor.execute("INSERT INTO stickers (stickerLat, stickerLon, logoId, pictureUrl, adderEmail, postTime, spots, boardYear, verified) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)", (request.form['lat'], request.form['lon'], 1, os.path.join(Config.UPLOAD_DIRECTORY, filename), emailCode, currentTime, 0, request.form['boardYear'], 1))
                         con.commit()
                         return json.dumps({'status': '200', 'error': 'Sticker added to database.', 'emailCode': emailCode}), 200
                 else:
@@ -267,68 +257,12 @@ def uploadSticker():
     else:
         return json.dumps({'status': '405', 'error': 'HTTP Method not allowed.'}), 405
 
-
-@app.route('/logos', methods=['GET'])
-def getLogos():
-    # Check token if required
-    # if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-    #     if not checkToken(request.args.get('token')):
-            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
-    # with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-    #     cursor = con.cursor()
-    #     results = cursor.execute('SELECT * FROM logos ORDER BY logoTitle DESC').fetchall()
-    #     return json.dumps(results)
-
-@app.route('/editLogo', methods=['PATCH'])
-def editLogo():
-    # Check if the request contains an valid admin token
-    if not checkAdminToken(request.cookies.get('adminToken')):
-        return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
-    if request.args.get("id") == None or request.args.get('name') == None or request.args.get('color') == None:
-        return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
-    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-        cursor = con.cursor();
-        cursor.execute('UPDATE logos SET logoTitle=%s, logoColor=%s WHERE logoId=%s', (request.args.get('name'), request.args.get('color'), request.args.get('id')))
-        con.commit()
-        return json.dumps({'status': '200', 'error': 'Logo updated!'}), 200
-
-@app.route('/deleteLogo', methods=['DELETE'])
-def deleteLogo():
-    # Check if the request contains an valid admin token
-    if not checkAdminToken(request.cookies.get('adminToken')):
-        return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
-    if request.args.get("id") is None:
-        return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
-    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-        cursor = con.cursor()
-        cursor.execute('DELETE FROM logos WHERE logoId=%s', (request.args.get('id'),))
-        con.commit()
-        return json.dumps({'status': '200', 'error': 'Logo deleted!'}), 200
-
-@app.route('/addLogo', methods=['POST'])
-def addLogo():
-    # Check if the request contains an valid admin token
-    if not checkAdminToken(request.cookies.get('adminToken')):
-        return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
-    if request.args.get('name') == None or request.args.get('color') == None:
-        return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'}), 400
-    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-        cursor = con.cursor()
-        cursor.execute('INSERT INTO logos (logoTitle, logoColor) VALUES (%s,%s)', (request.args.get('name'), request.args.get('color')))
-        con.commit()
-        return json.dumps({'status': '200', 'error': 'Logo added!'}), 200
-
-
 @app.route('/addEmail', methods=['PATCH'])
 def addEmail():
-    # Check token if required
-    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        if not checkToken(request.cookies.get('token')):
-            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
     if request.form['email'] != '':
         if request.form['token'] != '':
             # Check if the token is in the database
-            with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+            with psycopg2.connect(host=Config.POSTGRES_HOST, dbname=Config.POSTGRES_DBNAME, user=Config.POSTGRES_USER, password=Config.POSTGRES_PASS, port=Config.POSTGRES_PORT) as con:
                 cursor = con.cursor()
                 result = cursor.execute('SELECT * FROM stickers WHERE adderEmail=%s', (request.form['token'],)).fetchall()
                 if len(result) != 0:
@@ -343,16 +277,11 @@ def addEmail():
     else:
         return json.dumps({'status': '400', 'error': 'Email not defined'}), 400
 
-
 @app.route('/getStickers', methods=['GET'])
 def getStickers():
-    # Check token if required
-    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        if not checkToken(request.cookies.get('token')):
-            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
     if (request.args.get('west') != '' and request.args.get('east') != '' and request.args.get('north') != '' and request.args.get('south') != ''):
         # Get all the stickers within the bounding box
-        with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+        with psycopg2.connect(host=Config.POSTGRES_HOST, dbname=Config.POSTGRES_DBNAME, user=Config.POSTGRES_USER, password=Config.POSTGRES_PASS, port=Config.POSTGRES_PORT) as con:
             # create cursor
             cursor = con.cursor()
             # find results
@@ -366,23 +295,10 @@ def getStickers():
 
 @app.route('/getNearYouStickers', methods=['GET'])
 def getNearYouStickers():
-    # Check token if required
-    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        if not checkToken(request.cookies.get('token')):
-            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
     if (request.args.get('lon') != '' and request.args.get('lat') != ''):
         # Get all the stickers within the bounding box
-        with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-            # create cursor
+        with psycopg2.connect(host=Config.POSTGRES_HOST, dbname=Config.POSTGRES_DBNAME, user=Config.POSTGRES_USER, password=Config.POSTGRES_PASS, port=Config.POSTGRES_PORT) as con:
             cursor = con.cursor()
-            # find results
-            # cursor.execute("""SELECT *, ST_DistanceSphere(
-            #     ST_MakePoint(5.172445, 52.086240),
-            #     ST_MakePoint(stickerLon, stickerLat)
-            # ) AS distance
-            # FROM stickers
-            # ORDER BY distance ASC
-            # LIMIT 10""")
 
             cursor.execute("""SELECT *, ST_DistanceSphere(
                 ST_MakePoint(%s, %s),
@@ -401,26 +317,19 @@ def getNearYouStickers():
 
 @app.route('/getUnverifiedStickers', methods=['GET'])
 def getUnverifiedStickers():
-    # Check if the request contains an valid admin token
-    if not checkAdminToken(request.cookies.get('adminToken')):
-        return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
     # Get all unverified stickers'
-    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+    with psycopg2.connect(host=Config.POSTGRES_HOST, dbname=Config.POSTGRES_DBNAME, user=Config.POSTGRES_USER, password=Config.POSTGRES_PASS, port=Config.POSTGRES_PORT) as con:
         # create cursor
         cursor = con.cursor()
         # find results
         rows = cursor.execute("SELECT * FROM stickers WHERE verified=0").fetchall()
         return json.dumps(rows)
 
-
 @app.route('/setSticker', methods=['GET'])
 def setSticker():
-    # Check if the request contains an valid admin token
-    if not checkAdminToken(request.cookies.get('adminToken')):
-        return json.dumps({'status': '403', 'error': 'Token invalid, expired, or not available'}), 403
     if request.args.get("id") == None or request.args.get('state') == None:
         return json.dumps({'status': '400', 'error': 'Invalid or missing arguments.'})
-    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+    with psycopg2.connect(host=Config.POSTGRES_HOST, dbname=Config.POSTGRES_DBNAME, user=Config.POSTGRES_USER, password=Config.POSTGRES_PASS, port=Config.POSTGRES_PORT) as con:
         # create a cursor
         cursor = con.cursor()
         # Get the email address of the user
@@ -438,20 +347,14 @@ def setSticker():
             return json.dumps({'status': '200', 'error': 'Card updated'})
         return json.dumps({'status': '400', 'error': 'Invalid card state'})
 
-
 @app.route('/updateStickerSpots', methods=['POST'])
 def updateStickerSpots():
-    # Check token if required
-    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        if not checkToken(request.cookies.get('token')):
-            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
-    
     data = request.get_json()
     stickerID = data.get('stickerID')
 
     if (stickerID != ''):
         # Get all the stickers within the bounding box
-        with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
+        with psycopg2.connect(host=Config.POSTGRES_HOST, dbname=Config.POSTGRES_DBNAME, user=Config.POSTGRES_USER, password=Config.POSTGRES_PASS, port=Config.POSTGRES_PORT) as con:
             # create cursor
             cursor = con.cursor()
             # Increase spot count
@@ -461,66 +364,17 @@ def updateStickerSpots():
     else:
         return json.dumps({'status': '400', 'error': 'Updating sticker spots failed'}), 400
 
-def sendEmailUpdate():
-    return 0  # TODO not implemented
-
-
-def checkToken(token):
-    # print(token)
-    if token is None:
-        return False
-    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-        cursor = con.cursor()
-        cursor.execute("SELECT * FROM tokens WHERE token=%s", (token,))
-        rows = cursor.fetchall()
-        if len(rows) > 0:
-            return True
-        else:
-            return False
-
-def checkAdminToken(token):
-    # Check if the token is not null
-    if token is None:
-        return False
-    # Connect with database
-    with psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DBNAME, user=POSTGRES_USER, password=POSTGRES_PASS, port=POSTGRES_PORT) as con:
-        # Remove invalid keys from the database
-        cursor = con.cursor()
-        cursor.execute("DELETE FROM adminTokens WHERE %s > expirationTime", (time.time(),))
-        # Check if you key is still in the database
-        cursor.execute("SELECT * FROM adminTokens WHERE token = %s", (token,))
-        rows = cursor.fetchall()
-        if len(rows) > 0:
-            return True
-        else:
-            return False
-
-
 def allowed_file(filename):
     return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
+        filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
 def checkFileName(name):
     newName = name
     counter = 0
-    while os.path.exists(os.path.join(UPLOAD_DIRECTORY, newName)):
+    while os.path.exists(os.path.join(Config.UPLOAD_DIRECTORY, newName)):
         newName = name.split('.')[0] + str(counter) + '.' + name.split('.')[1]
         counter += 1
     return newName
 
-
-@app.route('/getUserName', methods=['GET'])
-def getUserName():
-    # Check token if required
-    if os.getenv('STICKER_MAP_REQUIRE_LOGIN') == "True":
-        if not checkToken(request.cookies.get('token')):
-            return json.dumps({'status': '403', 'error': 'Not authenticated or cookies disabled.'}), 405
-
-    global userName
-    return json.dumps({'status': '200', 'username': userName}), 200
-
-# only runs when executed as script, not when used as module
 if __name__ == "__main__":
-    from waitress import serve
-    serve(app, host='0.0.0.0', port='7050')
+    app.run(port=7050, debug=True)
