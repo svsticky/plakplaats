@@ -745,3 +745,12 @@ button,
 .stickerDiv>*.revealed {
     opacity: 1;
 }
+
+.error:not(.revealed) {
+    display: none;
+} 
+
+.error.revealed {
+    display: block;
+    color: #FF0000;
+}

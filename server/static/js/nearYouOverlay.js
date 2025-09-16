@@ -11,9 +11,9 @@ var Overlay = L.Class.extend({
         this._selector = selector;
         this._dragStartY = 0;
         this._overlayHeight = 0;
-        
+
         this._overlayElement = this.createOverlayElement();
-        
+
         document.body.appendChild(this._overlayElement);
 
         this._desktopOpenButton = this.addDesktopOpenButton();
@@ -30,20 +30,23 @@ var Overlay = L.Class.extend({
     createOverlayElement: function () {
         const overlayElement = document.createElement('div');
         overlayElement.id = 'nearYouOverlay';
-    
+
         this._line = this.createElement('img', 'nearYouMobileLine', { src: './static/img/line.svg' });
         overlayElement.appendChild(this._line);
-    
+
         const titleText = this.createElement('h1', 'nearYouTopText', { textContent: "Stickers near you" });
         overlayElement.appendChild(titleText);
-    
+
+        const errorMessage = this.createElement('h2', 'errorMessage', { textContent: 'placeholder', className: 'error' });
+        overlayElement.appendChild(errorMessage);
+
         for (let i = 0; i < 10; i++) {
             this.createStickerDiv(i, overlayElement);
         }
-    
+
         overlayElement.classList.add('inactive');
         overlayElement.classList.remove('active');
-        
+
         return overlayElement;
     },
 
@@ -57,7 +60,7 @@ var Overlay = L.Class.extend({
         _desktopOpenButton.innerHTML = 'Show Stickers';
         document.body.appendChild(_desktopOpenButton);
 
-        _desktopOpenButton.addEventListener('click', function() {
+        _desktopOpenButton.addEventListener('click', function () {
             if (self.isActive === false) {
                 self.openDesktopSidebar();
             } else {
@@ -95,61 +98,57 @@ var Overlay = L.Class.extend({
     toggleOverlay: function ({ isOpen, isMobile }) {
         const activeClass = 'active';
         const inactiveClass = 'inactive';
-        
+
         // Update overlay classes
         this._overlayElement.classList.toggle(activeClass, isOpen);
         this._overlayElement.classList.toggle(inactiveClass, !isOpen);
-        
+
         // Update button classes
         this._desktopOpenButton.classList.toggle(activeClass, isOpen);
         this._desktopOpenButton.classList.toggle(inactiveClass, !isOpen);
-    
+
         // Update button text
         this._desktopOpenButton.textContent = isOpen ? "Hide Stickers" : "Show Stickers";
-    
+
         // For mobile, set the bottom style for drag behavior
         if (isMobile) {
             this._overlayElement.style.bottom = isOpen ? "0" : "-90%";
         }
-    
+
         // Reset scroll and remove revealed stickers when closing
         if (!isOpen) {
             this._overlayElement.scrollTo(0, 0);
             const stickerDivs = document.querySelectorAll('.stickerDiv');
             stickerDivs.forEach(div => div.classList.remove('revealed'));
         }
-    
+
         // Fetch data only when opening and inactive
         if (isOpen && !this.isActive) {
             this.getNearYouData();
         }
-    
+
         // Update activity state
         this.isActive = isOpen;
     },
-    
+
     openMobileOverlay: function () {
         this.toggleOverlay({ isOpen: true, isMobile: true });
-        console.log("openMobileOverlay");
     },
-    
+
     closeMobileOverlay: function () {
         this.toggleOverlay({ isOpen: false, isMobile: true });
-        console.log("closeMobileOverlay");
     },
-    
+
     openDesktopSidebar: function () {
         resetView();
         closeAddView();
         this.toggleOverlay({ isOpen: true, isMobile: false });
-        console.log("openDesktopSidebar");
     },
-    
+
     closeDesktopSidebar: function () {
         this.toggleOverlay({ isOpen: false, isMobile: false });
-        console.log("closeDesktopSidebar");
     },
-    
+
 
     // Helper function to create elements with attributes
     createElement: function (tagName, id, attributes = {}) {
@@ -158,7 +157,7 @@ var Overlay = L.Class.extend({
         Object.assign(element, attributes);
         return element;
     },
-    
+
     // Create individual sticker elements
     createStickerDiv: function (i, parentElement) {
         const stickerDiv = this.createElement('div', `stickerDiv-${i}`, { className: 'stickerDiv' });
@@ -227,7 +226,7 @@ var Overlay = L.Class.extend({
 
     handleGeolocationError: function (error) {
         getError(error);
-        
+
     },
 
     handleFetchError: function (error, url) {
@@ -236,11 +235,20 @@ var Overlay = L.Class.extend({
 
     getNearYouData: function () {
         const self = this;
+        const errorMessage = document.getElementsByClassName('error')[0];
+        if (errorMessage.classList.contains('revealed'))
+            errorMessage.classList.remove('revealed');
+
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 // Use user location to request nearby stickers from database
-                position => self.requestDBStickers(position),
-                error => window.alert(getError(error))
+                position => {
+                    self.requestDBStickers(position)
+                },
+                error => {
+                    errorMessage.textContent = getError(error);
+                    errorMessage.classList.add('revealed');
+                }
             );
         } else {
             alert("Geolocation is not supported by this browser.");
@@ -254,6 +262,7 @@ var Overlay = L.Class.extend({
         }
 
         const nearYouStickersDBUrl = `getNearYouStickers?lon=${position.coords.longitude}&lat=${position.coords.latitude}`;
+
         fetch(nearYouStickersDBUrl)
             .then(response => {
                 if (!response.ok) {
@@ -282,10 +291,10 @@ var Overlay = L.Class.extend({
                 // Fill sticker with content
                 this.renderSticker(title, stickerDivImgs[i], stickerDivDates[i], stickerData);
                 // Add the 'open on map' button click event
-                this.addOpenOnmapClickListener(stickerDivButtons[i], stickerData[0], stickerData[1], stickerData[2]);
+                this.addOpenOnmapClickListener(stickerDivButtons[i], stickerData.id, stickerData.latitude, stickerData.longitude);
 
                 // Fetch approximate address given the sticker coordinate
-                this.fetchStickerAddress(stickerData[1], stickerData[2], stickerDivNearbys[i]);
+                this.fetchStickerAddress(stickerData.latitude, stickerData.longitude, stickerDivNearbys[i]);
             } else {
                 // Hide the sticker div when there are more divs than stickers
                 stickerDivs[i].style.display = 'none';
@@ -298,11 +307,9 @@ var Overlay = L.Class.extend({
 
     // Fills individual stickers with content
     renderSticker: function (stickerDivH1, stickerDivImg, stickerDivDate, stickerData) {
-        let [stickerID, lat, long, logoID, pictureURL, email, postTime, spots, verified] = stickerData;
-
-        stickerDivH1.textContent = `Sticker ${stickerID}`;
-        stickerDivImg.src = pictureURL;
-        stickerDivDate.textContent = `Posted ${dayjs().to(dayjs(postTime))}`;
+        stickerDivH1.textContent = `Sticker ${stickerData.id}`;
+        stickerDivImg.src = stickerData.picture_url;
+        stickerDivDate.textContent = `Posted ${dayjs().to(dayjs(stickerData.posttime))}`;
     },
 
     // Add 'open on map' button event listener
@@ -311,12 +318,12 @@ var Overlay = L.Class.extend({
         stickerDivButton.dataset.id = stickerID;
         stickerDivButton.dataset.lat = lat;
         stickerDivButton.dataset.long = long;
-    
+
         stickerDivButton.addEventListener('click', function () {
             let stickerID = this.getAttribute('data-id');
             let lat = this.getAttribute('data-lat');
             let long = this.getAttribute('data-long');
-    
+
             self.handleOpenOnMapClick(stickerID, lat, long);
         });
     },
@@ -328,7 +335,7 @@ var Overlay = L.Class.extend({
         // Stickers are loaded in only when they're in you view
         // Therefore, when 'flying' to a sticker we need to 'find' it before we can open it
         // This recursive function checks whether the sticker is present, it not tries again later until it is present
-        
+
         function checkPointerAndOpenPopup(stickerID) {
             for (let y = 0; y < pointersOnMap.length; y++) {
                 if (stickerID == pointersOnMap[y].id) {
@@ -341,7 +348,7 @@ var Overlay = L.Class.extend({
                 checkPointerAndOpenPopup(stickerID);
             }, 100);
         }
-    
+
         // Search for sticker on map and open it
         checkPointerAndOpenPopup(stickerID);
     },
@@ -384,11 +391,11 @@ var Overlay = L.Class.extend({
 
 var overlay = new Overlay('#overlay');
 
-window.addEventListener('resize', function() {
+window.addEventListener('resize', function () {
     if (isMobile() && !overlay.currentlyMobile) {
         overlay.switchToMobile();
     }
-    
+
     else if (!isMobile() && overlay.currentlyMobile) {
         overlay.switchToDesktop();
     }

@@ -22,8 +22,8 @@ updateMap();
 
 function updateMap() {
     //Remove pointers that fell of the map
-    pointersOnMap = pointersOnMap.filter(function(pointer){
-        if(pointer.lat < mymap.getBounds().getSouth() || pointer.lat > mymap.getBounds().getNorth() || pointer.lon < mymap.getBounds().getWest() || pointer.lon > mymap.getBounds().getEast()){
+    pointersOnMap = pointersOnMap.filter(function (pointer) {
+        if (pointer.lat < mymap.getBounds().getSouth() || pointer.lat > mymap.getBounds().getNorth() || pointer.lon < mymap.getBounds().getWest() || pointer.lon > mymap.getBounds().getEast()) {
             mymap.removeLayer(pointer.pointer);
             return false;
         }
@@ -35,23 +35,23 @@ function updateMap() {
     url += '&south=' + mymap.getBounds().getSouth();
     url += '&west=' + mymap.getBounds().getWest();
     url += '&east=' + mymap.getBounds().getEast();
-    request.open('GET', url, true); 
-    request.onreadystatechange = function(){
-        if(this.readyState == 4){
-            if(this.status == 200){
+    request.open('GET', url, true);
+    request.onreadystatechange = function () {
+        if (this.readyState == 4) {
+            if (this.status == 200) {
                 var results = JSON.parse(this.responseText);
-                for(var x = 0; x < results.length; x++){
+                for (var x = 0; x < results.length; x++) {
                     //Check if the pointer already exists on map
                     var isNotOnMap = true;
-                    for(var y = 0; y < pointersOnMap.length; y++){
-                        if(results[x][0] == pointersOnMap[y].id){
+                    for (var y = 0; y < pointersOnMap.length; y++) {
+                        if (results[x].id == pointersOnMap[y].id) {
                             isNotOnMap = false;
                         }
                     }
-                    if(isNotOnMap){
+                    if (isNotOnMap) {
                         //Not on map, add the pointer
                         var stickyIcon = L.icon({
-                            iconUrl: `/static/img/markers/marker-${results[x][8]}.svg`,
+                            iconUrl: `/static/img/markers/marker-${results[x].boardyear}.svg`,
                             shadowUrl: '/static/img/markerShadow.png',
                             iconSize: [38, 52],
                             shadowSize: [52, 52],
@@ -59,35 +59,35 @@ function updateMap() {
                         });
 
                         const pointer = {
-                            id: results[x][0],
-                            lat: results[x][1],
-                            lon: results[x][2],
-                            pointer: L.marker([results[x][1], results[x][2]], {icon: stickyIcon}).addTo(mymap)
+                            id: results[x].id,
+                            lat: results[x].latitude,
+                            lon: results[x].longitude,
+                            pointer: L.marker([results[x].latitude, results[x].longitude], { icon: stickyIcon }).addTo(mymap)
                         }
 
                         //Add a popup
                         let spotText = "";
-                        if (results[x][7] === 1) {
+                        if (results[x].spots === 1) {
                             spotText = "spot";
-                        } 
+                        }
                         else {
                             spotText = "spots";
                         }
 
                         pointer.pointer.bindPopup(`
-                        <h1>Sticker ${results[x][0]}</h1>
+                        <h1>Sticker ${results[x].id}</h1>
                         <h2>Sticked by ???</h2>
-                        <img width='200px' src='${results[x][4]}'>
-                        <h2>${results[x][7]} ${spotText}</h2>
-                        <h2>Posted ${dayjs().to(dayjs(results[x][6]))}</h2>
+                        <img width='200px' src='${results[x].picture}'>
+                        <h2>${results[x].spots} ${spotText}</h2>
+                        <h2>Posted ${dayjs().to(dayjs(results[x].posttime))}</h2>
                         <div class='markerBoardYearDiv'>
-                        <h2 class='markerBoardYearText'>Board year:</h2><h2 class='marker-B${results[x][8]} markerBoardYear'>${results[x][8]}</h2>
+                        <h2 class='markerBoardYearText'>Board year:</h2><h2 class='marker-B${results[x].boardyear} markerBoardYear'>${results[x].boardyear}</h2>
                         </div>
-                        <button class='leafletMarkerButton' id='spotButton-${pointer.id}' data-stickerID='${results[x][0]}'>I've spotted this sticker</button>`)
-                    
-                        pointer.pointer.on('popupopen', function (e) {                         
+                        <button class='leafletMarkerButton' id='spotButton-${pointer.id}' data-stickerID='${results[x].id}'>I've spotted this sticker</button>`)
+
+                        pointer.pointer.on('popupopen', function (e) {
                             document.getElementById('spotButton-' + pointer.id).addEventListener('click', async (e) => {
-                                
+
                                 const button = document.getElementById('spotButton-' + pointer.id);
                                 const stickerID = button.getAttribute('data-stickerID');
 
