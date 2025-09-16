@@ -87,10 +87,11 @@ function submit() {
             dropArea.classList.remove('invalid');
             const response = this.responseText;
             closeAddView();
+            resetView();
             setTimeout(function () {
                 openSuccessView();
+                emailCode = JSON.parse(response)['emailCode'];
             }, 500);
-
         } else {
             if (JSON.parse(this.responseText)['error'] == "You must upload a picture.") {
                 dropArea.classList.add('invalid');

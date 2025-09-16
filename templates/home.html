@@ -19,12 +19,16 @@
             </svg>
             <h1 id="navUserName">{{ username }}</h1>
         </div>
-	<div id="map"></div>  <!-- Will be filled by leaflet code, resulting in the map -->
 
+	        <div id="map" ></div>  <!-- Will be filled by leaflet code, resulting in the map -->
+
+        <div id="mapOverlay">
+            <div id="overlayText">Click anywhere to pick location</div>
+        </div>
         <div class="addContainer">
             <div class="addView">
                 <span class="addViewTitle">Add a sticker</span>
-                <div class="locationContainer">
+                <div class="locationContainer" onclick="setPicker(true)">
                     <svg class="locationContainerSpinner" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="shape-rendering: auto;" width="40px" height="40px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
                         <circle class="locationContainerCircle" cx="50" cy="50" fill="none" stroke="#e15b64" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138">
                             <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" values="0 50 50;360 50 50" keyTimes="0;1"></animateTransform>
@@ -34,7 +38,7 @@
                         <circle class="outerCircle circle" cx="50" cy="50" r="20" fill="blue"></circle>
                         <circle class="circle" cx="50" cy="50" r="20" fill="blue" stroke="white" stroke-width="3px"></circle>   
                       </svg>
-                    <span class="locationContainerText" onclick="setManualLocationInput(true)"></span>
+                    <span class="locationContainerText"></span>
                 </div>
                 <span class="addInputDes locationInputDes">Latitude</span>
                 <input type="number" class="addInput" id="latitudeInput">
@@ -46,7 +50,7 @@
                 </div>
                 <div class="boarYearInput">
                     <label for="boardYearInputSelect">Board year:</label>
-                    <select id="boardYearInputSelect">
+                    <select id="boardYearInputSelect" name="boardYearInputSelect">
                         <option value="1">B1</option>
                         <option value="2">B2</option>
                         <option value="3">B3</option>
@@ -65,7 +69,7 @@
                         <option value="16">B16</option>
                         <option value="17">B17</option>
                         <option value="18">B18</option>
-                        <option value="19">B19</option>
+                        <option value="19" selected>B19</option>
                     </select>
                 </div>
                 <div class="addLogoSelector">

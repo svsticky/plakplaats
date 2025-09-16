@@ -1,20 +1,32 @@
 // *****LOCATION
+
+let pickingLocation = false;
+let statePicked = false;
+
 function getLocation(){
     //Get the permissions
     setLocationContainer("Please grant location permission...");
     
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(handleLocation, showError);
+        navigator.geolocation.getCurrentPosition(handleGeoLocation, (error) => 
+            {setLocationContainer(getError(error) + ", please press to add manually.");});
     } else {
         alert("Geolocation is not supported by this browser.");
     }
 }
 
-function handleLocation(position){
+function handleGeoLocation(location) {
+    if (!pickingLocation && !statePicked)
+        handleLocation(location.coords.latitude, location.coords.longitude);
+}
+
+function handleLocation(lat, lon){
     //Set the values in the inputs
     setLocationContainer("Loading location...");
-    latitudeInput.value = position.coords.latitude;
-    longitudeInput.value = position.coords.longitude;
+    setPicker(false)
+    statePicked = true;
+    latitudeInput.value = lat;
+    longitudeInput.value = lon;
     //Retrieve estimated address
     var addressRequest = new XMLHttpRequest();
     addressRequest.onreadystatechange = function(){
@@ -27,29 +39,25 @@ function handleLocation(position){
                     text += ' ' + addressJson['address']['house_number'];
                 }
             }
-            text += "</i><br>Click to enter manually."
+            text += "</i><br>Press to pick manually."
             setLocationContainer(text, true);
         }
     }
-    console.log('https://nominatim.openstreetmap.org/reverse?lat=' + position.coords.latitude + '&lon=' + position.coords.longitude + '&format=json');
-    addressRequest.open("GET", 'https://nominatim.openstreetmap.org/reverse?lat=' + position.coords.latitude + '&lon=' + position.coords.longitude + '&format=json', true);
+    console.log('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json');
+    addressRequest.open("GET", 'https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json', true);
     addressRequest.send();
 }
 
-function showError(error) {
+function getError(error) {
     switch(error.code) {
         case error.PERMISSION_DENIED:
-            setLocationContainer("Location permission denied, please enter manually.");
-        break;
+            return "Location permission denied";
         case error.POSITION_UNAVAILABLE:
-            setLocationContainer("Location information is unavailable, please enter manually.");
-        break;
+            return "Location information is unavailable"
         case error.TIMEOUT:
-            setLocationContainer("The request to get user location timed out, please enter manually.");
-        break;
+            return "The request to get user location timed out"
         case error.UNKNOWN_ERROR:
-            setLocationContainer("An unknown error occurred, please enter manually");
-        break;
+            return "An unknown error occurred"
     }
 }
 
@@ -68,12 +76,33 @@ function setManualLocationInput(state){
     if(state == true){
         latitudeInput.style.display = 'block';
         longitudeInput.style.display = 'block';
+        
         document.getElementsByClassName('locationInputDes')[0].style.display = 'block';
         document.getElementsByClassName('locationInputDes')[1].style.display = 'block';
     } else {
         latitudeInput.style.display = 'none';
         longitudeInput.style.display = 'none';
+
         document.getElementsByClassName('locationInputDes')[0].style.display = 'none';
         document.getElementsByClassName('locationInputDes')[1].style.display = 'none';
     }
+}
+
+// Manages manually picking a location, called by clikcing the map
+function pickManualLocation(location) {
+    if (pickingLocation) {
+        handleLocation(location.latlng.lat, location.latlng.lng);
+        setManualLocationInput(true);
+        openAddView(false);
+    }
+}
+
+// Set the picking state
+function setPicker(state) {
+    pickingLocation = state;
+    if (statePicked)
+        statePicked = false;
+    setOverlay(state);
+    if (state) 
+        closeAddView(false);
 }

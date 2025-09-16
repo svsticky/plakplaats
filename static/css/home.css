@@ -1,30 +1,52 @@
 /* SETTINGS */
 :root {
     /* Board Color Variables */
-	--board-color: #197052; /* primary color of the current board of Sticky */
-    --board-18-color: rgb(97, 81, 143); /* #61518f */
-    --board-17-color: rgb(41, 115, 143); /* #29738f */
-    --board-16-color: rgb(128, 8, 22); /* #800816 */
-    --board-15-color: rgb(254, 114, 21); /* #fe7215 */
-    --board-14-color: rgb(197, 63, 120); /* #c53f78 */
-    --board-13-color: rgb(32, 115, 13); /* #20730d */
-    --board-12-color: rgb(0, 0, 120); /* #000078 */
-    --board-11-color: rgb(206, 32, 41); /* #ce2029 */
-    --board-10-color: rgb(255, 127, 0); /* #ff7f00 */
-    --board-9-color: rgb(70, 196, 255); /* #46c4ff */
-    --board-8-color: rgb(72, 42, 129); /* #482a81 */
-    --board-7-color: rgb(108, 17, 34); /* #6c1122 */
-    --board-6-color: rgb(65, 105, 225); /* #4169e1 */
-    --board-5-color: rgb(170, 170, 170); /* #aaaaaa */
-    --board-4-color: rgb(183, 224, 147); /* #b7e093 */
-    --board-3-color: rgb(170, 170, 170); /* #aaaaaa */
-    --board-2-color: rgb(170, 170, 170); /* #aaaaaa */
-    --board-1-color: rgb(255, 127, 0); /* #ff7f00 */
+    --board-color: #197052;
+    /* primary color of the current board of Sticky */
+    --board-18-color: rgb(97, 81, 143);
+    /* #61518f */
+    --board-17-color: rgb(41, 115, 143);
+    /* #29738f */
+    --board-16-color: rgb(128, 8, 22);
+    /* #800816 */
+    --board-15-color: rgb(254, 114, 21);
+    /* #fe7215 */
+    --board-14-color: rgb(197, 63, 120);
+    /* #c53f78 */
+    --board-13-color: rgb(32, 115, 13);
+    /* #20730d */
+    --board-12-color: rgb(0, 0, 120);
+    /* #000078 */
+    --board-11-color: rgb(206, 32, 41);
+    /* #ce2029 */
+    --board-10-color: rgb(255, 127, 0);
+    /* #ff7f00 */
+    --board-9-color: rgb(70, 196, 255);
+    /* #46c4ff */
+    --board-8-color: rgb(72, 42, 129);
+    /* #482a81 */
+    --board-7-color: rgb(108, 17, 34);
+    /* #6c1122 */
+    --board-6-color: rgb(65, 105, 225);
+    /* #4169e1 */
+    --board-5-color: rgb(170, 170, 170);
+    /* #aaaaaa */
+    --board-4-color: rgb(183, 224, 147);
+    /* #b7e093 */
+    --board-3-color: rgb(170, 170, 170);
+    /* #aaaaaa */
+    --board-2-color: rgb(170, 170, 170);
+    /* #aaaaaa */
+    --board-1-color: rgb(255, 127, 0);
+    /* #ff7f00 */
 
     /* Miscellaneous Color Variables */
-    --secondary-color: #ffffff; /* light color that works in combination with primary board color */
-    --background-color: #ffffff; /* general light background color  */
-    --element-background-color: #e0e0e0; /* Light grey color for sticker div background */
+    --secondary-color: #ffffff;
+    /* light color that works in combination with primary board color */
+    --background-color: #ffffff;
+    /* general light background color  */
+    --element-background-color: #e0e0e0;
+    /* Light grey color for sticker div background */
     --dark-text-color: #000000;
     --lighter-text-color: #646464;
     --light-text-color: #ffffff;
@@ -40,7 +62,7 @@
 }
 
 /* General */
-*{
+* {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     box-sizing: border-box;
     margin: 0;
@@ -52,17 +74,18 @@ html {
     overscroll-behavior: none;
 }
 
-body{
+body {
     height: 100%;
 }
 
-button, .addSubmitButton {
+button,
+.addSubmitButton {
     background-color: var(--board-color);
     color: var(--secondary-color);
 }
 
 /* Nav bar */
-.navBar{
+.navBar {
     position: relative;
     height: var(--navbar-height);
     display: flex;
@@ -85,11 +108,11 @@ button, .addSubmitButton {
     cursor: pointer;
 }
 
-.addIcon > line {
+.addIcon>line {
     stroke: var(--background-color);
 }
 
-.addIconClose{
+.addIconClose {
     transform: rotate(45deg);
 }
 
@@ -105,14 +128,39 @@ button, .addSubmitButton {
 }
 
 /* Map */
-#map{
+#mapOverlay {
+    position: fixed;
+    display: none;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    z-index: 2;
+    pointer-events: none;
+}
+
+#overlayText {
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    font-size: 25px;
+    font-weight: bold;
+    color: white;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+}
+
+#map {
     height: 100%;
     width: 100%;
     z-index: 1;
 }
 
 /* Sticker adding */
-.addContainer{
+.addContainer {
     width: 100%;
     height: 100%;
     z-index: 2;
@@ -122,7 +170,7 @@ button, .addSubmitButton {
     align-items: center;
 }
 
-.addView{
+.addView {
     background-color: var(--background-color);
     position: fixed;
     z-index: 2;
@@ -135,11 +183,11 @@ button, .addSubmitButton {
     border-radius: 0px 0px 20px 20px;
 }
 
-.openView{
+.openView {
     top: var(--navbar-height) !important;
 }
 
-.addViewTitle{
+.addViewTitle {
     color: var(--dark-text-color);
     font-size: 30px;
     font-weight: bold;
@@ -148,7 +196,7 @@ button, .addSubmitButton {
 }
 
 /* Sticker adding: location */
-.locationContainer{
+.locationContainer {
     background-color: var(--element-background-color);
     margin-left: 20px;
     margin-right: 20px;
@@ -160,31 +208,31 @@ button, .addSubmitButton {
     align-items: center;
 }
 
-.locationContainerSpinner{
+.locationContainerSpinner {
     margin: 10px;
     min-width: 40px;
     display: none;
 }
 
-
-.locationIcon{
+.locationIcon {
     margin: 10px;
     min-width: 40px;
 }
 
-.locationContainerCircle{
+.locationContainerCircle {
     stroke: var(--board-color);
 }
-.circle{
+
+.circle {
     fill: var(--board-color);
 }
 
-.outerCircle{
+.outerCircle {
     animation: outerAnim 1s infinite;
     transform-origin: center;
 }
 
-.locationContainerText{
+.locationContainerText {
     margin-top: 10px;
     margin-bottom: 10px;
     font-size: 15px;
@@ -194,54 +242,57 @@ button, .addSubmitButton {
 
 /* Sticker adding: location animation */
 @keyframes outerAnim {
-    from{
+    from {
         transform: scale(1);
         opacity: 1;
     }
-    to{
+
+    to {
         transform: scale(2.5);
         opacity: 0;
     }
 }
 
 .addSubmitButtonPressed {
-    background: linear-gradient(-45deg, rgb(200,200,200), var(--board-color));
+    background: linear-gradient(-45deg, rgb(200, 200, 200), var(--board-color));
     background-size: 200% 400%;
     animation: submitPressed 2s ease infinite;
 }
 
-@keyframes submitPressed{
+@keyframes submitPressed {
     0% {
         background-position: 0% 50%;
     }
+
     50% {
         background-position: 100% 50%;
     }
+
     100% {
         background-position: 0% 50%;
     }
 }
 
-.addInputDes{
+.addInputDes {
     margin-left: 20px;
     margin-top: 5px;
 }
 
-.addInput{
+.addInput {
     margin-left: 20px;
     margin-right: 20px;
     margin-top: 3px;
 }
 
-.addInput{
+.addInput {
     display: none;
 }
 
-.locationInputDes{
+.locationInputDes {
     display: none;
 }
 
-.addImageInput{
+.addImageInput {
     margin-left: 20px;
     margin-top: 20px;
     width: calc(100% - 48px);
@@ -259,30 +310,31 @@ button, .addSubmitButton {
 }
 
 /* Sticker adding: drag and drop image */
-.highlight{
+.highlight {
     background-color: var(--drop-image-see-through-color);
     border: 4px solid var(--border-drop-image-see-through-color);
     color: var(--light-text-color);
 }
 
 /* Sticker adding */
-.imageError{
+.imageError {
     background-color: var(--error-color);
     border: 4px solid var(--border-drop-image-see-through-color);
     color: var(--light-text-color);
 }
 
-.addImageTextHidden{
+.addImageTextHidden {
     display: none;
 }
 
-.addImagePreview{
+.addImagePreview {
     display: none;
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-.addImagePreviewShow{
+
+.addImagePreviewShow {
     display: block !important;
 }
 
@@ -298,7 +350,7 @@ button, .addSubmitButton {
     cursor: pointer;
 }
 
-.addLogoSelector{
+.addLogoSelector {
     display: flex;
     flex-direction: row;
 
@@ -308,7 +360,7 @@ button, .addSubmitButton {
     justify-content: center;
 }
 
-.logoELement{
+.logoELement {
     margin-right: 5px;
     padding: 5px;
     border-radius: 5px;
@@ -332,79 +384,98 @@ button, .addSubmitButton {
     background-color: #00ff33;
 }
 
-#boardYearInputSelect option:nth-child(1), .marker-B1 {
+#boardYearInputSelect option:nth-child(1),
+.marker-B1 {
     background: var(--board-1-color);
 }
 
-#boardYearInputSelect option:nth-child(2), .marker-B2 {
+#boardYearInputSelect option:nth-child(2),
+.marker-B2 {
     background: var(--board-2-color);
 }
 
-#boardYearInputSelect option:nth-child(3), .marker-B3 {
+#boardYearInputSelect option:nth-child(3),
+.marker-B3 {
     background: var(--board-3-color);
 }
 
-#boardYearInputSelect option:nth-child(4), .marker-B4 {
+#boardYearInputSelect option:nth-child(4),
+.marker-B4 {
     background: var(--board-4-color);
 }
 
-#boardYearInputSelect option:nth-child(5), .marker-B5 {
+#boardYearInputSelect option:nth-child(5),
+.marker-B5 {
     background: var(--board-5-color);
 }
 
-#boardYearInputSelect option:nth-child(6), .marker-B6 {
+#boardYearInputSelect option:nth-child(6),
+.marker-B6 {
     background: var(--board-6-color);
 }
 
-#boardYearInputSelect option:nth-child(7), .marker-B7 {
+#boardYearInputSelect option:nth-child(7),
+.marker-B7 {
     background: var(--board-7-color);
 }
 
-#boardYearInputSelect option:nth-child(8), .marker-B8 {
+#boardYearInputSelect option:nth-child(8),
+.marker-B8 {
     background: var(--board-8-color);
 }
 
-#boardYearInputSelect option:nth-child(9), .marker-B9 {
+#boardYearInputSelect option:nth-child(9),
+.marker-B9 {
     background: var(--board-9-color);
 }
 
-#boardYearInputSelect option:nth-child(10), .marker-B10 {
+#boardYearInputSelect option:nth-child(10),
+.marker-B10 {
     background: var(--board-10-color);
 }
 
-#boardYearInputSelect option:nth-child(11), .marker-B11 {
+#boardYearInputSelect option:nth-child(11),
+.marker-B11 {
     background: var(--board-11-color);
 }
 
-#boardYearInputSelect option:nth-child(12), .marker-B12 {
+#boardYearInputSelect option:nth-child(12),
+.marker-B12 {
     background: var(--board-12-color);
 }
 
-#boardYearInputSelect option:nth-child(13), .marker-B13 {
+#boardYearInputSelect option:nth-child(13),
+.marker-B13 {
     background: var(--board-13-color);
 }
 
-#boardYearInputSelect option:nth-child(14), .marker-B14 {
+#boardYearInputSelect option:nth-child(14),
+.marker-B14 {
     background: var(--board-14-color);
 }
 
-#boardYearInputSelect option:nth-child(15), .marker-B15 {
+#boardYearInputSelect option:nth-child(15),
+.marker-B15 {
     background: var(--board-15-color);
 }
 
-#boardYearInputSelect option:nth-child(16), .marker-B16 {
+#boardYearInputSelect option:nth-child(16),
+.marker-B16 {
     background: var(--board-16-color);
 }
 
-#boardYearInputSelect option:nth-child(17), .marker-B17 {
+#boardYearInputSelect option:nth-child(17),
+.marker-B17 {
     background: var(--board-17-color);
 }
 
-#boardYearInputSelect option:nth-child(18), .marker-B18 {
+#boardYearInputSelect option:nth-child(18),
+.marker-B18 {
     background: var(--board-18-color);
 }
 
-#boardYearInputSelect option:nth-child(19), .marker-B19 {
+#boardYearInputSelect option:nth-child(19),
+.marker-B19 {
     background: var(--board-color);
 }
 
@@ -412,13 +483,13 @@ button, .addSubmitButton {
     background-color: rgba(155, 155, 155, 0.329);
 } */
 
-.addSubmitButtonPressed{
+.addSubmitButtonPressed {
     animation: submitPressed 2s infinite;
 }
 
 
 /* Sticker adding: adding succes */
-.successView{
+.successView {
     background-color: var(--background-color);
     position: fixed;
     z-index: 2;
@@ -431,15 +502,15 @@ button, .addSubmitButton {
     border-radius: 0px 0px 20px 20px;
 }
 
-.successText{
+.successText {
     margin-top: 10px;
     margin-left: 22px;
     margin-right: 22px;
     font-size: 14px;
-    color:var(--dark-text-color);
+    color: var(--dark-text-color);
 }
 
-.successEmail{
+.successEmail {
     background-color: var(--background-color);
     margin-top: 15px;
     margin-left: 20px;
@@ -456,11 +527,11 @@ button, .addSubmitButton {
 }
 
 /* Sticker adding: adding failed */
-.invalid{
+.invalid {
     border-color: var(--error-color);
 }
 
-.customDivIcon{
+.customDivIcon {
     background-color: var(--background-color);
     border-radius: 50%;
     padding: 4px;
@@ -486,7 +557,7 @@ button, .addSubmitButton {
     border-radius: 5px;
     padding: 0.5rem 0.5rem;
     margin-top: 1rem;
-    margin-left: auto;    
+    margin-left: auto;
     margin-right: auto;
     width: 80%;
 }
@@ -522,7 +593,8 @@ button, .addSubmitButton {
     width: 100%;
     height: 100%;
     background-color: var(--background-color);
-    transition: bottom 0.5s, border-radius 0.5s; /* Transition for sliding  */
+    transition: bottom 0.5s, border-radius 0.5s;
+    /* Transition for sliding  */
     transition-timing-function: 'ease-in';
     display: flex;
     flex-direction: column;
@@ -542,7 +614,7 @@ button, .addSubmitButton {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    background-color: var(--background-color); 
+    background-color: var(--background-color);
     overflow-x: hidden;
     padding-top: 1rem;
     transition: 0.5s;
@@ -579,7 +651,7 @@ button, .addSubmitButton {
     border: none;
     border-radius: 5px;
     padding: 0.5rem 0.5rem;
-    margin-left: auto;    
+    margin-left: auto;
     margin-right: auto;
     margin-bottom: 0.5rem;
     transition: 0.5s;
@@ -600,17 +672,17 @@ button, .addSubmitButton {
 
 
 /* nearYouMobileLine */
-#nearYouOverlay.mobile > #nearYouMobileLine {
+#nearYouOverlay.mobile>#nearYouMobileLine {
     display: block;
     margin-top: 0.5rem;
     width: 10%;
 }
 
-#nearYouOverlay.mobile.active > #nearYouMobileLine {
+#nearYouOverlay.mobile.active>#nearYouMobileLine {
     display: none;
 }
 
-#nearYouOverlay.desktop > #nearYouMobileLine {
+#nearYouOverlay.desktop>#nearYouMobileLine {
     display: none;
 }
 
@@ -636,7 +708,7 @@ button, .addSubmitButton {
 }
 
 .stickerDiv h3 {
-   font-weight: 600;
+    font-weight: 600;
 }
 
 .stickerDiv .stickerDivImg {
@@ -648,7 +720,7 @@ button, .addSubmitButton {
     border: none;
     border-radius: 5px;
     padding: 0.5rem 0.5rem;
-    margin-left: auto;    
+    margin-left: auto;
     margin-right: auto;
     margin-bottom: 0.5rem;
     width: 30%;
@@ -658,15 +730,18 @@ button, .addSubmitButton {
     background-color: var(--element-background-color);
 }
 
-.stickerDiv, .stickerDiv > * {
+.stickerDiv,
+.stickerDiv>* {
     transition: opacity 0.8s;
     transition-timing-function: 'ease-in';
 }
 
-.stickerDiv:not(.revealed), .stickerDiv:not(.revealed) > *:not(.revealed) {
+.stickerDiv:not(.revealed),
+.stickerDiv:not(.revealed)>*:not(.revealed) {
     opacity: 0;
 }
 
-.stickerDiv.revealed, .stickerDiv > *.revealed {
+.stickerDiv.revealed,
+.stickerDiv>*.revealed {
     opacity: 1;
 }
