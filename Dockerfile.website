@@ -1,18 +1,15 @@
-FROM python:3.12-alpine3.20
+FROM ghcr.io/astral-sh/uv:bookworm
 WORKDIR /home/plakplaats
 
 # Install build dependencies
-RUN apk add --no-cache postgresql-libs
-RUN apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev
+# RUN apk add --no-cache postgresql-libs
+# RUN apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev
 
-# Install UV
-COPY --from=ghcr.io/astral-sh/uv:0.6.3 /uv /uvx /bin/
-RUN apk add --no-cache --virtual .build-deps python3~=3.12
-
-# Remove previously installed build dependencies, they are not needed anymore
-RUN apk del .build-deps
+# # Remove previously installed build dependencies, they are not needed anymore
+# RUN apk del .build-deps
 
 # Cache the python dependencies
+# RUN uv python install
 COPY uv.lock pyproject.toml ./
 RUN uv sync
 
@@ -22,4 +19,4 @@ COPY static templates .env server.py ./
 
 ARG STICKER_MAP_PORT
 EXPOSE $STICKER_MAP_PORT
-CMD ["uv", "run" "python", "server.py"]
+CMD ["uv", "run", "server.py"]
