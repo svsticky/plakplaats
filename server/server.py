@@ -155,12 +155,16 @@ def super_admin_required(fn):
 @app.route('/')
 @login_required
 def stickerMap():
-    return render_template('home.html', username=current_user.full_name)
+    adminList = [3, 412]
+    is_admin = (current_user.sub in adminList) or bool(current_user.is_super_admin)
+    return render_template('home.html', username=current_user.full_name, is_admin=is_admin)
 
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
-    return render_template("admin.html")
+    with Session(engine) as session:
+        new_stickers = session.query(Sticker).filter_by(verified=False).all()
+    return render_template("admin.html", stickers=new_stickers)
 
 @app.route("/superadmin")
 @super_admin_required
@@ -244,7 +248,7 @@ def uploadSticker():
                             picture    = os.path.join(Config.UPLOAD_DIRECTORY, filename),
                             adderemail = emailCode,
                             boardyear  = request.form['boardYear'],
-                            verified   = True
+                            verified   = False
                         )
 
                         session.add(sticker)
@@ -289,6 +293,7 @@ def getStickers():
             stmt = select(Sticker).where(and_(
                 Sticker.latitude.between(request.args.get('south'), request.args.get('north')),
                 Sticker.longitude.between(request.args.get('west'), request.args.get('east')),
+                Sticker.verified,
             ))
             rows = [row[0] for row in session.execute(stmt).all()]
             return json.dumps([row.__dict__ for row in rows], default=str)
@@ -300,7 +305,9 @@ def getNearYouStickers():
     if (request.args.get('lon') != '' and request.args.get('lat') != ''):
         # Get all the stickers within the bounding box
         with Session(engine) as session:
-            stmt = select(Sticker).order_by(ST_DistanceSphere(
+            stmt = select(Sticker).where(and_(
+                Sticker.verified,
+            )).order_by(ST_DistanceSphere(
                 ST_MakePoint(float(request.args.get('lon')), float(request.args.get('lat'))), 
                 ST_MakePoint(Sticker.longitude, Sticker.latitude)).asc()
             ).limit(10)
@@ -341,6 +348,28 @@ def updateStickerSpots():
             return json.dumps({'status': '200', 'error': 'Updated spots count'}), 200
     else:
         return json.dumps({'status': '400', 'error': 'Updating sticker spots failed'}), 400
+
+@app.route('/reviewSticker', methods=['POST'])
+def reviewSticker():
+    data = request.get_json()
+    sticker_id = data.get('stickerID')
+    approved = data.get('approved')
+    if sticker_id is None:
+        return jsonify({'error': 'Sticker ID missing'}), 400
+
+    with Session(engine) as session:
+        sticker = session.get(Sticker, sticker_id)
+        if not sticker:
+            return jsonify({'error': 'Sticker not found'}), 404
+        if approved:
+            # Approve the sticker
+            sticker.verified = True
+        else:
+            # Delete (or otherwise handle rejection)
+            session.delete(sticker)
+        session.commit()
+        return jsonify({'status': 'ok'}), 200
+
 
 def sendEmailUpdate():
     return 0  # TODO not implemented
