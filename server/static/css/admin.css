@@ -1,10 +1,3 @@
-* {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 .content {
   display: flex;
   flex-direction: column;
@@ -20,7 +13,8 @@
   padding-top: 10px;
   margin: 10px 0px 10px 0px;
   border-radius: 15px;
-  background-color: rgb(30, 30, 30);
+  /* background-color: rgb(30, 30, 30); */
+  background-color: rgb(82, 81, 81);
 }
 
 .navBar {
@@ -29,7 +23,7 @@
   display: flex;
   align-items: center;
   flex-direction: row;
-  background-color: rgb(30, 30, 30);
+  background-color: var(--board-color);
   box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.5);
 }
 
@@ -46,23 +40,7 @@
   margin-left: 35px;
 }
 
-.cardHolder {
-  height: 450px;
-}
-
-.card {
-  position: absolute;
-  overflow: hidden;
-  margin: 15px 30px 30px 30px;
-  border-radius: 20px;
-  box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
-  width: calc(100% - 60px);
-  /*animation: cardSwipeRight 1s infinite;
-    animation-direction: alternate-reverse; */
-  transform-origin: bottom;
-  touch-action: none;
-}
-
+/* --- keep your existing keyframes --- */
 @keyframes cardSwipeLeft {
   0% {
     transform: translate(0px, 0px) rotate(0deg);
@@ -83,6 +61,37 @@
     transform: translate(200px, 30px) rotate(30deg);
     opacity: 0;
   }
+}
+
+/* Base card style: no automatic animation */
+.card {
+  position: absolute;
+  overflow: hidden;
+  margin: 15px 30px 30px 30px;
+  border-radius: 20px;
+  background-color: var(--board-color);
+  box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+  width: calc(100% - 60px);
+  transform-origin: bottom;
+  touch-action: none;
+  transition: transform 0.2s ease; /* small smoothing when needed */
+}
+
+/* One-shot swipe animations: play once and keep final state */
+.card.swipe-left {
+  animation: cardSwipeLeft 0.6s forwards;
+  pointer-events: none; /* prevent extra clicks during animation */
+}
+
+.card.swipe-right {
+  animation: cardSwipeRight 0.6s forwards;
+  pointer-events: none;
+}
+
+/* Optional: visual cue while animating */
+.card.swiping {
+  /* reduce pointer events and slightly dim while animating */
+  filter: brightness(0.95);
 }
 
 .stickerImage {
@@ -111,11 +120,13 @@
 }
 
 .accept {
-  background-image: url("/static/thumb-up.svg");
+  background-image: url("/static/img/thumb-up.svg");
+  /* background-color: green; */
 }
 
 .reject {
-  background-image: url("/static/thumb-down.svg");
+  background-image: url("/static/img/thumb-down.svg");
+  /* background-color: red; */
 }
 
 .bottomSection {
@@ -147,7 +158,7 @@
 
 .allStickersSection {
   background-color: rgb(30, 30, 30);
-  width: 50%;
+  width: 80%;
   margin: 0px 5px 0px 10px;
   padding: 10px;
   border-radius: 15px;

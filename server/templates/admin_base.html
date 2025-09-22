@@ -1,0 +1,142 @@
+{# templates/admin_base.html #}
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Admin — Plakplaats</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
+    <style>
+        /* Minimal tab styling */
+        .admin-shell {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 12px;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #1e1e1e;
+            padding: 12px;
+            color: white;
+            border-radius: 8px;
+        }
+
+        .title {
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+
+        /* hide native radio inputs */
+        .tab-radio {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            clip: rect(0 0 0 0);
+            overflow: hidden;
+            border: 0;
+        }
+
+        .tabs {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-label {
+            padding: 8px 12px;
+            background: #2b2b2b;
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+        }
+
+        /* when the radio is checked, style the corresponding label */
+        #tab-review:checked~header .tabs label[for="tab-review"],
+        #tab-dashboard:checked~header .tabs label[for="tab-dashboard"] {
+            background: #fff;
+            color: #000;
+        }
+
+        /* partial container */
+        .partials {
+            margin-top: 16px;
+        }
+
+        /* hide all partial sections by default */
+        .partial-section {
+            display: none;
+        }
+
+        /* show the corresponding section when radio checked */
+        #tab-review:checked~.partials #partial-review {
+            display: block;
+        }
+
+        #tab-dashboard:checked~.partials #partial-dashboard {
+            display: block;
+        }
+
+        /* responsive niceties */
+        @media (max-width: 700px) {
+            .nav {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .tabs {
+                width: 100%;
+                justify-content: flex-start;
+                gap: 6px;
+            }
+        }
+    </style>
+  </head>
+  <body>
+    <div class="admin-shell">
+      {# radios control which partial is visible. Set checked via Jinja 'active'
+var #}
+      <input type="radio" name="admin_tab" id="tab-review"
+        class="tab-radio" autocomplete="off" {% if active == 'review' or active is
+        not defined %} checked{% endif %}>
+        <input type="radio" name="admin_tab"
+          id="tab-dashboard" class="tab-radio" autocomplete="off" {% if active ==
+          'dashboard' %}checked{% endif %}>
+
+          <header>
+            <div class="nav" role="navigation" aria-label="Admin navigation">
+              <div class="title">Sticker Map Admin</div>
+
+              <div class="tabs" role="tablist" aria-label="Admin tabs">
+                <label for="tab-review" class="tab-label" role="tab" tabindex="0">Review</label>
+                <label for="tab-dashboard" class="tab-label" role="tab" tabindex="0">Dashboard</label>
+              </div>
+            </div>
+          </header>
+
+          <div class="partials">
+            <section id="partial-review"
+                     class="partial-section"
+                     aria-hidden="{{ 'false' if active == 'review' else 'true' }}">
+              {# server-include the review partial #}
+              {% include 'admin_review.html'
+              %}
+            </section>
+
+            <section id="partial-dashboard"
+                     class="partial-section"
+                     aria-hidden="{{ 'false' if active == 'dashboard' else 'true' }}">
+              {# server-include the dashboard partial #}
+              {% include
+              'admin_dashboard.html' %}
+            </section>
+          </div>
+        </div>
+      </body>
+    </html>

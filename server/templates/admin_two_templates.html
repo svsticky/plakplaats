@@ -1,0 +1,247 @@
+<!-- templates/admin_two_views.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Admin — Review & Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/admin.css') }}"
+    />
+    <style>
+      /* simpele hide/show */
+      .view {
+        display: none;
+      }
+      .view.active {
+        display: block;
+      }
+      .navTabs {
+        display: flex;
+        gap: 12px;
+        margin: 12px 0;
+      }
+      .tabBtn {
+        padding: 8px 12px;
+        cursor: pointer;
+        background: #222;
+        color: #fff;
+        border-radius: 6px;
+      }
+      .tabBtn.active {
+        background: #fff;
+        color: #000;
+      }
+      /* quick mobile friendly */
+      .flexRow {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navBar">
+      <span class="title">Sticker Map Admin</span>
+
+      <div style="margin-left: auto" class="flexRow">
+        <div class="navTabs" role="tablist" aria-label="Admin views">
+          <button
+            id="tabReview"
+            class="tabBtn"
+            role="tab"
+            aria-controls="viewReview"
+          >
+            Review
+          </button>
+          <button
+            id="tabDashboard"
+            class="tabBtn"
+            role="tab"
+            aria-controls="viewDashboard"
+          >
+            Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <main style="padding: 16px; max-width: 1100px; margin: auto">
+      <!-- REVIEW VIEW: server-rendered pending stickers (fast initial paint) -->
+      <section id="viewReview" class="view" aria-hidden="true">
+        <h2>Review new stickers</h2>
+        <div id="reviewContainer">
+          {% for sticker in stickers %}
+          <div
+            class="card"
+            id="card-{{ sticker.id }}"
+            style="margin-bottom: 18px"
+          >
+            <img
+              src="{{ url_for('static', filename=sticker.picture) }}"
+              class="stickerImage"
+            />
+            <div style="padding: 8px; color: white">
+              <div>ID: {{ sticker.id }} — Board: {{ sticker.boardyear }}</div>
+              <div>
+                Posted: {{ sticker.posttime.strftime('%Y-%m-%d %H:%M:%S') }}
+              </div>
+              <div style="margin-top: 8px">
+                <button onclick="reviewSticker({{ sticker.id }}, true)">
+                  Approve
+                </button>
+                <button onclick="reviewSticker({{ sticker.id }}, false)">
+                  Reject
+                </button>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div>No new stickers to review.</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- DASHBOARD VIEW: initially empty, will be filled by JS on demand -->
+      <section id="viewDashboard" class="view" aria-hidden="true">
+        <h2>All stickers (dashboard)</h2>
+        <div id="dashboardContainer">
+          <div id="dashboardLoading">
+            Click “Dashboard” to load all stickers.
+          </div>
+          <div
+            id="dashboardGrid"
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+              gap: 12px;
+              margin-top: 12px;
+            "
+          ></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // ---- UI logic: toggle views without changing URL ----
+      const tabReview = document.getElementById("tabReview");
+      const tabDashboard = document.getElementById("tabDashboard");
+      const viewReview = document.getElementById("viewReview");
+      const viewDashboard = document.getElementById("viewDashboard");
+
+      // initial active view (server-side default). We'll default to Review.
+      function setActiveView(name) {
+        if (name === "dashboard") {
+          tabDashboard.classList.add("active");
+          tabReview.classList.remove("active");
+          viewDashboard.classList.add("active");
+          viewDashboard.removeAttribute("aria-hidden");
+          viewReview.classList.remove("active");
+          viewReview.setAttribute("aria-hidden", "true");
+          // load dashboard data if not loaded yet
+          if (!window._dashboardLoaded) loadDashboardData();
+        } else {
+          tabReview.classList.add("active");
+          tabDashboard.classList.remove("active");
+          viewReview.classList.add("active");
+          viewReview.removeAttribute("aria-hidden");
+          viewDashboard.classList.remove("active");
+          viewDashboard.setAttribute("aria-hidden", "true");
+        }
+        // optionally set history.state (no URL change) to support back button
+        history.replaceState({ view: name }, "", location.pathname);
+      }
+
+      tabReview.addEventListener("click", () => setActiveView("review"));
+      tabDashboard.addEventListener("click", () => setActiveView("dashboard"));
+
+      // pick initial view from history.state if available
+      const initialState =
+        history.state && history.state.view ? history.state.view : "review";
+      setActiveView(initialState);
+
+      // ---- fetch and render Dashboard data lazily ----
+      async function loadDashboardData() {
+        window._dashboardLoaded = true;
+        const loading = document.getElementById("dashboardLoading");
+        const grid = document.getElementById("dashboardGrid");
+        loading.textContent = "Loading...";
+        try {
+          const resp = await fetch('{{ url_for("admin_all_stickers") }}', {
+            credentials: "same-origin",
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+          });
+          if (!resp.ok) {
+            loading.textContent = "Failed to load stickers.";
+            console.error("Failed to load all stickers", resp.status);
+            return;
+          }
+          const data = await resp.json();
+          loading.style.display = "none";
+          // render grid
+          grid.innerHTML = "";
+          data.forEach((s) => {
+            const el = document.createElement("div");
+            el.className = "gridItem";
+            el.innerHTML = `
+            <img src="${
+              s.picture_url
+            }" style="width:100%; height:120px; object-fit:cover; border-radius:8px;">
+            <div style="font-size:13px; margin-top:6px;">
+              ID: ${s.id}<br/>
+              ${new Date(s.posttime).toLocaleString()}
+            </div>
+          `;
+            grid.appendChild(el);
+          });
+        } catch (err) {
+          loading.textContent = "Network error";
+          console.error(err);
+        }
+      }
+
+      // ---- reuse your existing reviewSticker function (AJAX) ----
+      async function reviewSticker(stickerId, approved) {
+        // disable UI on button click? minimal approach:
+        try {
+          const resp = await fetch('{{ url_for("reviewSticker") }}', {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            body: JSON.stringify({ stickerID: stickerId, approved: approved }),
+            redirect: "manual",
+          });
+          if (resp.redirected) {
+            window.location.href = resp.url;
+            return;
+          }
+          if (!resp.ok) {
+            alert("Server error");
+            return;
+          }
+          // remove card from review view
+          const card = document.getElementById("card-" + stickerId);
+          if (card) card.remove();
+          // if dashboard is loaded, optionally update it to reflect approved change
+          if (window._dashboardLoaded) {
+            // naive: remove from grid if present
+            const imgs = document.querySelectorAll("#dashboardGrid img");
+            imgs.forEach((img) => {
+              if (img.src.includes("/" + stickerId)) {
+                img.parentNode.remove();
+              }
+            });
+            // better: re-fetch or update exact item if you stored mapping
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Network error.");
+        }
+      }
+    </script>
+  </body>
+</html>

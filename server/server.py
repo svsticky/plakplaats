@@ -159,12 +159,44 @@ def stickerMap():
     is_admin = (current_user.sub in adminList) or bool(current_user.is_super_admin)
     return render_template('home.html', username=current_user.full_name, is_admin=is_admin)
 
-@app.route("/admin")
+# @app.route("/admin")
+# @admin_required
+# def admin_dashboard():
+#     with Session(engine) as session:
+#         new_stickers = session.query(Sticker).filter_by(verified=False).all()
+#     return render_template("admin.html", stickers=new_stickers)
+
+# Render the base admin shell (URL stays /admin)
+@app.route('/admin')
 @admin_required
-def admin_dashboard():
+def admin_shell():
+    # We'll render the main shell. For fast initial page load, you can optionally
+    # prefetch pending stickers or keep that in the review partial.
     with Session(engine) as session:
-        new_stickers = session.query(Sticker).filter_by(verified=False).all()
-    return render_template("admin.html", stickers=new_stickers)
+        pending_stickers = session.query(Sticker).filter(Sticker.verified == False).order_by(Sticker.posttime.desc()).all()
+    return render_template('admin_base.html', pending_stickers=pending_stickers)
+
+
+# Partial: review view (Jinja partial)
+# @app.route('/admin/review_partial')
+# @admin_required
+# def admin_review_partial():
+#     # Serve pending stickers to the review partial
+#     with Session(engine) as session:
+#         pending = session.query(Sticker).filter(Sticker.verified == False).order_by(Sticker.posttime.desc()).all()
+#     print(f"pending: {pending}")
+#     return render_template('admin_review.html', stickers=pending)
+
+
+# Partial: dashboard view (Jinja partial)
+# @app.route('/admin/dashboard_partial')
+# @admin_required
+# def admin_dashboard_partial():
+#     # This partial can either server-render all stickers or fetch JSON client-side.
+#     # Here I server-render a quick list (but you can also have the partial's JS call admin_all_stickers).
+#     with Session(engine) as session:
+#         rows = session.query(Sticker).order_by(Sticker.posttime.desc()).limit(200).all()
+#     return render_template('admin_dashboard.html', stickers=rows)
 
 @app.route("/superadmin")
 @super_admin_required
@@ -351,6 +383,8 @@ def updateStickerSpots():
 
 @app.route('/reviewSticker', methods=['POST'])
 def reviewSticker():
+    return jsonify({'status': 'ok'}), 200 # Remove this line
+
     data = request.get_json()
     sticker_id = data.get('stickerID')
     approved = data.get('approved')
@@ -370,6 +404,26 @@ def reviewSticker():
         session.commit()
         return jsonify({'status': 'ok'}), 200
 
+
+@app.route('/admin/all_stickers', methods=['GET'])
+@admin_required
+def admin_all_stickers():
+    with Session(engine) as session:
+        rows = session.query(Sticker).order_by(Sticker.posttime.desc()).all()
+        out = []
+        for s in rows:
+            out.append({
+                'id': s.id,
+                'latitude': float(s.latitude) if s.latitude is not None else None,
+                'longitude': float(s.longitude) if s.longitude is not None else None,
+                'picture_url': url_for('static', filename=s.picture),
+                'adderemail': s.adderemail,
+                'posttime': s.posttime.isoformat(),
+                'spots': s.spots,
+                'boardyear': s.boardyear,
+                'verified': s.verified
+            })
+        return jsonify(out), 200
 
 def sendEmailUpdate():
     return 0  # TODO not implemented

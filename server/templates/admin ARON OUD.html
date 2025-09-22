@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Admin Dashboard - Review Stickers</title>
+    <link rel="stylesheet" href="/static/css/admin.css" />
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='img/favicon.ico') }}"
+    />
+    <style>
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        text-align: center;
+      }
+      img {
+        max-width: 100px;
+      }
+      .btn {
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      .btn-approve {
+        background-color: #4caf50;
+        color: white;
+      }
+      .btn-reject {
+        background-color: #f44336;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Admin: Review New Stickers</h1>
+    <table class="content">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Image</th>
+          <th>Location</th>
+          <th>Posted At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sticker in stickers %}
+        <tr id="row-{{ sticker.id }}">
+          <td>{{ sticker.id }}</td>
+          <td>
+            <img src="{{ sticker.picture }}" alt="sticker-img" />
+          </td>
+          <td>
+            Lat: {{ sticker.latitude }}, Lon: {{ sticker.longitude }} <br />
+            <a
+              target="_blank"
+              href="https://www.google.com/maps/place/{{ sticker.latitude }},{{ sticker.longitude }}"
+              >Google Maps Location</a
+            >
+          </td>
+          <td>{{ sticker.posttime.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td>
+            <button
+              class="btn btn-approve"
+              onclick="reviewSticker({{ sticker.id }}, true)"
+            >
+              Approve
+            </button>
+            <button
+              class="btn btn-reject"
+              onclick="reviewSticker({{ sticker.id }}, false)"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5">No new stickers to review.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <script>
+      // Function to call backend and update sticker status
+      function reviewSticker(stickerId, approved) {
+        fetch("{{ url_for('reviewSticker') }}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stickerID: stickerId, approved: approved }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              // Remove the sticker row from the table on success
+              document.getElementById("row-" + stickerId).remove();
+            } else {
+              alert("Error: Unable to update sticker status.");
+            }
+          })
+          .catch((error) => alert("Network error."));
+      }
+    </script>
+  </body>
+</html>
