@@ -34,12 +34,14 @@
 
         /* stack cards on top of each other */
         .card {
-            position: absolute;
+            position: relative;
             top: 0;
             left: 0;
             right: 0;
             margin: 0 auto;
-            width: calc(100% - 40px);
+            /* width: calc(100% - 40px); */
+            height: 80vh;
+            width: fit-content;
             max-width: 560px;
             border-radius: 16px;
             box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.5);
@@ -55,10 +57,23 @@
             z-index: 10;
         }
 
+        .cardText {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            padding: 1rem 1rem;
+            margin-bottom: 2rem;
+            border-radius: 1rem;
+            color: white;
+            background-color: #41414196;
+        }
+
         .stickerImage {
             width: 100%;
             height: 360px;
-            object-fit: cover;
+            object-fit: contain;
             display: block;
         }
 
@@ -151,13 +166,8 @@
             <a href="{{ url_for('admin_shell', view='review') }}">Review</a>
             <a href="{{ url_for('admin_shell', view='dashboard') }}">Dashboard</a>
         </nav>
-
-        {% if view == "review" %}
-        <h1>Review Stickers</h1>
-        {% elif view == "dashboard" %}
-        <h1>All Stickers</h1>
-        {% endif %}
         <span class="containerLabel">Open sticker requests</span>
+        <span id="reviewCounter">1</span> / <span id="totalStickers">{{ stickers|length }}</span>
 
         <div class="cardHolder" id="cardHolder">
             {# Render server-side cards using Jinja2. Only the first gets class "top" #}
@@ -173,7 +183,7 @@
 
             <div class="card {% if loop.first %}top{% endif %}" id="card-{{ sticker.id }}" data-id="{{ sticker.id }}">
                 <img src="{{ sticker.picture }}" class="stickerImage" alt="sticker-{{ sticker.id }}" />
-                <div style="padding: 12px; color: white">
+                <div class="cardText">
                     <div><strong>ID:</strong> {{ sticker.id }}</div>
                     <div><strong>Board year:</strong> {{ sticker.boardyear }}</div>
                     <div><strong>Added by:</strong> {{ sticker.adderemail }}</div>
@@ -189,14 +199,7 @@
                 </div>
             </div>
             {% endfor %}
-
-            {% if not any %}
-            <div class="no-cards" id="noCardsPlaceholder">No new stickers to review.</div>
-            {% else %}
-            <div class="no-cards" id="noCardsPlaceholder" style="display:none">No new stickers to review.</div>
-            {% endif %}
         </div>
-
 
         <!-- Buttons moved out of card; they act on the currently visible top card -->
         <div class="controls" id="controlsRow" aria-hidden="{{ 'true' if not any else 'false' }}">
@@ -242,6 +245,16 @@
 
         // Reveal next card (make it top)
         function revealNextCard() {
+            const reviewCounter = document.getElementById('reviewCounter');
+            const totalStickers = document.getElementById('totalStickers');
+            const nextValue = parseInt(reviewCounter.innerText) + 1;
+            if (parseInt(reviewCounter.innerText) < parseInt(totalStickers.innerText)) {
+                reviewCounter.innerText = nextValue;
+            }
+            else {
+                alert("All stickers are reviewed!🎉")
+            }
+
             const holder = document.getElementById('cardHolder');
             const next = holder.querySelector('.card'); // first remaining .card
             if (!next) {
