@@ -1,0 +1,26 @@
+{# templates/admin_dashboard.html #}
+<div class="content">
+  <h1>All Stickers</h1>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-top:12px;">
+    {% for s in dashboard_stickers %}
+    {% set pic = s.picture or '' %}
+    {% if pic.startswith('/') or '://' in pic %}
+    {% set img_src = pic %}
+    {% else %}
+    {% set img_src = url_for('static', filename=pic) %}
+    {% endif %}
+    <div class="gridItem" id="grid-{{ s.id }}" style="background:#222; padding:8px; border-radius:8px; color:white;">
+      <img src="{{ img_src }}" style="width:100%; height:120px; object-fit:cover; border-radius:6px"
+        alt="sticker-{{ s.id }}">
+      <div style="font-size:13px; margin-top:6px;">
+        <div><strong>ID:</strong> {{ s.id }}</div>
+        <div><strong>Posted:</strong> {{ s.posttime.strftime('%Y-%m-%d %H:%M:%S') if s.posttime else '-' }}</div>
+        <div style="margin-top:6px;"><a href="https://www.google.com/maps/place/{{ s.latitude }},{{ s.longitude }}"
+            target="_blank">Open location</a></div>
+      </div>
+    </div>
+    {% else %}
+    <div style="color:white">No stickers found.</div>
+    {% endfor %}
+  </div>
+</div>

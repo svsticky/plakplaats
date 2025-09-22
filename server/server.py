@@ -159,23 +159,35 @@ def stickerMap():
     is_admin = (current_user.sub in adminList) or bool(current_user.is_super_admin)
     return render_template('home.html', username=current_user.full_name, is_admin=is_admin)
 
-# @app.route("/admin")
+@app.route("/admin")
 # @admin_required
-# def admin_dashboard():
-#     with Session(engine) as session:
-#         new_stickers = session.query(Sticker).filter_by(verified=False).all()
-#     return render_template("admin.html", stickers=new_stickers)
+def admin_dashboard():
+    with Session(engine) as session:
+        new_stickers = session.query(Sticker).filter_by(verified=False).all()
+    return render_template("admin.html", stickers=new_stickers)
 
 # Render the base admin shell (URL stays /admin)
+# @app.route('/admin')
+# @admin_required
+# def admin_shell():
+#     # We'll render the main shell. For fast initial page load, you can optionally
+#     # prefetch pending stickers or keep that in the review partial.
+#     with Session(engine) as session:
+#         pending_stickers = session.query(Sticker).filter(Sticker.verified == False).order_by(Sticker.posttime.desc()).all()
+#     return render_template('admin_base.html', pending_stickers=pending_stickers)
+
 @app.route('/admin')
-@admin_required
+# @admin_required
 def admin_shell():
-    # We'll render the main shell. For fast initial page load, you can optionally
-    # prefetch pending stickers or keep that in the review partial.
+    # fetch pending and recent stickers and render shell
     with Session(engine) as session:
         pending_stickers = session.query(Sticker).filter(Sticker.verified == False).order_by(Sticker.posttime.desc()).all()
-    return render_template('admin_base.html', pending_stickers=pending_stickers)
-
+        dashboard_stickers = session.query(Sticker).order_by(Sticker.posttime.desc()).limit(200).all()
+    # render base and pass both lists
+    return render_template('admin_base.html',
+                           pending_stickers=pending_stickers,
+                           dashboard_stickers=dashboard_stickers,
+                           active='review')   # default shown tab
 
 # Partial: review view (Jinja partial)
 # @app.route('/admin/review_partial')

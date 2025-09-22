@@ -1,0 +1,200 @@
+{# templates/admin_combined.html #}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sticker Map Admin</title>
+
+  <!-- Favicons & CSS (same as original) -->
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/ico" />
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon" />
+  <link rel="stylesheet" href="/static/css/general.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/popUp.css') }}" />
+
+  <script type="text/javascript" src="{{ url_for('static', filename='js/popUp.js') }}"></script>
+
+  <style>
+    /* preserve original userColor behaviour but provide a default */
+    :root {
+      --admin-bg: {
+          {
+          color|default('#1e1e1e')|tojson|safe
+        }
+      }
+
+      ;
+    }
+
+    .userColor {
+      background-color: var(--admin-bg);
+    }
+
+    /* small helper so card images are visible on small screens */
+    .card {
+      position: relative;
+      transform-origin: bottom;
+    }
+  </style>
+</head>
+
+<body class="userColor">
+  <div class="content">
+    <nav class="navBar">
+      <span class="title">Sticker Map Admin</span>
+      <a href="{{ url_for('admin_shell', view='review') }}">Review</a>
+      <a href="{{ url_for('admin_shell', view='dashboard') }}">Dashboard</a>
+    </nav>
+
+    {% if view == "review" %}
+    <h1>Review Stickers</h1>
+    {% for sticker in stickers %}
+    <div>{{ sticker.picture }}</div>
+    {% endfor %} {% elif view == "dashboard" %}
+    <h1>All Stickers</h1>
+    {% for sticker in stickers %}
+    <div>{{ sticker.picture }}</div>
+    {% endfor %} {% endif %}
+
+    <div class="cardSection">
+      <span class="containerLabel">Open sticker requests</span>
+      <div class="cardHolder" id="cardHolder">
+        {# Render server-side cards using Jinja2 #} {% for sticker in stickers
+        %} {# build a safe image src: - if sticker.picture looks like an
+        absolute URL or starts with /, use it as-is - otherwise, assume it's a
+        path inside static/ (e.g. "uploads/xxx.jpg") and use url_for('static',
+        filename=...) #} {% set pic = sticker.picture or '' %} {% if
+        pic.startswith('/') or '://' in pic %} {% set img_src = pic %} {% else
+        %} {% set img_src = url_for('static', filename=pic) %} {% endif %}
+
+        <div class="card" id="card-{{ sticker.id }}" data-id="{{ sticker.id }}">
+          <img src="{{ sticker.picture }}" class="stickerImage" alt="sticker-{{ sticker.id }}" />
+          <div class="buttonArea">
+            <div class="cardButton accept" title="Approve" onclick="reviewSticker({{ sticker.id }}, true)"></div>
+            <div class="cardButton reject" title="Reject" onclick="reviewSticker({{ sticker.id }}, false)"></div>
+          </div>
+          <div style="padding: 12px; color: white">
+            <div><strong>ID:</strong> {{ sticker.id }}</div>
+            <div><strong>Board year:</strong> {{ sticker.boardyear }}</div>
+            <div><strong>Added by:</strong> {{ sticker.adderemail }}</div>
+            <div>
+              <strong>Posted:</strong> {{ sticker.posttime.strftime('%Y-%m-%d
+              %H:%M:%S') }}
+            </div>
+            <div>
+              <strong>Location:</strong> Lat {{ sticker.latitude }}, Lon {{
+              sticker.longitude }}
+              <br />
+              <a target="_blank"
+                href="https://www.google.com/maps/place/{{ sticker.latitude }},{{ sticker.longitude }}">Open in Google
+                Maps</a>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div style="color: white; padding: 20px">
+          No new stickers to review.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function waitForAnimationEnd(el) {
+      return new Promise((resolve) => {
+        if (!el) return resolve();
+        function onEnd(e) {
+          el.removeEventListener("animationend", onEnd);
+          resolve(e);
+        }
+        el.addEventListener("animationend", onEnd);
+      });
+    }
+
+    // new reviewSticker logic with animation + fetch synchronization
+    async function reviewSticker(stickerId, approved) {
+      const card =
+        document.getElementById("card-" + stickerId) ||
+        document.getElementById("row-" + stickerId);
+      // support both card-based template (card-<id>) and table-row template (row-<id>)
+      if (!card) {
+        console.warn("Card not found for", stickerId);
+      }
+
+      // Choose direction for animation
+      const dirClass = approved ? "swipe-right" : "swipe-left";
+
+      // Start animation if we have a card element
+      if (card) {
+        card.classList.add("swiping", dirClass);
+      }
+
+      // Kick off fetch (do not await yet)
+      const fetchPromise = fetch("{{ url_for('reviewSticker') }}", {
+        method: "POST",
+        credentials: "same-origin", // ensure cookie is sent
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          // add X-CSRF-TOKEN header here if you implemented server-side CSRF token flow:
+          // "X-CSRF-TOKEN": getCookieValue('csrf_token')
+        },
+        body: JSON.stringify({ stickerID: stickerId, approved: approved }),
+        redirect: "manual",
+      });
+
+      // Wait for animation to finish (if there is a card)
+      const animPromise = card
+        ? waitForAnimationEnd(card)
+        : Promise.resolve();
+
+      // Wait for both to finish
+      let fetchResp;
+      try {
+        [, fetchResp] = await Promise.all([animPromise, fetchPromise]);
+      } catch (err) {
+        console.error("Network / fetch error during review:", err);
+        alert(
+          "Network error while approving/rejecting sticker. Reloading page."
+        );
+        window.location.reload();
+        return;
+      }
+
+      // If the request was redirected (server may redirect to login), handle it
+      if (fetchResp.redirected) {
+        // go to redirected URL (likely login)
+        window.location.href = fetchResp.url;
+        return;
+      }
+
+      // If non-OK, show error and reload so admin has consistent UI
+      if (!fetchResp.ok) {
+        const txt = await fetchResp.text().catch(() => "(no body)");
+        console.error("Server returned error:", fetchResp.status, txt);
+        alert(
+          "Server error while updating sticker. Reloading page to resync."
+        );
+        window.location.reload();
+        return;
+      }
+
+      // Success — remove the element from DOM (card or table row)
+      if (card && card.parentNode) {
+        card.parentNode.removeChild(card);
+      } else {
+        // fallback: try to remove row-<id> if it exists
+        const row = document.getElementById("row-" + stickerId);
+        if (row && row.parentNode) row.parentNode.removeChild(row);
+      }
+
+      // Optionally, you may fetch a replacement card to keep a fixed number present.
+    }
+  </script>
+</body>
+
+</html>
