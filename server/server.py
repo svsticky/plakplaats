@@ -43,6 +43,14 @@ from jwt.algorithms import RSAAlgorithm
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 
+from flask_admin import Admin, AdminIndexView, expose
+from flask_admin.contrib.sqla import ModelView
+from flask_admin.menu import MenuLink
+from sqlalchemy.orm import scoped_session, sessionmaker
+from models import Sticker
+
+from flask import send_from_directory
+
 load_dotenv()
 
 class Config:
@@ -77,15 +85,55 @@ if (not os.path.exists(Config.UPLOAD_DIRECTORY)):
 engine = create_engine(f"postgresql://{Config.POSTGRES_USER}:{Config.POSTGRES_PASS}@{Config.POSTGRES_HOST}/{Config.POSTGRES_DBNAME}")
 Base.metadata.create_all(engine)
 
+class AdminIndex(AdminIndexView):
+    @expose('/')
+    def index(self):
+        with Session(engine) as session:
+            new_stickers = session.query(Sticker).filter_by(verified=False).all()
+        return self.render('admin/index.html', stickers=new_stickers)
+
+    def is_accessible(self):
+        verify_jwt_in_request()
+        adminList = [3, 412]
+        approved = (current_user.sub in adminList) or current_user.is_super_admin
+        return approved
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
+
 # ─── Flask + JWT init ────────────────────────────────────────────────────
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Create scoped session for Flask-Admin
+session_factory = sessionmaker(bind=engine)
+db_session = scoped_session(session_factory)
+
+# Flask + Admin setup
+admin = Admin(
+    app,
+    name='Plakplaats Admin',
+    template_mode='bootstrap3',
+    index_view=AdminIndex(),
+    base_template='admin/master.html'
+)
+
+admin.add_view(ModelView(Sticker, db_session))
+
+admin.add_link(MenuLink(name='Main Site', url='/', category=''))
+admin.add_link(MenuLink(name='Logout', url='/logout', category=''))
+
 disc = requests.get(f"{app.config['OIDC_ISSUER_BASE']}/.well-known/openid-configuration", verify=True).json()
+
 jwks = requests.get(disc["jwks_uri"], verify=True).json()
 app.config["JWT_PUBLIC_KEY"] = RSAAlgorithm.from_jwk(json.dumps(jwks["keys"][0]))
 
 jwt = JWTManager(app)
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 class User:
     def __init__(self, sub, email, is_super_admin, full_name):
@@ -158,57 +206,6 @@ def stickerMap():
     adminList = [3, 412]
     is_admin = (current_user.sub in adminList) or bool(current_user.is_super_admin)
     return render_template('home.html', username=current_user.full_name, is_admin=is_admin)
-
-@app.route("/admin")
-# @admin_required
-def admin_dashboard():
-    with Session(engine) as session:
-        new_stickers = session.query(Sticker).filter_by(verified=False).all()
-    return render_template("admin.html", stickers=new_stickers)
-
-# Render the base admin shell (URL stays /admin)
-# @app.route('/admin')
-# @admin_required
-# def admin_shell():
-#     # We'll render the main shell. For fast initial page load, you can optionally
-#     # prefetch pending stickers or keep that in the review partial.
-#     with Session(engine) as session:
-#         pending_stickers = session.query(Sticker).filter(Sticker.verified == False).order_by(Sticker.posttime.desc()).all()
-#     return render_template('admin_base.html', pending_stickers=pending_stickers)
-
-@app.route('/admin')
-# @admin_required
-def admin_shell():
-    # fetch pending and recent stickers and render shell
-    with Session(engine) as session:
-        pending_stickers = session.query(Sticker).filter(Sticker.verified == False).order_by(Sticker.posttime.desc()).all()
-        dashboard_stickers = session.query(Sticker).order_by(Sticker.posttime.desc()).limit(200).all()
-    # render base and pass both lists
-    return render_template('admin_base.html',
-                           pending_stickers=pending_stickers,
-                           dashboard_stickers=dashboard_stickers,
-                           active='review')   # default shown tab
-
-# Partial: review view (Jinja partial)
-# @app.route('/admin/review_partial')
-# @admin_required
-# def admin_review_partial():
-#     # Serve pending stickers to the review partial
-#     with Session(engine) as session:
-#         pending = session.query(Sticker).filter(Sticker.verified == False).order_by(Sticker.posttime.desc()).all()
-#     print(f"pending: {pending}")
-#     return render_template('admin_review.html', stickers=pending)
-
-
-# Partial: dashboard view (Jinja partial)
-# @app.route('/admin/dashboard_partial')
-# @admin_required
-# def admin_dashboard_partial():
-#     # This partial can either server-render all stickers or fetch JSON client-side.
-#     # Here I server-render a quick list (but you can also have the partial's JS call admin_all_stickers).
-#     with Session(engine) as session:
-#         rows = session.query(Sticker).order_by(Sticker.posttime.desc()).limit(200).all()
-#     return render_template('admin_dashboard.html', stickers=rows)
 
 @app.route("/superadmin")
 @super_admin_required
@@ -393,6 +390,7 @@ def updateStickerSpots():
     else:
         return json.dumps({'status': '400', 'error': 'Updating sticker spots failed'}), 400
 
+
 @app.route('/reviewSticker', methods=['POST'])
 def reviewSticker():
     return jsonify({'status': 'ok'}), 200 # Remove this line
@@ -415,27 +413,6 @@ def reviewSticker():
             session.delete(sticker)
         session.commit()
         return jsonify({'status': 'ok'}), 200
-
-
-@app.route('/admin/all_stickers', methods=['GET'])
-@admin_required
-def admin_all_stickers():
-    with Session(engine) as session:
-        rows = session.query(Sticker).order_by(Sticker.posttime.desc()).all()
-        out = []
-        for s in rows:
-            out.append({
-                'id': s.id,
-                'latitude': float(s.latitude) if s.latitude is not None else None,
-                'longitude': float(s.longitude) if s.longitude is not None else None,
-                'picture_url': url_for('static', filename=s.picture),
-                'adderemail': s.adderemail,
-                'posttime': s.posttime.isoformat(),
-                'spots': s.spots,
-                'boardyear': s.boardyear,
-                'verified': s.verified
-            })
-        return jsonify(out), 200
 
 def sendEmailUpdate():
     return 0  # TODO not implemented

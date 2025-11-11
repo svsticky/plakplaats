@@ -1,0 +1,27 @@
+{# templates/macros/sticker_card.html #}
+{% macro sticker_card(sticker, is_active=false) %}
+{% set pic = sticker.picture or '' %}
+{% if pic.startswith('/') or '://' in pic %}
+{% set img_src = pic %}
+{% else %}
+{% set img_src = url_for('static', filename=pic) %}
+{% endif %}
+
+<div class="card {% if is_active %}top{% endif %}" id="card-{{ sticker.id }}" data-id="{{ sticker.id }}">
+    <img src="{{ img_src }}" class="stickerImage" alt="sticker-{{ sticker.id }}" />
+    <div class="cardText">
+        <div><strong>ID:</strong> {{ sticker.id }}</div>
+        <div><strong>Board year:</strong> {{ sticker.boardyear }}</div>
+        <div><strong>Added by:</strong> {{ sticker.adderemail }}</div>
+        <div><strong>Posted:</strong> {{ sticker.posttime.strftime('%Y-%m-%d %H:%M:%S') if sticker.posttime else '-' }}
+        </div>
+        <div>
+            <strong>Location:</strong> Lat {{ sticker.latitude }}, Lon {{ sticker.longitude }}
+            <br />
+            <a target="_blank"
+                href="https://www.google.com/maps/place/{{ sticker.latitude }},{{ sticker.longitude }}">Open in Google
+                Maps</a>
+        </div>
+    </div>
+</div>
+{% endmacro %}

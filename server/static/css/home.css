@@ -37,7 +37,7 @@ button,
   cursor: pointer;
 }
 
-.addIcon > line {
+.addIcon>line {
   stroke: var(--background-color);
 }
 
@@ -609,17 +609,17 @@ button,
 }
 
 /* nearYouMobileLine */
-#nearYouOverlay.mobile > #nearYouMobileLine {
+#nearYouOverlay.mobile>#nearYouMobileLine {
   display: block;
   margin-top: 0.5rem;
   width: 10%;
 }
 
-#nearYouOverlay.mobile.active > #nearYouMobileLine {
+#nearYouOverlay.mobile.active>#nearYouMobileLine {
   display: none;
 }
 
-#nearYouOverlay.desktop > #nearYouMobileLine {
+#nearYouOverlay.desktop>#nearYouMobileLine {
   display: none;
 }
 
@@ -668,18 +668,18 @@ button,
 }
 
 .stickerDiv,
-.stickerDiv > * {
+.stickerDiv>* {
   transition: opacity 0.8s;
   transition-timing-function: "ease-in";
 }
 
 .stickerDiv:not(.revealed),
-.stickerDiv:not(.revealed) > *:not(.revealed) {
+.stickerDiv:not(.revealed)>*:not(.revealed) {
   opacity: 0;
 }
 
 .stickerDiv.revealed,
-.stickerDiv > *.revealed {
+.stickerDiv>*.revealed {
   opacity: 1;
 }
 

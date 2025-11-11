@@ -1,0 +1,40 @@
+{% extends 'admin/base.html' %}
+
+{% block head_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
+<link rel="shortcut icon" href="{{ url_for('static', filename='/img/favicon.ico') }}" type="image/x-icon" />
+
+<style>
+    .navbar {
+        background-image: none;
+        background-color: var(--board-color);
+        border: none;
+    }
+
+    .navbar.navbar-inverse {
+        border-color: var(--board-color);
+    }
+
+    .navbar .navbar-brand,
+    .navbar .nav>li>a {
+        color: #ffffff;
+    }
+
+    .navbar .nav>li.active>a {
+        background-color: #ffffff;
+        color: var(--board-color);
+    }
+
+    .navbar .nav>li.active>a:hover,
+    .navbar .nav>li.active>a:focus {
+        background-color: #ffffff;
+        color: var(--board-color);
+    }
+
+    .navbar .nav>li>a:hover {
+        background-color: #e5e5e5ff;
+        color: var(--board-color);
+    }
+</style>
+{% endblock head_css %}
