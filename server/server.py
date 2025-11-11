@@ -190,8 +190,6 @@ def login():
         )
         return render_template("login.html", loginUrl=auth_url)
 
-    next_url = request.args.get("next") or url_for("stickerMap")
-
     # Exchange code for tokens
     token_response = requests.post(
         f"{Config.OIDC_ISSUER_BASE}/api/oauth/token",
