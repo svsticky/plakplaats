@@ -393,8 +393,6 @@ def updateStickerSpots():
 
 @app.route('/reviewSticker', methods=['POST'])
 def reviewSticker():
-    return jsonify({'status': 'ok'}), 200 # Remove this line
-
     data = request.get_json()
     sticker_id = data.get('stickerID')
     approved = data.get('approved')
@@ -409,8 +407,8 @@ def reviewSticker():
             # Approve the sticker
             sticker.verified = True
         else:
-            # Delete (or otherwise handle rejection)
-            session.delete(sticker)
+            # Disapprove the sticker
+            session.verified = False
         session.commit()
         return jsonify({'status': 'ok'}), 200
 
