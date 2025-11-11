@@ -17,6 +17,7 @@ class Sticker(Base):
     spots:      Mapped[int]      = mapped_column(default=0)
     boardyear:  Mapped[int]
     verified:   Mapped[bool]     = mapped_column(default=False)
+    reviewed:   Mapped[bool]     = mapped_column(default=False)
 
     # run:
     #    to autogenerate a migration if this file changes:

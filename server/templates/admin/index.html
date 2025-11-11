@@ -13,6 +13,13 @@
         color: black;
     }
 
+    .finishedMessage {
+        text-align: center;
+        font-size: 18px;
+        margin: 0.5rem 0 1rem 0;
+        color: black;
+    }
+
     .containerLabel {
         color: black;
         display: block;
@@ -170,19 +177,19 @@
             transform: scale(1);
         }
     }
-
-    .no-cards {
-        color: white;
-        padding: 20px;
-        text-align: center;
-    }
 </style>
 {% endblock head_css %}
 
 {% block body %}
 <div class="content">
     <span class="containerLabel">Open sticker requests</span>
+
+    {% if stickers|length > 0 %}
     <div class="reviewCounter" id="reviewCounter">1 / {{ stickers|length }}</div>
+    {% else %}
+    <div class="finishedMessage">All stickers are reviewed! 🎉</div>
+    {% endif %}
+
 
     <div class="cardHolder" id="cardHolder">
         {% set any = stickers|length > 0 %}

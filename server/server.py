@@ -89,7 +89,7 @@ class AdminIndex(AdminIndexView):
     @expose('/')
     def index(self):
         with Session(engine) as session:
-            new_stickers = session.query(Sticker).filter_by(verified=False).all()
+            new_stickers = session.query(Sticker).filter_by(reviewed=False).order_by(Sticker.posttime.asc()).all()
         return self.render('admin/index.html', stickers=new_stickers)
 
     def is_accessible(self):
@@ -403,6 +403,7 @@ def reviewSticker():
         sticker = session.get(Sticker, sticker_id)
         if not sticker:
             return jsonify({'error': 'Sticker not found'}), 404
+        sticker.reviewed = True
         if approved:
             # Approve the sticker
             sticker.verified = True
