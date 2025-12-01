@@ -29,7 +29,7 @@ from jwt.algorithms import RSAAlgorithm
 
 from flask_jwt_extended import current_user
 from flask_jwt_extended import JWTManager
-from flask_jwt_extended import verify_jwt_in_request
+from flask_jwt_extended import verify_jwt_in_request, set_access_cookies
 
 import os, requests, flask, json
 from flask import Flask, request, redirect, url_for, render_template, jsonify
@@ -57,7 +57,8 @@ class Config:
     JWT_PUBLIC_KEY       = None   # gets filled in at startup
     JWT_TOKEN_LOCATION   = ["cookies"]
     JWT_ACCESS_COOKIE_PATH = "/"
-    JWT_COOKIE_SECURE    = True
+    JWT_COOKIE_SECURE    = os.getenv("STICKER_MAP_URL").startswith("https://")
+    JWT_CSRF_IN_COOKIES  = False
 
     # Postgres config
     POSTGRES_HOST = os.getenv("POSTGRES_HOST")
@@ -210,13 +211,7 @@ def login():
 
     # Set the Koala ID‑token as the cookie
     resp = flask.make_response(redirect(next_url))
-    resp.set_cookie(
-        "access_token_cookie",
-        id_token,
-        httponly=True,
-        secure=Config.JWT_COOKIE_SECURE,
-        path="/"
-    )
+    set_access_cookies(resp, id_token)
     return resp
 
 # ─── Backend routes ───────────────────────────────────────────────────
