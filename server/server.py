@@ -71,6 +71,7 @@ class Config:
     BOARD_COLOR = os.getenv("STICKER_MAP_COLOR")
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
     UPLOAD_DIRECTORY = "./static/uploads"
+    STICKER_MAP_PORT = os.getenv("STICKER_MAP_PORT")
 
 if (not os.path.exists(Config.UPLOAD_DIRECTORY)):
     os.mkdir(Config.UPLOAD_DIRECTORY)
@@ -370,4 +371,4 @@ def checkFileName(name):
 # only runs when executed as script, not when used as module
 if __name__ == "__main__":
     from waitress import serve
-    serve(app, host='0.0.0.0', port='7050')
+    serve(app, host='0.0.0.0', port=Config.STICKER_MAP_PORT)
