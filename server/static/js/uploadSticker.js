@@ -64,56 +64,43 @@ function previewImage() {
 }
 
 //Upload function
-function submit() {
+async function submit() {
     latitudeInput.disabled = true;
     longitudeInput.disabled = true;
     submitButton.classList.add('addSubmitButtonPressed');
 
-    //Create request
-    var request = new XMLHttpRequest();
-    request.open('POST', '/upload', true);
-    request.withCredentials = true;
-    request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    request.onreadystatechange = function () {
-        if (this.readyState !== 4) return;
+    try {
+        var formdata = new FormData();
+        formdata.append('image', imageFile);
+        formdata.append('lat', latitudeInput.value);
+        formdata.append('lon', longitudeInput.value);
+        formdata.append('logoId', selectedLogoId);
+        formdata.append('boardYear', boardYearInput.value);
 
-        // detect redirect to login
-        if (this.status === 401 || (this.responseURL && this.responseURL.indexOf('/login') !== -1)) {
-            window.location = this.responseURL || '/login?next=/upload';
-            return;
-        }
+        const response = await fetch("/upload", { method: 'post', body: formdata }).then(async resp => {
+            const json = await resp.json();
+            if (resp.ok) return json
+            else throw json;
+        });
 
-        if (this.status === 200) {
-            dropArea.classList.remove('invalid');
-            const response = this.responseText;
-            closeAddView();
-            resetView();
-            setTimeout(function () {
-                openSuccessView();
-                emailCode = JSON.parse(response)['emailCode'];
-            }, 500);
+        dropArea.classList.remove('invalid');
+        closeAddView();
+        resetView();
+        setTimeout(function () {
+            openSuccessView();
+            emailCode = response['emailCode'];
+        }, 500);
+    } catch (error) {
+        if (error['error'] == "You must upload a picture.") {
+            dropArea.classList.add('invalid');
+        } else if (error['error'] == "Unsupported file type.") {
+            dropArea.classList.add('invalid');
+            alert('File type not supported.');
         } else {
-            if (JSON.parse(this.responseText)['error'] == "You must upload a picture.") {
-                dropArea.classList.add('invalid');
-            } else if (JSON.parse(this.responseText)['error'] == "Unsupported file type.") {
-                dropArea.classList.add('invalid');
-                alert('File type not supported.');
-            } else {
-                alert("Error: " + this.responseText);
-            }
-            latitudeInput.disabled = false;
-            longitudeInput.disabled = false;
-            submitButton.classList.remove('addSubmitButtonPressed');
+            alert("Error: " + error['error']);
         }
+        latitudeInput.disabled = false;
+        longitudeInput.disabled = false;
+        submitButton.classList.remove('addSubmitButtonPressed');
     }
-
-    //Send request
-    var formdata = new FormData();
-    formdata.append('image', imageFile);
-    formdata.append('lat', latitudeInput.value);
-    formdata.append('lon', longitudeInput.value);
-    formdata.append('logoId', selectedLogoId);
-    formdata.append('boardYear', boardYearInput.value);
-
-    request.send(formdata);
 }

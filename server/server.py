@@ -26,10 +26,11 @@ from flask import Flask
 from flask import jsonify
 from flask import url_for
 from jwt.algorithms import RSAAlgorithm
+from jwt import decode as jwt_decode
 
 from flask_jwt_extended import current_user
 from flask_jwt_extended import JWTManager
-from flask_jwt_extended import verify_jwt_in_request, set_access_cookies
+from flask_jwt_extended import verify_jwt_in_request, set_access_cookies, create_access_token
 
 import os, requests, flask, json
 from flask import Flask, request, redirect, url_for, render_template, jsonify
@@ -53,12 +54,15 @@ class Config:
     OIDC_SCOPES        = os.getenv("OIDC_SCOPES")
 
     # Flask‑JWT‑Extended config
-    JWT_ALGORITHM        = "RS256"
     JWT_PUBLIC_KEY       = None   # gets filled in at startup
+    JWT_SECRET_KEY      = os.getenv("JWT_SECRET_KEY")
     JWT_TOKEN_LOCATION   = ["cookies"]
     JWT_ACCESS_COOKIE_PATH = "/"
     JWT_COOKIE_SECURE    = os.getenv("STICKER_MAP_URL").startswith("https://")
     JWT_CSRF_IN_COOKIES  = False
+    JWT_COOKIE_CSRF_PROTECT = False
+    JWT_ACCESS_COOKIE_NAME = "access_token_cookie"
+    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(hours=8)
 
     # Postgres config
     POSTGRES_HOST = os.getenv("POSTGRES_HOST")
@@ -84,7 +88,7 @@ app.config.from_object(Config)
 
 disc = requests.get(f"{app.config['OIDC_ISSUER_BASE']}/.well-known/openid-configuration", verify=True).json()
 jwks = requests.get(disc["jwks_uri"], verify=True).json()
-app.config["JWT_PUBLIC_KEY"] = RSAAlgorithm.from_jwk(json.dumps(jwks["keys"][0]))
+koala_public_key = RSAAlgorithm.from_jwk(json.dumps(jwks["keys"][0]))
 
 jwt = JWTManager(app)
 
@@ -209,13 +213,24 @@ def login():
 
     next_url = request.args.get("state") or url_for("stickerMap")
 
-    # Set the Koala ID‑token as the cookie
+    # Decode id_token
+    jwt_data = jwt_decode(id_token, key=koala_public_key, algorithms=["RS256"], audience=Config.OIDC_CLIENT_ID)
+
+    # Create new access token from jwt_data
+    plakplaats_access_token = create_access_token(
+        jwt_data['sub'], 
+        additional_claims={
+            "email": jwt_data['email'],
+            "is_admin": jwt_data['is_admin'],
+            "full_name": jwt_data['full_name']})
+
     resp = flask.make_response(redirect(next_url))
-    set_access_cookies(resp, id_token)
+    set_access_cookies(resp, plakplaats_access_token)
     return resp
 
 # ─── Backend routes ───────────────────────────────────────────────────
 @app.route('/upload', methods=['GET', 'POST'])
+@login_required
 def uploadSticker():
     # Check if request is sent with HTTP Post method
     if request.method == 'POST':
@@ -253,6 +268,7 @@ def uploadSticker():
         return json.dumps({'status': '405', 'error': 'HTTP Method not allowed.'}), 405
 
 @app.route('/addEmail', methods=['PATCH'])
+@login_required
 def addEmail():
     if request.form['email'] != '':
         if request.form['token'] != '':
@@ -275,6 +291,7 @@ def addEmail():
 
 
 @app.route('/getStickers', methods=['GET'])
+@login_required
 def getStickers():
     if (request.args.get('west') != '' and request.args.get('east') != '' and request.args.get('north') != '' and request.args.get('south') != ''):
         # Get all the stickers within the bounding box
@@ -289,6 +306,7 @@ def getStickers():
         return json.dumps({'status': '400', 'error': 'Bounding box not defined or incomplete.'}), 400
 
 @app.route('/getNearYouStickers', methods=['GET'])
+@login_required
 def getNearYouStickers():
     if (request.args.get('lon') != '' and request.args.get('lat') != ''):
         # Get all the stickers within the bounding box
@@ -318,6 +336,7 @@ def getNearYouStickers():
         return json.dumps({'status': '400', 'error': 'Bounding box not defined or incomplete.'}), 400
 
 @app.route('/updateStickerSpots', methods=['POST'])
+@login_required
 def updateStickerSpots():  
     data = request.get_json()
     stickerID = data.get('stickerID')
