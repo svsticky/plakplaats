@@ -9,16 +9,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-POSTGRES_HOST = os.getenv("POSTGRES_HOST")
-POSTGRES_DBNAME = os.getenv("POSTGRES_DBNAME")
-POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PASS = os.getenv("POSTGRES_PASS")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+# POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+# POSTGRES_DBNAME = os.getenv("POSTGRES_DBNAME")
+# POSTGRES_USER = os.getenv("POSTGRES_USER")
+# POSTGRES_PASS = os.getenv("POSTGRES_PASS")
+# POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-config.set_main_option('sqlalchemy.url', f'postgresql://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DBNAME}')
+config.set_main_option('sqlalchemy.url', DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
