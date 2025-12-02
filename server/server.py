@@ -61,11 +61,7 @@ class Config:
     JWT_CSRF_IN_COOKIES  = False
 
     # Postgres config
-    POSTGRES_HOST = os.getenv("POSTGRES_HOST")
-    POSTGRES_DBNAME = os.getenv("POSTGRES_DBNAME")
-    POSTGRES_USER = os.getenv("POSTGRES_USER")
-    POSTGRES_PASS = os.getenv("POSTGRES_PASS")
-    POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+    DATABASE_URL = os.getenv("DATABASE_URL")
 
     # Miscellaneous
     BOARD_COLOR = os.getenv("STICKER_MAP_COLOR")
@@ -75,7 +71,7 @@ class Config:
 if (not os.path.exists(Config.UPLOAD_DIRECTORY)):
     os.mkdir(Config.UPLOAD_DIRECTORY)
 
-engine = create_engine(f"postgresql://{Config.POSTGRES_USER}:{Config.POSTGRES_PASS}@{Config.POSTGRES_HOST}/{Config.POSTGRES_DBNAME}")
+engine = create_engine(Config.DATABASE_URL)
 Base.metadata.create_all(engine)
 
 # ─── Flask + JWT init ────────────────────────────────────────────────────
