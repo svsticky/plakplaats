@@ -1,9 +1,9 @@
 // *****IMAGE UPLOAD
-function onClickImage(){
+function onClickImage() {
     let input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    
+
     input.onchange = _ => {
         imageFile = Array.from(input.files)[0];
         previewImage();
@@ -18,7 +18,7 @@ function onClickImage(){
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
     dropArea.addEventListener(eventName, preventDefaults, false);
 });
-function preventDefaults (e) {
+function preventDefaults(e) {
     e.preventDefault();
     e.stopPropagation();
 }
@@ -31,7 +31,7 @@ function preventDefaults (e) {
 ['dragleave', 'drop'].forEach(eventName => {
     dropArea.addEventListener(eventName, unhighlight, false);
 });
-  
+
 function highlight(e) {
     dropArea.classList.add('highlight');
 }
@@ -44,16 +44,16 @@ function unhighlight(e) {
 dropArea.addEventListener('drop', handleDrop, false);
 
 function handleDrop(e) {
-  let dt = e.dataTransfer;
-  imageFile = dt.files[0];
-  previewImage();
+    let dt = e.dataTransfer;
+    imageFile = dt.files[0];
+    previewImage();
 }
 
 //Preview Image
-function previewImage(){
+function previewImage() {
     let reader = new FileReader()
     reader.readAsDataURL(imageFile)
-    reader.onloadend = function() {
+    reader.onloadend = function () {
         //Hide the text
         imageText.classList.add('addImageTextHidden');
         //Set image
@@ -64,50 +64,43 @@ function previewImage(){
 }
 
 //Upload function
-function submit(){
+async function submit() {
     latitudeInput.disabled = true;
     longitudeInput.disabled = true;
     submitButton.classList.add('addSubmitButtonPressed');
 
-    //Create request
-    var request = new XMLHttpRequest();
-    request.open('POST', 'upload', true);
-    //request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    try {
+        var formdata = new FormData();
+        formdata.append('image', imageFile);
+        formdata.append('lat', latitudeInput.value);
+        formdata.append('lon', longitudeInput.value);
+        formdata.append('logoId', selectedLogoId);
+        formdata.append('boardYear', boardYearInput.value);
 
-    //Handle response
-    request.onreadystatechange = function() {
-        if(this.readyState == 4){
-            if(this.status == 200){
-                dropArea.classList.remove('invalid');
-                const response = this.responseText;
-                closeAddView();
-                resetView();
-                setTimeout(function(){
-                    openSuccessView();
-                    emailCode = JSON.parse(response)['emailCode'];
-                }, 500);
-            } else {
-                if(JSON.parse(this.responseText)['error'] == "You must upload a picture."){
-                    dropArea.classList.add('invalid');
-                } else if (JSON.parse(this.responseText)['error'] == "Unsupported file type."){
-                    dropArea.classList.add('invalid');
-                    alert('File type not supported.');
-                } else {
-                    alert("Error: " + this.responseText);
-                }
-                latitudeInput.disabled = false;
-                longitudeInput.disabled = false;
-                submitButton.classList.remove('addSubmitButtonPressed');
-            }
+        const response = await fetch("/upload", { method: 'post', body: formdata }).then(async resp => {
+            const json = await resp.json();
+            if (resp.ok) return json
+            else throw json;
+        });
+
+        dropArea.classList.remove('invalid');
+        closeAddView();
+        resetView();
+        setTimeout(function () {
+            openSuccessView();
+            emailCode = response['emailCode'];
+        }, 500);
+    } catch (error) {
+        if (error['error'] == "You must upload a picture.") {
+            dropArea.classList.add('invalid');
+        } else if (error['error'] == "Unsupported file type.") {
+            dropArea.classList.add('invalid');
+            alert('File type not supported.');
+        } else {
+            alert("Error: " + error['error']);
         }
+        latitudeInput.disabled = false;
+        longitudeInput.disabled = false;
+        submitButton.classList.remove('addSubmitButtonPressed');
     }
-
-    //Send request
-    var formdata = new FormData();
-    formdata.append('image', imageFile);
-    formdata.append('lat', latitudeInput.value);
-    formdata.append('lon', longitudeInput.value);
-    formdata.append('logoId', selectedLogoId);
-    formdata.append('boardYear', boardYearInput.value);
-    request.send(formdata);
 }
