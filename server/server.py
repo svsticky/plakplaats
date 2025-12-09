@@ -55,6 +55,9 @@ from flask import send_from_directory
 load_dotenv()
 
 class Config:
+    # Flask config
+    SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+
     # OIDC info
     OIDC_ISSUER_BASE   = os.getenv("KOALA_URL")
     OIDC_CLIENT_ID     = os.getenv("KOALA_CLIENT_UID")
