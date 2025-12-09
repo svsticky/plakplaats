@@ -130,11 +130,6 @@ app.config["JWT_PUBLIC_KEY"] = RSAAlgorithm.from_jwk(json.dumps(jwks["keys"][0])
 
 jwt = JWTManager(app)
 
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'),
-                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
-
 class User:
     def __init__(self, sub, email, is_super_admin, full_name):
         self.sub        = sub
@@ -234,8 +229,6 @@ def login():
             f"&state={next_url}"
         )
         return render_template("login.html", loginUrl=auth_url)
-
-    next_url = request.args.get("next") or url_for("stickerMap")
 
     # Exchange code for tokens
     token_response = requests.post(
