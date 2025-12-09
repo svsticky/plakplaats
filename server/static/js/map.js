@@ -20,7 +20,7 @@ L.control.locate().addTo(mymap);
 updateMap();
 
 
-function updateMap() {
+async function updateMap() {
     //Remove pointers that fell of the map
     pointersOnMap = pointersOnMap.filter(function (pointer) {
         if (pointer.lat < mymap.getBounds().getSouth() || pointer.lat > mymap.getBounds().getNorth() || pointer.lon < mymap.getBounds().getWest() || pointer.lon > mymap.getBounds().getEast()) {
@@ -29,101 +29,106 @@ function updateMap() {
         }
         return true;
     });
+
     //Add new pointers on the map
-    var request = new XMLHttpRequest();
-    var url = 'getStickers?north=' + mymap.getBounds().getNorth();
-    url += '&south=' + mymap.getBounds().getSouth();
-    url += '&west=' + mymap.getBounds().getWest();
-    url += '&east=' + mymap.getBounds().getEast();
-    request.open('GET', url, true);
-    request.onreadystatechange = function () {
-        if (this.readyState == 4) {
-            if (this.status == 200) {
-                var results = JSON.parse(this.responseText);
-                for (var x = 0; x < results.length; x++) {
-                    //Check if the pointer already exists on map
-                    var isNotOnMap = true;
-                    for (var y = 0; y < pointersOnMap.length; y++) {
-                        if (results[x].id == pointersOnMap[y].id) {
-                            isNotOnMap = false;
-                        }
-                    }
-                    if (isNotOnMap) {
-                        //Not on map, add the pointer
-                        var stickyIcon = L.icon({
-                            iconUrl: `/static/img/markers/marker-${results[x].boardyear}.svg`,
-                            shadowUrl: '/static/img/markerShadow.png',
-                            iconSize: [38, 52],
-                            shadowSize: [52, 52],
-                            shadowAnchor: [19, 25],
-                        });
+    try {
+        var url = 'getStickers?north=' + mymap.getBounds().getNorth();
+        url += '&south=' + mymap.getBounds().getSouth();
+        url += '&west=' + mymap.getBounds().getWest();
+        url += '&east=' + mymap.getBounds().getEast();
+        const response = await fetch(url)
+            .then(response => {
+                if (!response.ok)
+                    throw new Error('Network response was not ok');
+                else
+                    return response.json();
+            }
+            );
 
-                        const pointer = {
-                            id: results[x].id,
-                            lat: results[x].latitude,
-                            lon: results[x].longitude,
-                            pointer: L.marker([results[x].latitude, results[x].longitude], { icon: stickyIcon }).addTo(mymap)
-                        }
+        placePointers(response);
+    } catch (error) {
+        console.log('Error while loading map pointers!', error);
+    }
+}
 
-                        //Add a popup
-                        let spotText = "";
-                        if (results[x].spots === 1) {
-                            spotText = "spot";
-                        }
-                        else {
-                            spotText = "spots";
-                        }
-
-                        pointer.pointer.bindPopup(`
-                        <h1>Sticker ${results[x].id}</h1>
-                        <h2>Sticked by ???</h2>
-                        <img width='200px' src='${results[x].picture}'>
-                        <h2>${results[x].spots} ${spotText}</h2>
-                        <h2>Posted ${dayjs().to(dayjs(results[x].posttime))}</h2>
-                        <div class='markerBoardYearDiv'>
-                        <h2 class='markerBoardYearText'>Board year:</h2><h2 class='marker-B${results[x].boardyear} markerBoardYear'>${results[x].boardyear}</h2>
-                        </div>
-                        <button class='leafletMarkerButton' id='spotButton-${pointer.id}' data-stickerID='${results[x].id}'>I've spotted this sticker</button>`)
-
-                        pointer.pointer.on('popupopen', function (e) {
-                            document.getElementById('spotButton-' + pointer.id).addEventListener('click', async (e) => {
-
-                                const button = document.getElementById('spotButton-' + pointer.id);
-                                const stickerID = button.getAttribute('data-stickerID');
-
-                                // Post to updateStickerSpots to update spots value for the sticker
-                                try {
-                                    const response = await fetch('updateStickerSpots', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({ stickerID: stickerID })
-                                    });
-                                    if (response.ok) {
-                                        console.log('Spot value updated successfully for sticker ID: ' + stickerID);
-                                        alert('Added a spot successfully!')
-                                        // Optionally, you can reload the map or perform any other action here
-                                    } else {
-                                        console.error('Failed to update spot value for sticker ID: ' + stickerID);
-                                    }
-                                } catch (error) {
-                                    console.error('Error updating spot value:', error);
-                                }
-                            });
-                        });
-
-
-                        //Add pointer object to array
-                        pointersOnMap.push(pointer);
-                    }
-                }
-            } else {
-                console.error('Error while loading map pointers!');
+function placePointers(response) {
+    for (var x = 0; x < response.length; x++) {
+        //Check if the pointer already exists on map
+        var isNotOnMap = true;
+        for (var y = 0; y < pointersOnMap.length; y++) {
+            if (response[x].id == pointersOnMap[y].id) {
+                isNotOnMap = false;
             }
         }
+        if (isNotOnMap) {
+            //Not on map, add the pointer
+            var stickyIcon = L.icon({
+                iconUrl: `/static/img/markers/marker-${response[x].boardyear}.svg`,
+                shadowUrl: '/static/img/markerShadow.png',
+                iconSize: [38, 52],
+                shadowSize: [52, 52],
+                shadowAnchor: [19, 25],
+            });
+
+            const pointer = {
+                id: response[x].id,
+                lat: response[x].latitude,
+                lon: response[x].longitude,
+                pointer: L.marker([response[x].latitude, response[x].longitude], { icon: stickyIcon }).addTo(mymap)
+            }
+
+            //Add a popup
+            let spotText = "";
+            if (response[x].spots === 1) {
+                spotText = "spot";
+            }
+            else {
+                spotText = "spots";
+            }
+
+            pointer.pointer.bindPopup(`
+                        <h1>Sticker ${response[x].id}</h1>
+                        <h2>Sticked by ???</h2>
+                        <img width='200px' src='${response[x].picture}'>
+                        <h2>${response[x].spots} ${spotText}</h2>
+                        <h2>Posted ${dayjs().to(dayjs(response[x].posttime))}</h2>
+                        <div class='markerBoardYearDiv'>
+                        <h2 class='markerBoardYearText'>Board year:</h2><h2 class='marker-B${response[x].boardyear} markerBoardYear'>${response[x].boardyear}</h2>
+                        </div>
+                        <button class='leafletMarkerButton' id='spotButton-${pointer.id}' data-stickerID='${response[x].id}'>I've spotted this sticker</button>`)
+
+            pointer.pointer.on('popupopen', function (e) {
+                document.getElementById('spotButton-' + pointer.id).addEventListener('click', async (e) => {
+
+                    const button = document.getElementById('spotButton-' + pointer.id);
+                    const stickerID = button.getAttribute('data-stickerID');
+
+                    // Post to updateStickerSpots to update spots value for the sticker
+                    try {
+                        const response = await fetch('updateStickerSpots', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ stickerID: stickerID })
+                        });
+                        if (response.ok) {
+                            console.log('Spot value updated successfully for sticker ID: ' + stickerID);
+                            alert('Added a spot successfully!')
+                            // Optionally, you can reload the map or perform any other action here
+                        } else {
+                            console.error('Failed to update spot value for sticker ID: ' + stickerID);
+                        }
+                    } catch (error) {
+                        console.error('Error updating spot value:', error);
+                    }
+                });
+            });
+
+            //Add pointer object to array
+            pointersOnMap.push(pointer);
+        }
     }
-    request.send();
 }
 
 mymap.on('click', (e) => pickManualLocation(e));
