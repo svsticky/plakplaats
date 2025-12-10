@@ -1,4 +1,5 @@
 # Plakplaats
+
 Plak je kwak, en upload er een foto van.<br>
 This webapp lets your members add all the locations they sticked a sticker of your association.
 
@@ -17,6 +18,7 @@ This webapp lets your members add all the locations they sticked a sticker of yo
 7. To update your database table, run `uv run alembic upgrade head`
 
 ## Executing the program
+
 Running this program works by running the flask app.
 This is done through uv. Firstly, your terminal needs to be in the server subfolder using `cd .\server\`. Then run the flask app using the following command:
 
