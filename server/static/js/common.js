@@ -15,6 +15,7 @@ const addIcon = document.getElementsByClassName('addIcon')[0];
 const emailInput = document.getElementsByClassName('successEmail')[0];
 
 const nearYouButton = document.getElementsByClassName('nearYouButton')[0];
+const navUserName = document.getElementById('navUserName');
 
 const mobileThreshold = 768;
 
@@ -25,6 +26,26 @@ var emailCode;
 
 var pointersOnMap = [];
 var logoIcons = [];
+
+navUserName.addEventListener("click", function () {
+    const userResponse = confirm("Do you want to log out?");
+    if (userResponse) {
+        logOut();
+    }
+});
+
+function logOut() {
+    const logOutUrl = `/logout`;
+    fetch(logOutUrl, { method: 'GET', credentials: 'same-origin' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error while logging out.');
+            }
+            window.location.href = '/login';
+        })
+        .catch(error => console.error(`Error logging out: ${error.message}`));
+}
+
 
 // Define the function before the event listener
 function isMobile() {

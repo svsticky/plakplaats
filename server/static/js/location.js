@@ -3,13 +3,12 @@
 let pickingLocation = false;
 let statePicked = false;
 
-function getLocation(){
+function getLocation() {
     //Get the permissions
     setLocationContainer("Please grant location permission...");
-    
+
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(handleGeoLocation, (error) => 
-            {setLocationContainer(getError(error) + ", please press to add manually.");});
+        navigator.geolocation.getCurrentPosition(handleGeoLocation, (error) => { setLocationContainer(getError(error) + ", please press to add manually."); });
     } else {
         alert("Geolocation is not supported by this browser.");
     }
@@ -20,36 +19,41 @@ function handleGeoLocation(location) {
         handleLocation(location.coords.latitude, location.coords.longitude);
 }
 
-function handleLocation(lat, lon){
+async function handleLocation(lat, lon) {
     //Set the values in the inputs
     setLocationContainer("Loading location...");
     setPicker(false)
     statePicked = true;
     latitudeInput.value = lat;
     longitudeInput.value = lon;
+
     //Retrieve estimated address
-    var addressRequest = new XMLHttpRequest();
-    addressRequest.onreadystatechange = function(){
-        if(this.readyState == 4 && this.status == 200){
-            var addressJson = JSON.parse(addressRequest.responseText);
-            var text = "Location: <i>nearby ";
-            if(addressJson['address']['road'] != undefined){
-                text += addressJson['address']['road'];
-                if(addressJson['address']['house_number'] != undefined){
-                    text += ' ' + addressJson['address']['house_number'];
-                }
+    try {
+        const response = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json')
+            .then(response => {
+                if (!response.ok)
+                    throw new Error('Network response was not ok');
+                else
+                    return response.json();
             }
-            text += "</i><br>Press to pick manually."
-            setLocationContainer(text, true);
+            );
+
+        var text = "Location: <i>nearby ";
+        if (response['address']['road'] != undefined) {
+            text += response['address']['road'];
+            if (response['address']['house_number'] != undefined) {
+                text += ' ' + response['address']['house_number'];
+            }
         }
+        text += "</i><br>Press to pick manually."
+        setLocationContainer(text, true);
+    } catch (error) {
+        alert("Error retrieving address information.", error);
     }
-    console.log('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json');
-    addressRequest.open("GET", 'https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json', true);
-    addressRequest.send();
 }
 
 function getError(error) {
-    switch(error.code) {
+    switch (error.code) {
         case error.PERMISSION_DENIED:
             return "Location permission denied";
         case error.POSITION_UNAVAILABLE:
@@ -61,9 +65,9 @@ function getError(error) {
     }
 }
 
-function setLocationContainer(text, found=false){
+function setLocationContainer(text, found = false) {
     locationContainerText.innerHTML = text;
-    if(found == true){
+    if (found == true) {
         locationContainerSpinner.style.display = "none";
         locationIcon.style.display = "block";
     } else {
@@ -72,11 +76,11 @@ function setLocationContainer(text, found=false){
     }
 }
 
-function setManualLocationInput(state){
-    if(state == true){
+function setManualLocationInput(state) {
+    if (state == true) {
         latitudeInput.style.display = 'block';
         longitudeInput.style.display = 'block';
-        
+
         document.getElementsByClassName('locationInputDes')[0].style.display = 'block';
         document.getElementsByClassName('locationInputDes')[1].style.display = 'block';
     } else {
@@ -103,6 +107,6 @@ function setPicker(state) {
     if (statePicked)
         statePicked = false;
     setOverlay(state);
-    if (state) 
+    if (state)
         closeAddView(false);
 }
