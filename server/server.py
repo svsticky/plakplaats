@@ -415,12 +415,7 @@ def reviewSticker():
         if not sticker:
             return jsonify({'error': 'Sticker not found'}), 404
         sticker.reviewed = True
-        if approved:
-            # Approve the sticker
-            sticker.verified = True
-        else:
-            # Disapprove the sticker
-            session.verified = False
+        session.verified = approved
         session.commit()
         return jsonify({'status': 'ok'}), 200
 
