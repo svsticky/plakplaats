@@ -123,7 +123,11 @@ admin = Admin(
     base_template='admin/master.html'
 )
 
-admin.add_view(ModelView(Sticker, db_session))
+class StickerAdmin(ModelView):
+    # Sort by newest posttime default
+    column_default_sort = ('posttime', True)
+
+admin.add_view(StickerAdmin(Sticker, db_session))
 
 admin.add_link(MenuLink(name='Main Site', url='/', category=''))
 admin.add_link(MenuLink(name='Logout', url='/logout', category=''))
