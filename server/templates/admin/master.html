@@ -21,6 +21,14 @@
         color: #ffffff;
     }
 
+    .navbar .navbar-brand:hover,
+    .navbar .navbar-brand:focus,
+    .navbar .nav>li>a:hover,
+    .navbar .nav>li>a:focus {
+        background-color: #ffffff;
+        color: var(--board-color);
+    }
+
     .navbar .nav>li.active>a {
         background-color: #ffffff;
         color: var(--board-color);
@@ -32,9 +40,35 @@
         color: var(--board-color);
     }
 
-    .navbar .nav>li>a:hover {
-        background-color: #e5e5e5ff;
+    .navbar .navbar-nav>.open>a,
+    .navbar .navbar-nav>.open>a:hover,
+    .navbar .navbar-nav>.open>a:focus {
+        background-color: #ffffff;
         color: var(--board-color);
+    }
+
+    .navbar .dropdown-menu>li>a {
+        color: var(--board-color);
+    }
+
+    .navbar .dropdown-menu>li>a:hover,
+    .navbar .dropdown-menu>li>a:focus {
+        background-color: #acacacff;
+        color: var(--board-color);
+    }
+
+    .navbar .navbar-toggle .icon-bar {
+        background-color: #ffffff;
+    }
+
+    .navbar .navbar-toggle:hover .icon-bar,
+    .navbar .navbar-toggle:focus .icon-bar {
+        background-color: #ffffff;
+    }
+
+    .navbar .navbar-toggle,
+    .navbar .navbar-toggle .icon-bar {
+        transition: all 0.3s ease;
     }
 </style>
 {% endblock head_css %}
