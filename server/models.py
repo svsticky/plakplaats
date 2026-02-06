@@ -1,6 +1,6 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import func
-from sqlalchemy import Integer, String, DateTime
+from sqlalchemy import DateTime
 from datetime import datetime
 
 class Base(DeclarativeBase):
@@ -18,6 +18,14 @@ class Sticker(Base):
     boardyear:  Mapped[int]
     verified:   Mapped[bool]     = mapped_column(default=False)
     reviewed:   Mapped[bool]     = mapped_column(default=False)
+
+class Admin(Base):
+    __tablename__ = "admins"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    # OIDC subject (provided by OIDC provider)
+    sub: Mapped[int] = mapped_column(unique=True, index=True)
+    # Optional email field for referencing the admin by email
+    email: Mapped[str | None] = mapped_column(nullable=True)
 
     # run:
     #    to autogenerate a migration if this file changes:
