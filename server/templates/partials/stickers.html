@@ -1,0 +1,14 @@
+{% for s in stickers %}
+<div class="overlay-sticker-card">
+  <img src="{{ s.picture_url }}" class="overlay-sticker-img">
+
+  <div class="overlay-meta">
+    <span>ID {{ s.id }}</span>
+    <span>{{ s.posttime }}</span>
+  </div>
+
+  <button onclick="flyToSticker({{ s.lat }}, {{ s.lon }}, {{ s.id }})">
+    Open on map
+  </button>
+</div>
+{% endfor %}

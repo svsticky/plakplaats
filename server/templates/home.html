@@ -4,6 +4,7 @@
     <title>Plakplaats | Sticky Sticker Map</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/static/css/home.css">
+    <link rel="stylesheet" href="/static/css/overlay.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
         integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
         crossorigin="" />
@@ -95,8 +96,53 @@
             <span class="addSubmitButton" onclick="updateEmail()">Submit</span>
         </div>
     </div>
+
+<input type="hidden" id="geo-lat" name="geo-lat">
+<input type="hidden" id="geo-lon" name="geo-lon">
+
+<div
+  id="nearYouOverlay"
+  x-data="overlayState()"
+  x-init="
+    init();
+    window.addEventListener('toggle-overlay', () => toggleDesktop());
+  "
+  :class="{
+    'mobile active': isMobile && open,
+    'mobile inactive': isMobile && !open,
+    'desktop active': !isMobile && open,
+    'desktop inactive': !isMobile && !open
+  }"
+  @touchstart="onTouchStart($event)"
+  @touchmove="onTouchMove($event)"
+  @touchend="onTouchEnd()"
+>
+
+  <div id="nearYouMobileHandle"></div>
+
+  <h2>Stickers Near You</h2>
+
+  <div id="stickerList"
+      hx-get="/api/nearby-stickers"
+      hx-include="#geo-lat,#geo-lon"
+      hx-trigger="overlay-open"
+      hx-target="this"
+      hx-swap="innerHTML">
+  </div>
+
+</div>
+
+<button
+  id="nearYouDesktopToggleButton"
+  x-data
+  @click="$dispatch('toggle-overlay')"
+  class="near-toggle-btn">
+  Show Stickers
+</button>
+
 </body>
 
+<script src="/static/js/overlay.js"></script>
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
     integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
     crossorigin=""></script>
@@ -104,12 +150,14 @@
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/relativeTime.js"></script>
 <script>dayjs.extend(window.dayjs_plugin_relativeTime)</script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
 <script src="/static/js/common.js"></script>
 <script src="/static/js/map.js"></script>
 <script src="/static/js/UI.js"></script>
 <script src="/static/js/location.js"></script>
 <script src="/static/js/uploadSticker.js"></script>
-<script src="/static/js/nearYouOverlay.js"></script>
+<script src="/static/js/geo.js"></script>
 <script src="/static/js/main.js"></script>
 
 </html>
