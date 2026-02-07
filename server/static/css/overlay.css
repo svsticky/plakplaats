@@ -1,6 +1,6 @@
 #nearYouOverlay.desktop {
   position: fixed;
-  top: 80px;
+  top: var(--navbar-height);
   right: 0;
   width: 380px;
   height: calc(100vh - 80px);
@@ -53,6 +53,23 @@
   background: #ccc;
   border-radius: 3px;
   margin: 8px auto;
+}
+
+#nearYouOverlay.mobile > #nearYouMobileHandle {
+  display: block;
+  width: 60px;
+  height: 6px;
+  background: #ccc;
+  border-radius: 3px;
+  margin: 8px auto;
+}
+
+#nearYouOverlay.mobile.active > #nearYouMobileHandle {
+  display: none;
+}
+
+#nearYouOverlay.desktop > #nearYouMobileHandle {
+  display: none;
 }
 
 #nearYouOverlay h2 {

@@ -74,8 +74,32 @@ function toggleOverlay() {
 document.body.addEventListener("htmx:afterSwap", (e) => {
   if (e.target.id !== "stickerList") return;
 
+  convertPostTimes();
+  convertDistances();
+
   const cards = document.querySelectorAll(".overlay-sticker-card");
   cards.forEach((card, i) => {
     setTimeout(() => card.classList.add("revealed"), i * 400);
   });
 });
+
+function convertPostTimes() {
+  document.querySelectorAll(".posttime").forEach((el) => {
+    const iso = el.dataset.posttime;
+    if (!iso) return;
+    el.innerText = "Posted " + dayjs(iso).fromNow();
+  });
+}
+
+function convertDistances() {
+  document.querySelectorAll(".distance").forEach((el) => {
+    const d = parseFloat(el.dataset.distance);
+    if (isNaN(d)) return;
+
+    if (d < 1000) {
+      el.innerText = `${Math.round(d)} m away`;
+    } else {
+      el.innerText = `${(d / 1000).toFixed(2)} km away`;
+    }
+  });
+}

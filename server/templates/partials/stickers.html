@@ -3,8 +3,11 @@
   <img src="{{ s.picture_url }}" class="overlay-sticker-img">
 
   <div class="overlay-meta">
-    <span>ID {{ s.id }}</span>
-    <span>{{ s.posttime }}</span>
+    <span>#{{ s.id }}</span>
+    <span class="posttime" data-posttime="{{ s.posttime }}">
+      Posted just now
+    </span>
+    <span class="distance" data-distance="{{ s.distance_m }}">...</span>
   </div>
 
   <button onclick="flyToSticker({{ s.lat }}, {{ s.lon }}, {{ s.id }})">
@@ -12,3 +15,4 @@
   </button>
 </div>
 {% endfor %}
+

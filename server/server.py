@@ -2,7 +2,7 @@ import flask
 from flask import request
 from flask import jsonify
 from flask import render_template
-from sqlalchemy import create_engine, select, and_, update
+from sqlalchemy import create_engine, select, and_, update, func
 from sqlalchemy.orm import Session
 from geoalchemy2.functions import ST_MakePoint, ST_DistanceSphere
 from models import Sticker, Base
@@ -315,14 +315,17 @@ def get_nearby_stickers():
         return []
 
     with Session(engine) as session:
-        stmt = select(Sticker).order_by(
-            ST_DistanceSphere(
-                ST_MakePoint(lon, lat),
-                ST_MakePoint(Sticker.longitude, Sticker.latitude)
-            ).asc()
-        ).limit(10)
+        distance_expr = ST_DistanceSphere(
+            ST_MakePoint(lon, lat),
+            ST_MakePoint(Sticker.longitude, Sticker.latitude)
+        ).label("distance")
 
-        rows = [row[0] for row in session.execute(stmt).all()]
+        stmt = (
+        select(Sticker, distance_expr)
+        .order_by(distance_expr.asc())
+        .limit(10))
+
+        results = session.execute(stmt).all()
 
         return [
             {
@@ -331,8 +334,9 @@ def get_nearby_stickers():
                 "lon": float(s.longitude),
                 "picture_url": s.picture,
                 "posttime": s.posttime.isoformat(),
+                "distance_m": float(dist),
             }
-            for s in rows
+            for s, dist in results
         ]
 
 
