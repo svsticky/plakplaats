@@ -74,62 +74,62 @@
   cursor: pointer;
 }
 
-/* Sticker card container */
-.overlay-sticker-card {
-  background: #f8f8f8;
-  border-radius: 14px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  margin-bottom: 14px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.12s ease;
-}
-
-.overlay-sticker-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
-}
-
-/* Sticker image */
-.overlay-sticker-img {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  border-radius: 10px;
-  background: #ddd;
-}
-
-/* Meta row (id + time) */
-.overlay-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: #555;
-  font-family: monospace;
-}
-
-/* Open on map button */
-.overlay-sticker-card button {
-  background: black;
-  color: white;
-  border: none;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 12px;
-  cursor: pointer;
-  align-self: flex-start;
-}
-
-.overlay-sticker-card button:hover {
-  background: #222;
-}
-
+/* Container layout like old overlay */
 #stickerList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* NEW cards styled like old .stickerDiv */
+.overlay-sticker-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  background-color: var(--background-color);
+  color: var(--dark-text-color);
+
+  width: 80%;
+  border-radius: 6px;
+  padding: 10px;
+
+  transition:
+    background-color 0.8s ease,
+    opacity 0.8s ease;
+  opacity: 0; /* hidden until revealed */
+}
+
+/* When revealed */
+.overlay-sticker-card.revealed {
+  background-color: var(--element-background-color);
+  opacity: 1;
+}
+
+/* Image same as old stickerDivImg */
+.overlay-sticker-img {
+  width: 40%;
+  border-radius: 5px;
+  margin: 8px 0;
+}
+
+/* Meta text similar to old h3 blocks */
+.overlay-meta {
+  font-size: 14px;
+  color: var(--lighter-text-color);
+  text-align: center;
+}
+
+/* Button same as old stickerDivButton */
+.overlay-sticker-card button {
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 0.5rem;
+  margin-top: 8px;
+  width: 30%;
+  background-color: var(--board-color);
+  color: var(--secondary-color);
+  cursor: pointer;
 }

@@ -70,3 +70,12 @@ function toggleOverlay() {
     htmx.trigger("#stickerList", "overlay-open");
   }
 }
+
+document.body.addEventListener("htmx:afterSwap", (e) => {
+  if (e.target.id !== "stickerList") return;
+
+  const cards = document.querySelectorAll(".overlay-sticker-card");
+  cards.forEach((card, i) => {
+    setTimeout(() => card.classList.add("revealed"), i * 400);
+  });
+});
