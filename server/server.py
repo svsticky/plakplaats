@@ -2,6 +2,7 @@ import flask
 from flask import request
 from flask import jsonify
 from flask import render_template
+from flask import flash
 from sqlalchemy import create_engine, select, and_, update
 from sqlalchemy.orm import Session
 from geoalchemy2.functions import ST_MakePoint, ST_DistanceSphere
@@ -105,11 +106,23 @@ class AdminIndex(AdminIndexView):
         return approved
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('login'))
+        return redirect(url_for('stickerMap'))
 
 class AdminForm(Form):
     sub = IntegerField('OIDC Subject', validators=[InputRequired()])
     email = StringField('Email', validators=[Optional()])
+
+class StickerAdmin(ModelView):
+    # Sort by newest posttime default
+    column_default_sort = ('posttime', True)
+
+    def is_accessible(self):
+        verify_jwt_in_request()
+        approved = can_review_stickers()
+        return approved
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('stickerMap'))
 
 class SuperAdminView(ModelView):
     column_list = ("sub", "email")
@@ -121,6 +134,9 @@ class SuperAdminView(ModelView):
     def is_accessible(self):
         verify_jwt_in_request()
         return current_user.is_super_admin
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('stickerMap'))
 
 # ─── Flask + JWT init ────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -138,10 +154,6 @@ admin = Admin(
     index_view=AdminIndex(),
     base_template='admin/master.html'
 )
-
-class StickerAdmin(ModelView):
-    # Sort by newest posttime default
-    column_default_sort = ('posttime', True)
 
 admin.add_view(StickerAdmin(Sticker, db_session, name="Stickers", endpoint="stickers"))
 admin.add_view(SuperAdminView(AdminModel, db_session, name="Admins", endpoint="admins"))
@@ -213,7 +225,11 @@ def admin_required(fn):
         verify_jwt_in_request()
         approved = can_review_stickers()
         if not approved:
-             return "User does not have admin rights", 403
+            if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'error': 'You are no longer an admin. Redirecting to home page.'}), 403
+            # For regular browser requests, redirect the user
+            flash('You are no longer an admin', 'warning')
+            return redirect(url_for('stickerMap'))
         return fn(*args, **kwargs)
     return wrapper
 
@@ -233,11 +249,6 @@ def super_admin_required(fn):
 def stickerMap():
     is_admin = can_review_stickers()
     return render_template('home.html', username=f"{current_user.full_name} (#{current_user.sub})", is_admin=is_admin)
-
-@app.route("/superadmin")
-@super_admin_required
-def superadmin_dashboard():
-    return jsonify(msg="🚀 Welcome, superadmin!"), 200
 
 @app.route("/logout")
 def logout():
@@ -426,7 +437,7 @@ def updateStickerSpots():
 
 
 @app.route('/reviewSticker', methods=['POST'])
-@login_required
+@admin_required
 def reviewSticker():
     data = request.get_json()
     sticker_id = data.get('stickerID')
