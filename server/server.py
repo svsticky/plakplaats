@@ -118,9 +118,7 @@ db_session = scoped_session(session_factory)
 admin = Admin(
     app,
     name='Plakplaats Admin',
-    template_mode='bootstrap3',
     index_view=AdminIndex(),
-    base_template='admin/master.html'
 )
 
 class StickerAdmin(ModelView):
