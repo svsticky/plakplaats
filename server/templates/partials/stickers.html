@@ -1,16 +1,16 @@
-{% for s in stickers %}
+{% for sticker in stickers %}
 <div class="overlay-sticker-card">
-  <img src="{{ s.picture_url }}" class="overlay-sticker-img">
+  <img src="{{ sticker.picture_url }}" class="overlay-sticker-img">
 
   <div class="overlay-meta">
-    <span>#{{ s.id }}</span>
-    <span class="posttime" data-posttime="{{ s.posttime }}">
+    <span>#{{ sticker.id }}</span> •
+    <span class="posttime" data-posttime="{{ sticker.posttime }}">
       Posted just now
-    </span>
-    <span class="distance" data-distance="{{ s.distance_m }}">...</span>
+    </span> •
+    <span class="distance" data-distance="{{ sticker.distance_m }}">...</span>
   </div>
 
-  <button onclick="flyToSticker({{ s.lat }}, {{ s.lon }}, {{ s.id }})">
+  <button onclick="flyToSticker({{ sticker.lat }}, {{ sticker.lon }}, {{ sticker.id }})">
     Open on map
   </button>
 </div>
