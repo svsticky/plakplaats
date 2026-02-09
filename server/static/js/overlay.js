@@ -22,10 +22,9 @@ function overlayState() {
         });
       }
 
-      document.getElementById("nearYouDesktopToggleButton").innerText = this
-        .open
-        ? "Hide Stickers"
-        : "Show Stickers";
+      document.getElementById("toggle-chevron-img").src = this.open
+        ? "../static/img/chevron-right.svg"
+        : "../static/img/chevron-left.svg";
     },
 
     resetMobileStyles() {

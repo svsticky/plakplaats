@@ -645,3 +645,11 @@ button,
   top: 20px;
   z-index: 1100;
 } */
+
+#nearYouDesktopToggleButton {
+  background-color: rgba(100, 100, 100, 0.3);
+}
+
+#toggle-chevron-img {
+  width: 2rem;
+}
