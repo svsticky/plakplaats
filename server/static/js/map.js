@@ -138,7 +138,8 @@ function placePointers(response) {
 }
 
 function flyToSticker(lat, lon, id) {
-  document.getElementById("nearYouOverlay").__x.$data.open = false;
+  // TODO: close the overlay (at least on mobile), line below is not working
+  // document.getElementById("nearYouOverlay").__x.$data.open = false;
   mymap.flyTo([lat, lon], 18);
 
   function openPopup() {
