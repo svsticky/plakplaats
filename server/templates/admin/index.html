@@ -1,0 +1,341 @@
+{% extends 'admin/master.html' %}
+
+{% from 'macros/sticker_card.html' import render_sticker_card %}
+
+{% block head_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
+<style>
+    .reviewCounter {
+        text-align: center;
+        font-size: 18px;
+        margin: 0.5rem 0 1rem 0;
+        color: black;
+    }
+
+    .finishedMessage {
+        text-align: center;
+        font-size: 18px;
+        margin: 0.5rem 0 1rem 0;
+        color: black;
+    }
+
+    .containerLabel {
+        color: black;
+        display: block;
+        font-size: 25px;
+        margin-left: 35px;
+    }
+
+    .cardSection {
+        position: relative;
+        max-width: 600px;
+        margin: 18px auto;
+    }
+
+    .cardHolder {
+        position: relative;
+        width: 100%;
+        display: block;
+        overflow: visible;
+        margin-bottom: 2rem;
+    }
+
+    .card {
+        position: relative;
+        top: 0;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+        width: fit-content;
+        max-width: 560px;
+        border-radius: 16px;
+        box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.5);
+        background: #1b1b1b;
+        overflow: hidden;
+        display: none;
+        transform-origin: 50% 85%;
+    }
+
+    .card.top {
+        display: block;
+        z-index: 10;
+        animation: cardFadeIn 250ms ease-in;
+    }
+
+    .cardText {
+        padding: 1rem 1rem;
+        border-radius: 1rem;
+        color: white;
+        background-color: #41414196;
+        font-size: 1rem;
+        width: 100%;
+    }
+
+    .stickerImage {
+        width: 40%;
+        object-fit: contain;
+        display: block;
+        margin-bottom: 1rem;
+        margin-left: auto;
+        margin-right: auto;
+        border-radius: 16px;
+    }
+
+    .controls {
+        margin: 14px auto 40px auto;
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        align-items: center;
+    }
+
+    .cardButton {
+        width: 86px;
+        height: 86px;
+        background-size: 56px 56px;
+        background-repeat: no-repeat;
+        background-position: center;
+        cursor: pointer;
+        border-radius: 50%;
+        border: none;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+        background-color: #fff;
+    }
+
+    .cardButton.accept {
+        background-image: url('{{ url_for("static", filename="img/thumb-up.svg") }}');
+        background-color: #e9fff0;
+    }
+
+    .cardButton.reject {
+        background-image: url('{{ url_for("static", filename="img/thumb-down.svg") }}');
+        background-color: #fff0f0;
+    }
+
+    .cardButton.skip {
+        background-image: url('{{ url_for("static", filename="img/skip.svg") }}');
+        background-color: #FDEBD9;
+    }
+
+    .swiping.swipe-left {
+        animation: cardSwipeLeft 350ms forwards;
+    }
+
+    .swiping.swipe-right {
+        animation: cardSwipeRight 350ms forwards;
+    }
+
+    .swiping.swipe-up {
+        animation: cardSwipeUp 350ms forwards;
+    }
+
+    @keyframes cardSwipeLeft {
+        0% {
+            transform: translate(0px, 0) rotate(0deg);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translate(-300px, 30px) rotate(-20deg);
+            opacity: 0;
+        }
+    }
+
+    @keyframes cardSwipeRight {
+        0% {
+            transform: translate(0px, 0) rotate(0deg);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translate(300px, 30px) rotate(20deg);
+            opacity: 0;
+        }
+    }
+
+    @keyframes cardSwipeUp {
+        0% {
+            transform: translate(0, 0) rotate(0);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translate(0, -300px) rotate(0);
+            opacity: 0;
+        }
+    }
+
+    @keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.98);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+</style>
+{% endblock head_css %}
+
+{% block body %}
+<div class="content">
+    <span class="containerLabel">Open sticker requests</span>
+
+    {% if stickers|length > 0 %}
+    <div class="reviewCounter" id="reviewCounter">1 / {{ stickers|length }}</div>
+    {% else %}
+    <div class="finishedMessage">All stickers are reviewed! 🎉</div>
+    {% endif %}
+
+
+    <div class="cardHolder" id="cardHolder">
+        {% set any = stickers|length > 0 %}
+        {% for sticker in stickers %}
+        {{ render_sticker_card(sticker, loop.first) }}
+        {% endfor %}
+    </div>
+
+    <div class="controls" id="controlsRow" aria-hidden="{{ 'true' if not any else 'false' }}">
+        <button id="btnReject" class="cardButton reject" title="Reject" aria-label="Reject"
+            onclick="reviewTop(false)"></button>
+        <button id="btnSkip" class="cardButton skip" title="Skip" aria-label="Skip" onclick="skipTop()"></button>
+        <button id="btnAccept" class="cardButton accept" title="Approve" aria-label="Approve"
+            onclick="reviewTop(true)"></button>
+    </div>
+</div>
+
+<script>
+    function waitForAnimationEnd(el) {
+        return new Promise((resolve) => {
+            if (!el) return resolve();
+            function onEnd(e) {
+                el.removeEventListener("animationend", onEnd);
+                resolve(e);
+            }
+            el.addEventListener("animationend", onEnd);
+        });
+    }
+
+    function getTopCard() {
+        const holder = document.getElementById('cardHolder');
+        if (!holder) return null;
+        const top = holder.querySelector('.card.top');
+        if (top) return top;
+        return holder.querySelector('.card');
+    }
+
+    function reviewTop(approved) {
+        const top = getTopCard();
+        if (!top) {
+            console.warn('No top card to review');
+            return;
+        }
+        const id = top.dataset.id;
+        reviewSticker(id, approved);
+    }
+
+    function revealNextCard() {
+        const reviewCounter = document.getElementById('reviewCounter');
+        const [current, total] = reviewCounter.innerText.split(' / ').map(Number);
+
+        const nextValue = current + 1;
+        if (nextValue <= total) {
+            reviewCounter.innerText = `${nextValue} / ${total}`;
+        } else {
+            alert("All stickers are reviewed! 🎉");
+        }
+
+        const holder = document.getElementById('cardHolder');
+        const next = holder.querySelector('.card');
+        if (!next) {
+            const ph = document.getElementById('noCardsPlaceholder');
+            if (ph) ph.style.display = 'block';
+            const controls = document.getElementById('controlsRow');
+            if (controls) controls.style.display = 'none';
+            return;
+        }
+        holder.querySelectorAll('.card').forEach(c => c.classList.remove('top'));
+        next.classList.add('top');
+    }
+
+    async function reviewSticker(stickerId, approved) {
+        const card = document.getElementById("card-" + stickerId) || document.getElementById("row-" + stickerId);
+        if (!card) {
+            console.warn("Card not found for", stickerId);
+        }
+
+        const dirClass = approved ? "swipe-right" : "swipe-left";
+        if (card) card.classList.add("swiping", dirClass);
+
+        const fetchPromise = fetch("{{ url_for('reviewSticker') }}", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+            body: JSON.stringify({ stickerID: stickerId, approved: approved }),
+            redirect: "manual"
+        });
+
+        const animPromise = card ? waitForAnimationEnd(card) : Promise.resolve();
+
+        let fetchResp;
+        try {
+            [, fetchResp] = await Promise.all([animPromise, fetchPromise]);
+        } catch (err) {
+            console.error("Network / fetch error during review:", err);
+            alert("Network error while approving/rejecting sticker. Reloading page.");
+            window.location.reload();
+            return;
+        }
+
+        if (fetchResp.redirected) { window.location.href = fetchResp.url; return; }
+        if (!fetchResp.ok) {
+            const txt = await fetchResp.text().catch(() => "(no body)");
+            console.error("Server returned error:", fetchResp.status, txt);
+            alert("Server error while updating sticker. Reloading page to resync.");
+            window.location.reload();
+            return;
+        }
+
+        if (card && card.parentNode) card.parentNode.removeChild(card);
+        else {
+            const row = document.getElementById("row-" + stickerId);
+            if (row && row.parentNode) row.parentNode.removeChild(row);
+        }
+
+        revealNextCard();
+    }
+
+    (function initControls() {
+        const anyCard = !!document.querySelector('.card');
+        const controls = document.getElementById('controlsRow');
+        if (!anyCard && controls) controls.style.display = 'none';
+    })();
+
+    async function skipTop() {
+        const top = getTopCard();
+        if (!top) return;
+
+        top.classList.add("swiping", "swipe-up");
+        await waitForAnimationEnd(top);
+        top.remove();
+        revealNextCard();
+    }
+
+    document.addEventListener("keydown", (e) => {
+        switch (e.key) {
+            case "ArrowLeft":
+                reviewTop(false); // reject
+                break;
+            case "ArrowRight":
+                reviewTop(true); // approve
+                break;
+            case "ArrowUp":
+                skipTop(); // skip
+                break;
+        }
+    });
+</script>
+{% endblock body %}

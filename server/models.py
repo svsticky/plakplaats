@@ -1,6 +1,6 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import func
-from sqlalchemy import DateTime
+from sqlalchemy import Integer, String, DateTime
 from datetime import datetime
 
 class Base(DeclarativeBase):
@@ -17,6 +17,7 @@ class Sticker(Base):
     spots:      Mapped[int]      = mapped_column(default=0)
     boardyear:  Mapped[int]
     verified:   Mapped[bool]     = mapped_column(default=False)
+    reviewed:   Mapped[bool]     = mapped_column(default=False)
 
     # run:
     #    to autogenerate a migration if this file changes:

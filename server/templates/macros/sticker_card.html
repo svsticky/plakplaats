@@ -1,0 +1,33 @@
+{% macro render_sticker_card(sticker, is_top=False) %}
+{% set pic = sticker.picture or '' %}
+{% set pic_clean = pic.replace('\\','/') %}
+
+{% if pic_clean.startswith('./') %}
+{% set pic_clean = pic_clean[2:] %}
+{% endif %}
+{% if pic_clean.startswith('static/') %}
+{% set pic_clean = pic_clean[7:] %}
+{% endif %}
+{% if pic_clean.startswith('/') or '://' in pic_clean %}
+{% set img_src = pic_clean %}
+{% else %}
+{% set img_src = url_for('static', filename=pic_clean) %}
+{% endif %}
+
+<div class="card {% if is_top %}top{% endif %}" id="card-{{ sticker.id }}" data-id="{{ sticker.id }}">
+    <img src="{{ img_src }}" class="stickerImage" alt="sticker-{{ sticker.id }}" />
+    <div class="cardText">
+        <div><strong>ID:</strong> {{ sticker.id }}</div>
+        <div><strong>Board year:</strong> {{ sticker.boardyear }}</div>
+        <div><strong>Added by:</strong> {{ sticker.adderemail }}</div>
+        <div><strong>Posted:</strong> {{ sticker.posttime.strftime('%Y-%m-%d %H:%M:%S') if sticker.posttime else '-' }}
+        </div>
+        <div>
+            <strong>Location:</strong> Lat {{ sticker.latitude }}, Lon {{ sticker.longitude }}<br />
+            <a target="_blank"
+                href="https://www.google.com/maps/place/{{ sticker.latitude }},{{ sticker.longitude }}">Open in Google
+                Maps</a>
+        </div>
+    </div>
+</div>
+{% endmacro %}
