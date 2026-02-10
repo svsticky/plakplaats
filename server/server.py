@@ -335,6 +335,7 @@ def get_nearby_stickers():
                 "picture_url": s.picture,
                 "posttime": s.posttime.isoformat(),
                 "distance_m": float(dist),
+                "boardyear": s.boardyear,
             }
             for s, dist in results
         ]

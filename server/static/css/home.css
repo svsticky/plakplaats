@@ -2,6 +2,8 @@
 :root {
   /* Board Color Variables */
   --board-color: #197052;
+
+  --board-19-color: #197052;
   /* primary color of the current board of Sticky */
   --board-18-color: rgb(97, 81, 143);
   /* #61518f */
@@ -645,11 +647,3 @@ button,
   top: 20px;
   z-index: 1100;
 } */
-
-#nearYouDesktopToggleButton {
-  background-color: rgba(100, 100, 100, 0.3);
-}
-
-#toggle-chevron-img {
-  width: 2rem;
-}

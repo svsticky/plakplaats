@@ -74,8 +74,9 @@
 
 #nearYouOverlay h2 {
   color: black;
-  margin: 10px 0;
-  font-size: 18px;
+  margin: 10px auto;
+  font-size: 2rem;
+  text-align: center;
 }
 
 .near-toggle-btn {
@@ -130,6 +131,9 @@
   width: 40%;
   border-radius: 5px;
   margin: 8px 0;
+  box-shadow:
+    0 0 12px 2px var(--sticker-board-color),
+    0 0 30px 8px color-mix(in srgb, var(--sticker-board-color), transparent 70%);
 }
 
 /* Meta text similar to old h3 blocks */
@@ -149,4 +153,12 @@
   background-color: var(--board-color);
   color: var(--secondary-color);
   cursor: pointer;
+}
+
+#nearYouDesktopToggleButton {
+  background-color: rgba(100, 100, 100, 0.3);
+}
+
+#toggle-chevron-img {
+  width: 2rem;
 }
