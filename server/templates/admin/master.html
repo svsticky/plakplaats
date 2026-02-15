@@ -1,74 +1,59 @@
 {% extends 'admin/base.html' %}
 
 {% block head_css %}
-{{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
-<link rel="shortcut icon" href="{{ url_for('static', filename='/img/favicon.ico') }}" type="image/x-icon" />
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='/img/favicon.ico') }}" type="image/x-icon" />
 
-<style>
+  <style>
     .navbar {
-        background-image: none;
-        background-color: var(--board-color);
-        border: none;
+      background-color: var(--board-color) !important;
+      border-radius: 8px !important;
+      margin: 6px 8px 0 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
 
-    .navbar.navbar-inverse {
-        border-color: var(--board-color);
+    .navbar-dark .navbar-nav .nav-link,
+    .navbar-dark .navbar-nav .nav-link {
+      transition: all 0.3s ease;
     }
 
-    .navbar .navbar-brand,
-    .navbar .nav>li>a {
-        color: #ffffff;
+    .navbar-dark .navbar-nav .nav-link:hover,
+    .navbar-dark .navbar-nav .nav-link:focus {
+      color: rgba(255, 255, 255, 1) !important;
     }
 
-    .navbar .navbar-brand:hover,
-    .navbar .navbar-brand:focus,
-    .navbar .nav>li>a:hover,
-    .navbar .nav>li>a:focus {
-        background-color: #ffffff;
-        color: var(--board-color);
+    .navbar-dark .navbar-toggler {
+      border-color: rgb(255, 255, 255);
     }
 
-    .navbar .nav>li.active>a {
-        background-color: #ffffff;
-        color: var(--board-color);
+    .navbar-toggler-icon {
+      background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3e%3cpath stroke='rgba(255,255,255,1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
     }
 
-    .navbar .nav>li.active>a:hover,
-    .navbar .nav>li.active>a:focus {
-        background-color: #ffffff;
-        color: var(--board-color);
+    .navbar-toggler:focus,
+    .navbar-toggler:active,
+    .navbar-toggler:focus-visible {
+        outline: none !important;
+        box-shadow: none !important;
     }
 
-    .navbar .navbar-nav>.open>a,
-    .navbar .navbar-nav>.open>a:hover,
-    .navbar .navbar-nav>.open>a:focus {
-        background-color: #ffffff;
-        color: var(--board-color);
-    }
-
-    .navbar .dropdown-menu>li>a {
-        color: var(--board-color);
-    }
-
-    .navbar .dropdown-menu>li>a:hover,
-    .navbar .dropdown-menu>li>a:focus {
-        background-color: #acacacff;
-        color: var(--board-color);
-    }
-
-    .navbar .navbar-toggle .icon-bar {
-        background-color: #ffffff;
-    }
-
-    .navbar .navbar-toggle:hover .icon-bar,
-    .navbar .navbar-toggle:focus .icon-bar {
-        background-color: #ffffff;
-    }
-
-    .navbar .navbar-toggle,
-    .navbar .navbar-toggle .icon-bar {
+    .navbar-toggler,
+    .navbar-toggler-icon {
         transition: all 0.3s ease;
     }
-</style>
+
+    .navbar-toggler:hover {
+        background-color: rgba(255, 255, 255, 0.25);
+        border-radius: 4px;
+    }
+
+    .navbar-toggler:hover .navbar-toggler-icon {
+        opacity: 0.85;
+    }
+
+    .navbar-toggler:active {
+        transform: scale(0.95);
+    }
+  </style>
 {% endblock head_css %}

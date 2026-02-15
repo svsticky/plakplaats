@@ -1,5 +1,8 @@
 //Add view
 var addIsOpen = false;
+
+emailInput.addEventListener('input', (event) => setSubmitbutton(event.target.value));
+
 addIcon.addEventListener('click', function(){
     if(!addIsOpen){
         //Open add view
@@ -57,6 +60,7 @@ function resetView(){
     dropArea.classList.remove('invalid');
     latitudeInput.value = "";
     longitudeInput.value = "";
+    emailInput.value = "";
     latitudeInput.disabled = false;
     longitudeInput.disabled = false;
     setLocationContainer("", false);
@@ -68,4 +72,14 @@ function resetView(){
     addIcon.classList.remove('addIconClose');
     overlay.toggleOverlay({ isOpen: false, isMobile: false });
     setManualLocationInput(false);
+    setSubmitbutton("")
+}
+
+//Sets the text of the submit button under the email input according to the content of the input
+function setSubmitbutton(text) {
+    const submitText = document.getElementsByClassName('addSubmitButton')[1];
+    if (text == "")
+        submitText.innerHTML = 'Submit without email';
+    else
+        submitText.innerHTML = 'Submit';
 }
