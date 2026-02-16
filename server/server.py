@@ -102,8 +102,7 @@ class AdminIndex(AdminIndexView):
 
     def is_accessible(self):
         verify_jwt_in_request()
-        approved = can_review_stickers()
-        return approved
+        return is_admin_user(current_user.sub) or current_user.is_super_admin
 
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('stickerMap'))
@@ -118,8 +117,7 @@ class StickerAdmin(ModelView):
 
     def is_accessible(self):
         verify_jwt_in_request()
-        approved = can_review_stickers()
-        return approved
+        return is_admin_user(current_user.sub) or current_user.is_super_admin
     
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('stickerMap'))
@@ -245,7 +243,7 @@ def super_admin_required(fn):
 @app.route('/')
 @login_required
 def stickerMap():
-    is_admin = can_review_stickers()
+    is_admin = is_admin_user(current_user.sub) or current_user.is_super_admin
     return render_template('home.html', username=f"{current_user.full_name} (#{current_user.sub})", is_admin=is_admin)
 
 @app.route("/logout")
