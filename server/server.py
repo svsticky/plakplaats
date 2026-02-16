@@ -2,10 +2,11 @@ import flask
 from flask import request
 from flask import jsonify
 from flask import render_template
+from flask import flash
 from sqlalchemy import create_engine, select, and_, update
 from sqlalchemy.orm import Session
 from geoalchemy2.functions import ST_MakePoint, ST_DistanceSphere
-from models import Sticker, Base
+from models import Sticker, Admin as AdminModel, Base
 import requests
 import psycopg2
 import time
@@ -49,6 +50,8 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.menu import MenuLink
 from sqlalchemy.orm import scoped_session, sessionmaker
 from models import Sticker
+from wtforms import Form, IntegerField, StringField
+from wtforms.validators import InputRequired, Optional
 
 from flask import send_from_directory
 
@@ -99,12 +102,39 @@ class AdminIndex(AdminIndexView):
 
     def is_accessible(self):
         verify_jwt_in_request()
-        adminList = [3, 412]
-        approved = (current_user.sub in adminList) or current_user.is_super_admin
-        return approved
+        return is_admin_user(current_user.sub) or current_user.is_super_admin
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('login'))
+        return redirect(url_for('stickerMap'))
+
+class AdminForm(Form):
+    sub = IntegerField('OIDC Subject', validators=[InputRequired()])
+    email = StringField('Email', validators=[Optional()])
+
+class StickerAdmin(ModelView):
+    # Sort by newest posttime default
+    column_default_sort = ('posttime', True)
+
+    def is_accessible(self):
+        verify_jwt_in_request()
+        return is_admin_user(current_user.sub) or current_user.is_super_admin
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('stickerMap'))
+
+class SuperAdminView(ModelView):
+    column_list = ("sub", "email")
+    form_excluded_columns = ("id",)
+    column_default_sort = ("sub", False)
+
+    form = AdminForm
+
+    def is_accessible(self):
+        verify_jwt_in_request()
+        return current_user.is_super_admin
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('stickerMap'))
 
 # ─── Flask + JWT init ────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -121,11 +151,8 @@ admin = Admin(
     index_view=AdminIndex(),
 )
 
-class StickerAdmin(ModelView):
-    # Sort by newest posttime default
-    column_default_sort = ('posttime', True)
-
-admin.add_view(StickerAdmin(Sticker, db_session))
+admin.add_view(StickerAdmin(Sticker, db_session, name="Stickers", endpoint="stickers"))
+admin.add_view(SuperAdminView(AdminModel, db_session, name="Admins", endpoint="admins"))
 
 admin.add_link(MenuLink(name='Main Site', url='/', category=''))
 admin.add_link(MenuLink(name='Logout', url='/logout', category=''))
@@ -180,14 +207,25 @@ def login_required(fn):
         return fn(*a, **kw)
     return wrapper
 
+def is_admin_user(sub: int) -> bool:
+    with Session(engine) as session:
+        stmt = select(AdminModel).where(AdminModel.sub == sub)
+        return session.execute(stmt).first() is not None
+    
+def can_review_stickers() -> bool:
+    return is_admin_user(current_user.sub) or current_user.is_super_admin
+
 def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
-        adminList = [3, 412]
-        approved = (current_user.sub in adminList) or current_user.is_super_admin
+        approved = is_admin_user(current_user.sub) or current_user.is_super_admin
         if not approved:
-             return "User does not have admin rights", 403
+            if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'error': 'You are no longer an admin. Redirecting to home page.'}), 403
+            # For regular browser requests, redirect the user
+            flash('You are no longer an admin', 'warning')
+            return redirect(url_for('stickerMap'))
         return fn(*args, **kwargs)
     return wrapper
 
@@ -195,7 +233,8 @@ def super_admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
-        if not current_user.is_super_admin:
+        approved = current_user.is_super_admin
+        if not approved:
             return "User does not have super admin rights", 403
         return fn(*args, **kwargs)
     return wrapper
@@ -204,14 +243,8 @@ def super_admin_required(fn):
 @app.route('/')
 @login_required
 def stickerMap():
-    adminList = [3, 412]
-    is_admin = (current_user.sub in adminList) or bool(current_user.is_super_admin)
-    return render_template('home.html', username=current_user.full_name, is_admin=is_admin)
-
-@app.route("/superadmin")
-@super_admin_required
-def superadmin_dashboard():
-    return jsonify(msg="🚀 Welcome, superadmin!"), 200
+    is_admin = is_admin_user(current_user.sub) or current_user.is_super_admin
+    return render_template('home.html', username=f"{current_user.full_name} (#{current_user.sub})", is_admin=is_admin)
 
 @app.route("/logout")
 def logout():
@@ -400,7 +433,7 @@ def updateStickerSpots():
 
 
 @app.route('/reviewSticker', methods=['POST'])
-@login_required
+@admin_required
 def reviewSticker():
     data = request.get_json()
     sticker_id = data.get('stickerID')

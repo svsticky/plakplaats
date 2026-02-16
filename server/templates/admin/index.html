@@ -290,8 +290,22 @@
             return;
         }
 
-        if (fetchResp.redirected) { window.location.href = fetchResp.url; return; }
+        if (fetchResp.redirected) {
+            window.location.href = fetchResp.url;
+            return;
+        }
         if (!fetchResp.ok) {
+            if (fetchResp.status == 403) {
+              try {
+                const data = await fetchResp.json();
+                alert(data.error || "You are no longer an admin. Redirecting to home page.");
+              } catch {
+                alert("You are no longer an admin. Redirecting to home page.");
+              }
+              window.location.href = "{{ url_for('stickerMap') }}";
+              return;
+            }
+            
             const txt = await fetchResp.text().catch(() => "(no body)");
             console.error("Server returned error:", fetchResp.status, txt);
             alert("Server error while updating sticker. Reloading page to resync.");
