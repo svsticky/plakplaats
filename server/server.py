@@ -221,7 +221,7 @@ def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
-        approved = can_review_stickers()
+        approved = is_admin_user(current_user.sub) or current_user.is_super_admin
         if not approved:
             if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify({'error': 'You are no longer an admin. Redirecting to home page.'}), 403
