@@ -28,7 +28,7 @@ uv run server.py
 
 ## Upgrading to a new board year
 
-Upgrading to a new board year is done with the following steps:
+Upgrading to a new board year is done with the following steps (see commit `ef9a79a` for an example of this upgrade):
 
 In `home.html`:
 
