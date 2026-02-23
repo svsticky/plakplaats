@@ -415,6 +415,11 @@ button,
 
 #boardYearInputSelect option:nth-child(19),
 .marker-B19 {
+  background: var(--board-19-color);
+}
+
+#boardYearInputSelect option:nth-child(20),
+.marker-B20 {
   background: var(--board-color);
 }
 
