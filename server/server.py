@@ -82,7 +82,6 @@ class Config:
     DATABASE_URL = os.getenv("DATABASE_URL")
 
     # Miscellaneous
-    BOARD_COLOR = os.getenv("STICKER_MAP_COLOR")
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
     UPLOAD_DIRECTORY = "./static/uploads"
     STICKER_MAP_PORT = os.getenv("STICKER_MAP_PORT")
