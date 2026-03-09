@@ -24,27 +24,31 @@
 
 #nearYouOverlay.mobile {
   position: fixed;
-  bottom: 0;
+  z-index: 9999;
   left: 0;
   width: 100%;
-  height: 65vh;
+  height: 85vh;
+
   background: white;
   color: black;
-  border-radius: 16px 16px 0 0;
-  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
-  transform: translateY(100%);
-  transition: transform 0.25s ease;
-  z-index: 9999;
-  overflow-y: auto;
+
+  bottom: -90%;
+  border-radius: 20px 20px 0 0;
+
+  transition: bottom 0.32s cubic-bezier(.22, 1, .36, 1), border-radius 0.35s ease;
+
+  overflow-y: hidden;
   padding: 10px;
 }
 
 #nearYouOverlay.mobile.active {
-  transform: translateY(0);
+  bottom: 0;
+  border-radius: 0;
+  overflow-y: auto;
 }
 
 #nearYouOverlay.mobile.inactive {
-  transform: translateY(100%);
+  bottom: -75vh;
 }
 
 #nearYouMobileHandle {
@@ -151,8 +155,15 @@
 
 #nearYouDesktopToggleButton {
   background-color: rgba(100, 100, 100, 0.3);
+  display: none;
 }
 
 #toggle-chevron-img {
   width: 2rem;
+}
+
+@media (min-width: 768px) {
+  #nearYouDesktopToggleButton {
+    display: block;
+  }
 }

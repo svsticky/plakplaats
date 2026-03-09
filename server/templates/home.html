@@ -94,20 +94,22 @@
 
       <span class="addSubmitButton" onclick="submit()">Submit</span>
     </div>
-    <div class="successView">
-      <span class="addViewTitle">Success</span>
-      <span class="successText">Thanks for submitting your sticker! Your sticker will be visible
-        after it is reviewed. You can keep adding stickers while we are doing
-        this.</span>
-      <span class="successText">Want to know when your sticker is approved? Fill in your email below
-        and receive status updates!</span>
-      <input type="email" class="successEmail" placeholder="Email" />
-      <span class="addSubmitButton" onclick="updateEmail()">Submit</span>
-    </div>
-    <input type="hidden" id="geo-lat" name="geo-lat">
-    <input type="hidden" id="geo-lon" name="geo-lon">
+  </div>
+  <div class="successView">
+    <span class="addViewTitle">Success</span>
+    <span class="successText">Thanks for submitting your sticker! Your sticker will be visible
+      after it is reviewed. You can keep adding stickers while we are doing
+      this.</span>
+    <span class="successText">Want to know when your sticker is approved? Fill in your email below
+      and receive status updates!</span>
+    <input type="email" class="successEmail" placeholder="Email" />
+    <span class="addSubmitButton" onclick="updateEmail()">Submit</span>
+  </div>
 
-    <div id="nearYouOverlay" x-data="overlayState()" x-init="
+  <input type="hidden" id="geo-lat" name="geo-lat">
+  <input type="hidden" id="geo-lon" name="geo-lon">
+
+  <div id="nearYouOverlay" x-data="overlayState()" x-init="
     init();
     window.addEventListener('toggle-overlay', () => toggleDesktop());
     window.addEventListener('close-overlay', () => open = false);
@@ -118,19 +120,19 @@
     'desktop inactive': !isMobile && !open
   }" @touchstart="onTouchStart($event)" @touchmove="onTouchMove($event)" @touchend="onTouchEnd()">
 
-      <div id="nearYouMobileHandle"></div>
+    <div id="nearYouMobileHandle" @click="open = true"></div>
 
-      <h2>Stickers Near You</h2>
+    <h2 x-show="open">Stickers Near You</h2>
 
-      <div id="stickerList" hx-get="/api/nearby-stickers" hx-include="#geo-lat,#geo-lon" hx-trigger="overlay-open"
-        hx-target="this" hx-swap="innerHTML">
-      </div>
-
+    <div id="stickerList" x-show="open" hx-get="/api/nearby-stickers" hx-include="#geo-lat,#geo-lon"
+      hx-trigger="overlay-open" hx-target="this" hx-swap="innerHTML">
     </div>
 
-    <button id="nearYouDesktopToggleButton" x-data @click="$dispatch('toggle-overlay')" class="near-toggle-btn">
-      <img src="../static/img/chevron-left.svg" alt="chevron-left" id="toggle-chevron-img">
-    </button>
+  </div>
+
+  <button id="nearYouDesktopToggleButton" x-data @click="$dispatch('toggle-overlay')" class="near-toggle-btn">
+    <img src="../static/img/chevron-left.svg" alt="chevron-left" id="toggle-chevron-img">
+  </button>
 </body>
 
 <script src="/static/js/overlay.js"></script>

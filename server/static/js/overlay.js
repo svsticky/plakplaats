@@ -1,3 +1,6 @@
+const SNAP_THRESHOLD = 0.3;
+const OVERLAY_HIDE_LIMIT = 0.8;
+
 function overlayState() {
   return {
     open: false,
@@ -5,22 +8,31 @@ function overlayState() {
     dragStartY: 0,
     overlayHeight: 0,
     error: null,
+    dragStartTime: 0,
+    dragVelocity: 0,
+    stickersLoaded: false,
 
     init() {
+      this.$watch("open", value => {
+        if (value && !this.stickersLoaded) {
+          this.$nextTick(() => {
+            htmx.trigger("#stickerList", "overlay-open");
+            this.stickersLoaded = true;
+          });
+        }
+      });
+
       window.addEventListener("resize", () => {
         this.isMobile = window.innerWidth < 768;
-        if (!this.isMobile) this.resetMobileStyles();
+
+        if (!this.isMobile) {
+          this.$el.style.bottom = "";
+        }
       });
     },
 
     toggleDesktop() {
       this.open = !this.open;
-
-      if (this.open) {
-        this.$nextTick(() => {
-          htmx.trigger("#stickerList", "overlay-open");
-        });
-      }
 
       document.getElementById("toggle-chevron-img").src = this.open
         ? "../static/img/chevron-right.svg"
@@ -32,29 +44,59 @@ function overlayState() {
     },
 
     onTouchStart(e) {
+      if (!this.isMobile) return;
+
       this.dragStartY = e.touches[0].clientY;
       this.overlayHeight = this.$el.clientHeight;
+
+      this.dragStartTime = Date.now();
     },
 
     onTouchMove(e) {
-      const deltaY = e.touches[0].clientY - this.dragStartY;
-      const limit = -this.overlayHeight * 0.8;
-      const newBottom = Math.max(limit, -deltaY);
+      if (!this.isMobile) return;
+
+      const currentY = e.touches[0].clientY;
+      const deltaY = currentY - this.dragStartY;
+
+      const newBottom = Math.max(
+        -this.overlayHeight * OVERLAY_HIDE_LIMIT,
+        -deltaY
+      );
+
       this.$el.style.bottom = `${newBottom}px`;
-      e.preventDefault();
+
+      const elapsed = Date.now() - this.dragStartTime;
+      this.dragVelocity = deltaY / elapsed;
+
+      if (
+        this.$el.scrollHeight - this.$el.scrollTop ===
+        this.$el.clientHeight
+      ) {
+        e.preventDefault();
+      }
     },
 
     onTouchEnd() {
-      const threshold = -this.overlayHeight * 0.3;
-      if (parseInt(this.$el.style.bottom) < threshold) {
+      if (!this.isMobile) return;
+
+      const snapThreshold = -this.overlayHeight * SNAP_THRESHOLD;
+
+      const isFastSwipeDown = this.dragVelocity > 0.5;
+      const isFastSwipeUp = this.dragVelocity < -0.5;
+
+      const currentBottom = parseInt(this.$el.style.bottom || 0);
+
+      if (currentBottom < snapThreshold || isFastSwipeDown) {
         this.open = false;
-      } else {
+        this.$el.style.bottom = "-75vh";
+      }
+      else if (isFastSwipeUp) {
         this.open = true;
         this.$el.style.bottom = "0";
-
-        this.$nextTick(() => {
-          htmx.trigger("#stickerList", "overlay-open");
-        });
+      }
+      else {
+        this.open = true;
+        this.$el.style.bottom = "0";
       }
     },
   };
@@ -63,11 +105,6 @@ function overlayState() {
 function toggleOverlay() {
   const overlay = document.getElementById("nearYouOverlay");
   overlay.classList.toggle("open");
-
-  // Load stickers when opening
-  if (overlay.classList.contains("open")) {
-    htmx.trigger("#stickerList", "overlay-open");
-  }
 }
 
 function closeOverlay() {
