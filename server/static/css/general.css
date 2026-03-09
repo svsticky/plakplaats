@@ -1,0 +1,72 @@
+/* SETTINGS */
+:root {
+  /* Board Color Variables */
+  --board-color: rgb(250, 107, 32);
+  /* #FA6B20 primary color of the current board of Sticky */
+  --board-19-color: rgb(25, 112, 82);
+  /* #197052; */
+  --board-18-color: rgb(97, 81, 143);
+  /* #61518f */
+  --board-17-color: rgb(41, 115, 143);
+  /* #29738f */
+  --board-16-color: rgb(128, 8, 22);
+  /* #800816 */
+  --board-15-color: rgb(254, 114, 21);
+  /* #fe7215 */
+  --board-14-color: rgb(197, 63, 120);
+  /* #c53f78 */
+  --board-13-color: rgb(32, 115, 13);
+  /* #20730d */
+  --board-12-color: rgb(0, 0, 120);
+  /* #000078 */
+  --board-11-color: rgb(206, 32, 41);
+  /* #ce2029 */
+  --board-10-color: rgb(255, 127, 0);
+  /* #ff7f00 */
+  --board-9-color: rgb(70, 196, 255);
+  /* #46c4ff */
+  --board-8-color: rgb(72, 42, 129);
+  /* #482a81 */
+  --board-7-color: rgb(108, 17, 34);
+  /* #6c1122 */
+  --board-6-color: rgb(65, 105, 225);
+  /* #4169e1 */
+  --board-5-color: rgb(170, 170, 170);
+  /* #aaaaaa */
+  --board-4-color: rgb(183, 224, 147);
+  /* #b7e093 */
+  --board-3-color: rgb(170, 170, 170);
+  /* #aaaaaa */
+  --board-2-color: rgb(170, 170, 170);
+  /* #aaaaaa */
+  --board-1-color: rgb(255, 127, 0);
+  /* #ff7f00 */
+
+  /* Miscellaneous Color Variables */
+  --secondary-color: #ffffff;
+  /* light color that works in combination with primary board color */
+  --background-color: #ffffff;
+  /* general light background color  */
+  --element-background-color: #e0e0e0;
+  /* Light grey color for sticker div background */
+  --dark-text-color: #000000;
+  --lighter-text-color: #646464;
+  --light-text-color: #ffffff;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --border-see-through-color: rgba(0, 0, 0, 0.3);
+  --border-drop-image-see-through-color: rgba(255, 255, 255, 0.3);
+  --drop-image-see-through-color: rgba(2, 1, 1, 0.5);
+  --error-color: rgba(255, 0, 0, 0.6);
+
+  /* Dimensions */
+  --navbar-height: 10vh;
+  --sidebar-width: 40vw;
+}
+
+/* General */
+* {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}

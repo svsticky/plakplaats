@@ -3,9 +3,10 @@ from flask import request
 from flask import jsonify
 from flask import render_template
 from sqlalchemy import create_engine, select, and_, update, func
+from flask import flash
 from sqlalchemy.orm import Session
 from geoalchemy2.functions import ST_MakePoint, ST_DistanceSphere
-from models import Sticker, Base
+from models import Sticker, Admin as AdminModel, Base
 import requests
 import psycopg2
 import time
@@ -44,9 +45,22 @@ from jwt.algorithms import RSAAlgorithm
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 
+from flask_admin import Admin, AdminIndexView, expose
+from flask_admin.contrib.sqla import ModelView
+from flask_admin.menu import MenuLink
+from sqlalchemy.orm import scoped_session, sessionmaker
+from models import Sticker
+from wtforms import Form, IntegerField, StringField
+from wtforms.validators import InputRequired, Optional
+
+from flask import send_from_directory
+
 load_dotenv()
 
 class Config:
+    # Flask config
+    SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+
     # OIDC info
     OIDC_ISSUER_BASE   = os.getenv("KOALA_URL")
     OIDC_CLIENT_ID     = os.getenv("KOALA_CLIENT_UID")
@@ -68,7 +82,6 @@ class Config:
     DATABASE_URL = os.getenv("DATABASE_URL")
 
     # Miscellaneous
-    BOARD_COLOR = os.getenv("STICKER_MAP_COLOR")
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
     UPLOAD_DIRECTORY = "./static/uploads"
     STICKER_MAP_PORT = os.getenv("STICKER_MAP_PORT")
@@ -79,9 +92,69 @@ if (not os.path.exists(Config.UPLOAD_DIRECTORY)):
 engine = create_engine(Config.DATABASE_URL)
 Base.metadata.create_all(engine)
 
+class AdminIndex(AdminIndexView):
+    @expose('/')
+    def index(self):
+        with Session(engine) as session:
+            new_stickers = session.query(Sticker).filter_by(reviewed=False).order_by(Sticker.posttime.asc()).all()
+        return self.render('admin/index.html', stickers=new_stickers)
+
+    def is_accessible(self):
+        verify_jwt_in_request()
+        return is_admin_user(current_user.sub) or current_user.is_super_admin
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('stickerMap'))
+
+class AdminForm(Form):
+    sub = IntegerField('OIDC Subject', validators=[InputRequired()])
+    email = StringField('Email', validators=[Optional()])
+
+class StickerAdmin(ModelView):
+    # Sort by newest posttime default
+    column_default_sort = ('posttime', True)
+
+    def is_accessible(self):
+        verify_jwt_in_request()
+        return is_admin_user(current_user.sub) or current_user.is_super_admin
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('stickerMap'))
+
+class SuperAdminView(ModelView):
+    column_list = ("sub", "email")
+    form_excluded_columns = ("id",)
+    column_default_sort = ("sub", False)
+
+    form = AdminForm
+
+    def is_accessible(self):
+        verify_jwt_in_request()
+        return current_user.is_super_admin
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('stickerMap'))
+
 # ─── Flask + JWT init ────────────────────────────────────────────────────
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Create scoped session for Flask-Admin
+session_factory = sessionmaker(bind=engine)
+db_session = scoped_session(session_factory)
+
+# Flask + Admin setup
+admin = Admin(
+    app,
+    name='Plakplaats Admin',
+    index_view=AdminIndex(),
+)
+
+admin.add_view(StickerAdmin(Sticker, db_session, name="Stickers", endpoint="stickers"))
+admin.add_view(SuperAdminView(AdminModel, db_session, name="Admins", endpoint="admins"))
+
+admin.add_link(MenuLink(name='Main Site', url='/', category=''))
+admin.add_link(MenuLink(name='Logout', url='/logout', category=''))
 
 disc = requests.get(f"{app.config['OIDC_ISSUER_BASE']}/.well-known/openid-configuration", verify=True).json()
 jwks = requests.get(disc["jwks_uri"], verify=True).json()
@@ -133,14 +206,25 @@ def login_required(fn):
         return fn(*a, **kw)
     return wrapper
 
+def is_admin_user(sub: int) -> bool:
+    with Session(engine) as session:
+        stmt = select(AdminModel).where(AdminModel.sub == sub)
+        return session.execute(stmt).first() is not None
+    
+def can_review_stickers() -> bool:
+    return is_admin_user(current_user.sub) or current_user.is_super_admin
+
 def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
-        adminList = [3, 412]
-        approved = (current_user.sub in adminList) or current_user.is_super_admin
+        approved = is_admin_user(current_user.sub) or current_user.is_super_admin
         if not approved:
-             return "User does not have admin rights", 403
+            if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'error': 'You are no longer an admin. Redirecting to home page.'}), 403
+            # For regular browser requests, redirect the user
+            flash('You are no longer an admin', 'warning')
+            return redirect(url_for('stickerMap'))
         return fn(*args, **kwargs)
     return wrapper
 
@@ -148,7 +232,8 @@ def super_admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
-        if not current_user.is_super_admin:
+        approved = current_user.is_super_admin
+        if not approved:
             return "User does not have super admin rights", 403
         return fn(*args, **kwargs)
     return wrapper
@@ -157,17 +242,8 @@ def super_admin_required(fn):
 @app.route('/')
 @login_required
 def stickerMap():
-    return render_template('home.html', username=current_user.full_name)
-
-@app.route("/admin")
-@admin_required
-def admin_dashboard():
-    return render_template("admin.html")
-
-@app.route("/superadmin")
-@super_admin_required
-def superadmin_dashboard():
-    return jsonify(msg="🚀 Welcome, superadmin!"), 200
+    is_admin = is_admin_user(current_user.sub) or current_user.is_super_admin
+    return render_template('home.html', username=f"{current_user.full_name} (#{current_user.sub})", is_admin=is_admin)
 
 @app.route("/logout")
 def logout():
@@ -249,7 +325,7 @@ def uploadSticker():
                             picture    = os.path.join(Config.UPLOAD_DIRECTORY, filename),
                             adderemail = emailCode,
                             boardyear  = request.form['boardYear'],
-                            verified   = True
+                            verified   = False
                         )
 
                         session.add(sticker)
@@ -296,6 +372,7 @@ def getStickers():
             stmt = select(Sticker).where(and_(
                 Sticker.latitude.between(request.args.get('south'), request.args.get('north')),
                 Sticker.longitude.between(request.args.get('west'), request.args.get('east')),
+                Sticker.verified,
             ))
             rows = [row[0] for row in session.execute(stmt).all()]
             return json.dumps([row.__dict__ for row in rows], default=str)
@@ -303,6 +380,7 @@ def getStickers():
         return json.dumps({'status': '400', 'error': 'Bounding box not defined or incomplete.'}), 400
 
 @app.route("/api/nearby-stickers")
+@login_required
 def nearby_stickers():
     stickers = get_nearby_stickers()
     return render_template("partials/stickers.html", stickers=stickers)
@@ -340,35 +418,6 @@ def get_nearby_stickers():
             for s, dist in results
         ]
 
-
-# def get_nearby_stickers():
-#     if (request.args.get('lon') != '' and request.args.get('lat') != ''):
-#         # Get all the stickers within the bounding box
-#         with Session(engine) as session:
-#             stmt = select(Sticker).order_by(ST_DistanceSphere(
-#                 ST_MakePoint(float(request.args.get('lon')), float(request.args.get('lat'))), 
-#                 ST_MakePoint(Sticker.longitude, Sticker.latitude)).asc()
-#             ).limit(10)
-
-#             rows = [row[0] for row in session.execute(stmt).all()]
-
-#             out = []
-#             for s in rows:
-#                 out.append({
-#                     'id': s.id,
-#                     'latitude': float(s.latitude) if s.latitude is not None else None,
-#                     'longitude': float(s.longitude) if s.longitude is not None else None,
-#                     'picture_url': s.picture if s.picture is not None else None,
-#                     'adderemail': s.adderemail,
-#                     'posttime': s.posttime,
-#                     'spots': s.spots,
-#                     'boardyear': s.boardyear,
-#                     'verified': s.verified
-#                 })
-#             return jsonify(out), 200
-#     else:
-#         return json.dumps({'status': '400', 'error': 'Bounding box not defined or incomplete.'}), 400
-
 @app.route('/updateStickerSpots', methods=['POST'])
 @login_required
 def updateStickerSpots():  
@@ -387,6 +436,25 @@ def updateStickerSpots():
             return json.dumps({'status': '200', 'error': 'Updated spots count'}), 200
     else:
         return json.dumps({'status': '400', 'error': 'Updating sticker spots failed'}), 400
+
+
+@app.route('/reviewSticker', methods=['POST'])
+@admin_required
+def reviewSticker():
+    data = request.get_json()
+    sticker_id = data.get('stickerID')
+    approved = data.get('approved')
+    if sticker_id is None:
+        return jsonify({'error': 'Sticker ID missing'}), 400
+
+    with Session(engine) as session:
+        sticker = session.get(Sticker, sticker_id)
+        if not sticker:
+            return jsonify({'error': 'Sticker not found'}), 404
+        sticker.reviewed = True
+        sticker.verified = approved
+        session.commit()
+        return jsonify({'status': 'ok'}), 200
 
 def sendEmailUpdate():
     return 0  # TODO not implemented
