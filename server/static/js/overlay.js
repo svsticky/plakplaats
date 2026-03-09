@@ -70,6 +70,10 @@ function toggleOverlay() {
   }
 }
 
+function closeOverlay() {
+  window.dispatchEvent(new CustomEvent("close-overlay"));
+}
+
 document.body.addEventListener("htmx:afterSwap", (e) => {
   if (e.target.id !== "stickerList") return;
 

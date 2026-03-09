@@ -1,7 +1,6 @@
 {% for sticker in stickers %}
-<div class="overlay-sticker-card"
-  style="--sticker-board-color: var(--board-{{ sticker.boardyear }}-color);">
-  
+<div class="overlay-sticker-card" style="--sticker-board-color: var(--board-{{ sticker.boardyear }}-color);">
+
   <img src="{{ sticker.picture_url }}" class="overlay-sticker-img">
 
   <div class="overlay-meta">
@@ -12,9 +11,11 @@
     <span class="distance" data-distance="{{ sticker.distance_m }}">...</span>
   </div>
 
-  <button onclick="flyToSticker({{ sticker.lat }}, {{ sticker.lon }}, {{ sticker.id }})">
+  <button @click="
+      window.dispatchEvent(new CustomEvent('close-overlay'));
+      flyToSticker({{ sticker.lat }}, {{ sticker.lon }}, {{ sticker.id }})
+    ">
     Open on map
   </button>
 </div>
 {% endfor %}
-

@@ -116,7 +116,7 @@ function placePointers(response) {
               if (response.ok) {
                 console.log(
                   "Spot value updated successfully for sticker ID: " +
-                    stickerID,
+                  stickerID,
                 );
                 alert("Added a spot successfully!");
                 // Optionally, you can reload the map or perform any other action here
@@ -138,8 +138,6 @@ function placePointers(response) {
 }
 
 function flyToSticker(lat, lon, id) {
-  // TODO: close the overlay (at least on mobile), line below is not working
-  // document.getElementById("nearYouOverlay").__x.$data.open = false;
   mymap.flyTo([lat, lon], 18);
 
   function openPopup() {

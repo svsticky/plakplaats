@@ -97,48 +97,33 @@
         </div>
     </div>
 
-<input type="hidden" id="geo-lat" name="geo-lat">
-<input type="hidden" id="geo-lon" name="geo-lon">
+    <input type="hidden" id="geo-lat" name="geo-lat">
+    <input type="hidden" id="geo-lon" name="geo-lon">
 
-<div
-  id="nearYouOverlay"
-  x-data="overlayState()"
-  x-init="
+    <div id="nearYouOverlay" x-data="overlayState()" x-init="
     init();
     window.addEventListener('toggle-overlay', () => toggleDesktop());
-  "
-  :class="{
+    window.addEventListener('close-overlay', () => open = false);
+  " :class="{
     'mobile active': isMobile && open,
     'mobile inactive': isMobile && !open,
     'desktop active': !isMobile && open,
     'desktop inactive': !isMobile && !open
-  }"
-  @touchstart="onTouchStart($event)"
-  @touchmove="onTouchMove($event)"
-  @touchend="onTouchEnd()"
->
+  }" @touchstart="onTouchStart($event)" @touchmove="onTouchMove($event)" @touchend="onTouchEnd()">
 
-  <div id="nearYouMobileHandle"></div>
+        <div id="nearYouMobileHandle"></div>
 
-  <h2>Stickers Near You</h2>
+        <h2>Stickers Near You</h2>
 
-  <div id="stickerList"
-      hx-get="/api/nearby-stickers"
-      hx-include="#geo-lat,#geo-lon"
-      hx-trigger="overlay-open"
-      hx-target="this"
-      hx-swap="innerHTML">
-  </div>
+        <div id="stickerList" hx-get="/api/nearby-stickers" hx-include="#geo-lat,#geo-lon" hx-trigger="overlay-open"
+            hx-target="this" hx-swap="innerHTML">
+        </div>
 
-</div>
+    </div>
 
-<button
-  id="nearYouDesktopToggleButton"
-  x-data
-  @click="$dispatch('toggle-overlay')"
-  class="near-toggle-btn">
-  <img src="../static/img/chevron-left.svg" alt="chevron-left" id="toggle-chevron-img">
-</button>
+    <button id="nearYouDesktopToggleButton" x-data @click="$dispatch('toggle-overlay')" class="near-toggle-btn">
+        <img src="../static/img/chevron-left.svg" alt="chevron-left" id="toggle-chevron-img">
+    </button>
 
 </body>
 

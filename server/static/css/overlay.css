@@ -3,7 +3,7 @@
   top: var(--navbar-height);
   right: 0;
   width: 380px;
-  height: calc(100vh - 80px);
+  height: calc(100vh - var(--navbar-height));
   background: white;
   color: black;
   box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
@@ -55,7 +55,7 @@
   margin: 8px auto;
 }
 
-#nearYouOverlay.mobile > #nearYouMobileHandle {
+#nearYouOverlay.mobile>#nearYouMobileHandle {
   display: block;
   width: 60px;
   height: 6px;
@@ -64,11 +64,11 @@
   margin: 8px auto;
 }
 
-#nearYouOverlay.mobile.active > #nearYouMobileHandle {
+#nearYouOverlay.mobile.active>#nearYouMobileHandle {
   display: none;
 }
 
-#nearYouOverlay.desktop > #nearYouMobileHandle {
+#nearYouOverlay.desktop>#nearYouMobileHandle {
   display: none;
 }
 
@@ -117,7 +117,8 @@
   transition:
     background-color 0.8s ease,
     opacity 0.8s ease;
-  opacity: 0; /* hidden until revealed */
+  opacity: 0;
+  /* hidden until revealed */
 }
 
 /* When revealed */
