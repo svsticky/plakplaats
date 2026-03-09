@@ -110,7 +110,7 @@ button,
   cursor: pointer;
 }
 
-.addIcon > line {
+.addIcon>line {
   stroke: var(--background-color);
 }
 
@@ -583,67 +583,3 @@ button,
   margin: 0 0.5rem;
   justify-self: center;
 }
-
-/* Maybe add styling for when you hover or click a button? */
-.leafletMarkerButton:hover {
-  /* background-color:#be0202; */
-}
-
-/* NEW */
-/* Base overlay */
-/* #nearYouOverlay {
-  position: fixed;
-  background: white;
-  z-index: 1000;
-  transition:
-    bottom 0.25s ease,
-    right 0.25s ease;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-} */
-
-/* MOBILE BOTTOM SHEET */
-/* #nearYouOverlay.mobile {
-  left: 0;
-  width: 100%;
-  height: 80vh;
-  border-radius: 20px 20px 0 0;
-}
-
-#nearYouOverlay.mobile.inactive {
-  bottom: -85%;
-}
-#nearYouOverlay.mobile.active {
-  bottom: 0;
-} */
-
-/* DESKTOP SIDEBAR */
-/* #nearYouOverlay.desktop {
-  top: 0;
-  right: 0;
-  width: 380px;
-  height: 100vh;
-}
-
-#nearYouOverlay.desktop.inactive {
-  right: -380px;
-}
-#nearYouOverlay.desktop.active {
-  right: 0;
-} */
-
-/* Drag handle */
-/* #nearYouMobileHandle {
-  width: 50px;
-  height: 6px;
-  background: #ccc;
-  border-radius: 3px;
-  margin: 8px auto;
-} */
-
-/* Button */
-/* .near-toggle-btn {
-  position: fixed;
-  right: 20px;
-  top: 20px;
-  z-index: 1100;
-} */
