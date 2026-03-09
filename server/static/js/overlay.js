@@ -39,10 +39,6 @@ function overlayState() {
         : "../static/img/chevron-left.svg";
     },
 
-    resetMobileStyles() {
-      document.getElementById("nearYouOverlay").style.bottom = "";
-    },
-
     onTouchStart(e) {
       if (!this.isMobile) return;
 
@@ -100,15 +96,6 @@ function overlayState() {
       }
     },
   };
-}
-
-function toggleOverlay() {
-  const overlay = document.getElementById("nearYouOverlay");
-  overlay.classList.toggle("open");
-}
-
-function closeOverlay() {
-  window.dispatchEvent(new CustomEvent("close-overlay"));
 }
 
 document.body.addEventListener("htmx:afterSwap", (e) => {
