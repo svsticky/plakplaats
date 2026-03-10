@@ -283,13 +283,14 @@ var Overlay = L.Class.extend({
         const stickerDivDates = document.querySelectorAll('.stickerDivDate');
         const stickerDivButtons = document.querySelectorAll('.stickerDivButton');
         const stickerDivNearbys = document.querySelectorAll('.stickerDivNearby');
+        const stickerDivUsers = document.querySelectorAll('.stickerDivUser');
 
         // Iterate over sticker elements
         stickerDivH1s.forEach((title, i) => {
             if (i < results.length) {
                 const stickerData = results[i];
                 // Fill sticker with content
-                this.renderSticker(title, stickerDivImgs[i], stickerDivDates[i], stickerData);
+                this.renderSticker(title, stickerDivImgs[i], stickerDivDates[i], stickerDivUsers[i], stickerData);
                 // Add the 'open on map' button click event
                 this.addOpenOnmapClickListener(stickerDivButtons[i], stickerData.id, stickerData.latitude, stickerData.longitude);
 
@@ -306,10 +307,11 @@ var Overlay = L.Class.extend({
     },
 
     // Fills individual stickers with content
-    renderSticker: function (stickerDivH1, stickerDivImg, stickerDivDate, stickerData) {
+    renderSticker: function (stickerDivH1, stickerDivImg, stickerDivDate, stickerDivUser, stickerData) {
         stickerDivH1.textContent = `Sticker ${stickerData.id}`;
         stickerDivImg.src = stickerData.picture_url;
         stickerDivDate.textContent = `Posted ${dayjs().to(dayjs(stickerData.posttime))}`;
+        stickerDivUser.textContent = `Posted by ${stickerData.username}`;
     },
 
     // Add 'open on map' button event listener

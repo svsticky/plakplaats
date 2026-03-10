@@ -88,8 +88,8 @@ function placePointers(response) {
 
             pointer.pointer.bindPopup(`
                         <h1>Sticker ${response[x].id}</h1>
-                        <h2>Sticked by ???</h2>
-                        <img width='200px' src='${response[x].picture}'>
+                        <h2>Sticked by ${response[x].username}</h2>
+                        <img width='200px' src='${response[x].picture_url}'>
                         <h2>${response[x].spots} ${spotText}</h2>
                         <h2>Posted ${dayjs().to(dayjs(response[x].posttime))}</h2>
                         <div class='markerBoardYearDiv'>
