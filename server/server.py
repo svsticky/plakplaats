@@ -48,11 +48,14 @@ from urllib.parse import urlparse
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.menu import MenuLink
+from flask_admin.form import rules
+from sqlalchemy import func
 from sqlalchemy.orm import scoped_session, sessionmaker
 from models import Sticker
 from wtforms import Form, IntegerField, StringField
-from wtforms.validators import InputRequired, Optional
+from wtforms.validators import InputRequired, Optional, ValidationError
 
+from markupsafe import Markup
 from flask import send_from_directory
 
 load_dotenv()
@@ -96,8 +99,19 @@ class AdminIndex(AdminIndexView):
     @expose('/')
     def index(self):
         with Session(engine) as session:
-            new_stickers = session.query(Sticker).filter_by(reviewed=False).order_by(Sticker.posttime.asc()).all()
-        return self.render('admin/index.html', stickers=new_stickers)
+            new_stickers = (
+                session.query(Sticker, UserModel.name.label("username"))
+                .join(UserModel, Sticker.sub == UserModel.sub)
+                .filter(Sticker.reviewed == False)
+                .order_by(Sticker.posttime.asc())
+                .all()
+            )
+            stickers = []
+            for sticker, username in new_stickers:
+                sticker.username = username
+                stickers.append(sticker)
+
+        return self.render('admin/index.html', stickers=stickers)
 
     def is_accessible(self):
         verify_jwt_in_request()
@@ -111,8 +125,55 @@ class AdminForm(Form):
     email = StringField('Email', validators=[Optional()])
 
 class StickerAdmin(ModelView):
-    # Sort by newest posttime default
     column_default_sort = ('posttime', True)
+    column_filters = ("reviewed", "verified", "boardyear")
+
+    column_list = (
+        "id",
+        "preview",
+        "user.name",
+        "latitude",
+        "longitude",
+        "boardyear",
+        "verified",
+        "reviewed",
+        "posttime"
+    )
+
+    column_labels = {
+        "user.name": "Username",
+        "preview": "Sticker"
+    }
+
+    column_searchable_list = (
+        "user.name",
+    )
+
+    column_sortable_list = (
+        "posttime",
+        "boardyear",
+    )
+
+    column_auto_select_related = True
+
+    column_formatters = {
+        "preview": lambda v, c, m, p: Markup(
+            f'<a href="/{m.picture}" target="_blank">'
+            f'<img src="/{m.picture}" style="height:60px;border-radius:4px;">'
+            f'</a>'
+        ),
+        "posttime": lambda v, c, m, p: (
+            m.posttime.astimezone().strftime("%Y-%m-%d %H:%M:%S") if m.posttime else ""
+        )
+    }
+
+    form_ajax_refs = {
+        "user": {
+            "fields": ("name", "sub", "email"),
+            "order_by": UserModel.name,
+            "placeholder": "Search for a user..."
+        }
+    }
 
     def is_accessible(self):
         verify_jwt_in_request()
@@ -127,6 +188,38 @@ class SuperAdminView(ModelView):
     column_default_sort = ("sub", False)
 
     form = AdminForm
+
+    def is_accessible(self):
+        verify_jwt_in_request()
+        return current_user.is_super_admin
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('stickerMap'))
+
+class UserView(ModelView):
+    column_list = ("sub", "name", "email")
+    column_default_sort = ("sub", False)
+
+    form_columns = ("sub", "name", "email")
+    form_excluded_columns = ("stickers", "admin")
+
+    def create_form(self, obj=None):
+        form = super().create_form(obj)
+        # sub editable when creating
+        return form
+
+    def edit_form(self, obj=None):
+        form = super().edit_form(obj)
+        # sub readonly when editing
+        form.sub.render_kw = {"readonly": True}
+        return form
+
+    def on_model_change(self, form, model, is_created):
+        if is_created:
+            with Session(engine) as session:
+                user = session.get(UserModel, model.sub)
+                if user is not None:
+                    raise ValidationError("A user with this OIDC subject already exists.")
 
     def is_accessible(self):
         verify_jwt_in_request()
@@ -152,6 +245,7 @@ admin = Admin(
 
 admin.add_view(StickerAdmin(Sticker, db_session, name="Stickers", endpoint="stickers"))
 admin.add_view(SuperAdminView(AdminModel, db_session, name="Admins", endpoint="admins"))
+admin.add_view(UserView(UserModel, db_session, name="Users", endpoint="users"))
 
 admin.add_link(MenuLink(name='Main Site', url='/', category=''))
 admin.add_link(MenuLink(name='Logout', url='/logout', category=''))

@@ -19,7 +19,7 @@
     <div class="cardText">
         <div><strong>ID:</strong> {{ sticker.id }}</div>
         <div><strong>Board year:</strong> {{ sticker.boardyear }}</div>
-        <div><strong>Added by:</strong> {{ sticker.sub }}</div>
+        <div><strong>Added by:</strong> {{ sticker.username }}</div>
         <div><strong>Posted:</strong> {{ sticker.posttime.strftime('%Y-%m-%d %H:%M:%S') if sticker.posttime else '-' }}
         </div>
         <div>

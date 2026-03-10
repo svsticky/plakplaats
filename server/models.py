@@ -16,6 +16,9 @@ class User(Base):
     stickers: Mapped[list["Sticker"]] = relationship(back_populates="user")
     admin:    Mapped["Admin | None"] = relationship(back_populates="user")
 
+    def __str__(self):
+        return f"{self.name} (#{self.sub})"
+
 class Sticker(Base):
     __tablename__ = "stickers"
 
@@ -25,6 +28,8 @@ class Sticker(Base):
     picture:    Mapped[str]
 
     sub:        Mapped[int] = mapped_column(ForeignKey("users.sub"), index=True)
+
+    user = relationship("User")
 
     posttime:   Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     spots:      Mapped[int] = mapped_column(default=0)
