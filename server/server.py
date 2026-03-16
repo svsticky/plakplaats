@@ -86,7 +86,7 @@ class Config:
 
     # Miscellaneous
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-    UPLOAD_DIRECTORY = "./static/uploads"
+    UPLOAD_DIRECTORY = "./uploads"
     STICKER_MAP_PORT = os.getenv("STICKER_MAP_PORT")
 
 if (not os.path.exists(Config.UPLOAD_DIRECTORY)):
@@ -141,7 +141,7 @@ class StickerAdmin(ModelView):
     )
 
     column_labels = {
-        "user.name": "Username",
+        "user.name": "Sticked By",
         "preview": "Sticker"
     }
 
@@ -163,7 +163,7 @@ class StickerAdmin(ModelView):
             f'</a>'
         ),
         "posttime": lambda v, c, m, p: (
-            m.posttime.astimezone().strftime("%Y-%m-%d %H:%M:%S") if m.posttime else ""
+            m.posttime.strftime("%Y-%m-%d %H:%M:%S") if m.posttime else ""
         )
     }
 
@@ -183,11 +183,48 @@ class StickerAdmin(ModelView):
         return redirect(url_for('stickerMap'))
 
 class SuperAdminView(ModelView):
-    column_list = ("sub", "email")
-    form_excluded_columns = ("id",)
-    column_default_sort = ("sub", False)
+    column_list = ("user.name", "user.email", "sub")
+    column_default_sort = ("user.name", False)
 
-    form = AdminForm
+    column_labels = {
+        "user.name": "Username",
+        "user.email": "Email",
+        "sub": "User ID"
+    }
+
+    column_searchable_list = (
+        "user.name",
+        "user.email"
+    )
+
+    column_auto_select_related = True
+
+    form_columns = ("user",)
+
+    form_ajax_refs = {
+        "user": {
+            "fields": ("name", "email", "sub"),
+            "order_by": UserModel.name,
+            "placeholder": "Search for a user..."
+        }
+    }
+
+    can_edit = False
+
+    def create_model(self, form):
+        user = form.user.data
+
+        existing = self.session.get(AdminModel, user.sub)
+
+        if existing:
+            flash(f"{user.name} is already an admin.", "error")
+            return False
+
+        admin = AdminModel(sub=user.sub)
+        self.session.add(admin)
+        self.session.commit()
+
+        return admin
 
     def is_accessible(self):
         verify_jwt_in_request()

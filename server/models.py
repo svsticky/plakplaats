@@ -1,6 +1,7 @@
+import os
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
-from sqlalchemy import Integer, String, DateTime, ForeignKey
+from sqlalchemy import Integer, String, DateTime, ForeignKey, event
 from datetime import datetime
 
 class Base(DeclarativeBase):
@@ -13,8 +14,8 @@ class User(Base):
     name:   Mapped[str]
     email:  Mapped[str]
 
-    stickers: Mapped[list["Sticker"]] = relationship(back_populates="user")
-    admin:    Mapped["Admin | None"] = relationship(back_populates="user")
+    stickers: Mapped[list["Sticker"]] = relationship(back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+    admin: Mapped["Admin | None"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
 
     def __str__(self):
         return f"{self.name} (#{self.sub})"
@@ -27,9 +28,9 @@ class Sticker(Base):
     latitude:   Mapped[float]
     picture:    Mapped[str]
 
-    sub:        Mapped[int] = mapped_column(ForeignKey("users.sub"), index=True)
+    sub:        Mapped[int] = mapped_column(ForeignKey("users.sub", ondelete="CASCADE"), index=True)
 
-    user = relationship("User")
+    user:       Mapped["User"] = relationship(back_populates="stickers")
 
     posttime:   Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     spots:      Mapped[int] = mapped_column(default=0)
@@ -37,15 +38,11 @@ class Sticker(Base):
     verified:   Mapped[bool] = mapped_column(default=False)
     reviewed:   Mapped[bool] = mapped_column(default=False)
 
-    user: Mapped["User"] = relationship(back_populates="stickers")
 
 class Admin(Base):
     __tablename__ = "admins"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    sub: Mapped[int] = mapped_column(ForeignKey("users.sub"), unique=True, index=True)
-    email: Mapped[str | None] = mapped_column(nullable=True)
-
+    sub: Mapped[int] = mapped_column(ForeignKey("users.sub", ondelete="CASCADE"), primary_key=True)
     user: Mapped["User"] = relationship(back_populates="admin")
 
     # run:
@@ -55,4 +52,20 @@ class Admin(Base):
     #       uv run alembic upgrade head
     #    to downgrade the database:
     #       uv run alembic downgrade base
+
+@event.listens_for(Sticker, "after_delete")
+def delete_sticker_file(mapper, connection, target):
+    """
+    Automatically delete sticker image from disk when DB row is removed
+    """
+    if not target.picture:
+        return
+
+    try:
+        path = os.path.abspath(target.picture)
+
+        if os.path.abspath(target.picture):
+            os.remove(path)
     
+    except Exception as e:
+        print(f"Failed to delete sticker image {target.picture}: {e}")
