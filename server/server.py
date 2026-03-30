@@ -86,7 +86,7 @@ class Config:
 
     # Miscellaneous
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-    UPLOAD_DIRECTORY = "./uploads"
+    UPLOAD_DIRECTORY = "./static/uploads"
     STICKER_MAP_PORT = os.getenv("STICKER_MAP_PORT")
 
 if (not os.path.exists(Config.UPLOAD_DIRECTORY)):
