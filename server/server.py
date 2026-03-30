@@ -51,6 +51,7 @@ from flask_admin.menu import MenuLink
 from flask_admin.form import rules
 from sqlalchemy import func
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.exc import IntegrityError
 from models import Sticker
 from wtforms import Form, IntegerField, StringField
 from wtforms.validators import InputRequired, Optional, ValidationError
@@ -477,19 +478,23 @@ def uploadSticker():
                     # Save file
                     file.save(os.path.join(Config.UPLOAD_DIRECTORY, filename))
                     # create db entry
-                    with Session(engine) as session:
-                        sticker = Sticker(
-                            longitude  = float(request.form['lon']),
-                            latitude   = float(request.form['lat']),
-                            picture    = os.path.join(Config.UPLOAD_DIRECTORY, filename),
-                            sub        = current_user.sub,
-                            boardyear  = request.form['boardYear'],
-                            verified   = False
-                        )
+                    try:
+                        with Session(engine) as session:
+                            sticker = Sticker(
+                                longitude  = float(request.form['lon']),
+                                latitude   = float(request.form['lat']),
+                                picture    = os.path.join(Config.UPLOAD_DIRECTORY, filename),
+                                sub        = current_user.sub,
+                                boardyear  = request.form['boardYear'],
+                                verified   = False
+                            )
 
-                        session.add(sticker)
-                        session.commit()
-                        return json.dumps({'status': '200', 'error': 'Sticker added to database.'}), 200
+                            session.add(sticker)
+                            session.commit()
+                            return json.dumps({'status': '200', 'error': 'Sticker added to database.'}), 200
+                    except IntegrityError:
+                        os.remove(os.path.join(Config.UPLOAD_DIRECTORY, filename))
+                        return json.dumps({'status': '401', 'error': 'Your account no longer exists. Please log out and log in again.'}), 401
                 else:
                     return json.dumps({'status': '400', 'error': 'Unsupported file type.'}), 400
             else:
