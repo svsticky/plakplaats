@@ -14,12 +14,40 @@ function overlayState() {
 
     init() {
       this.$watch("open", value => {
-        if (value && !this.stickersLoaded) {
-          this.$nextTick(() => {
-            htmx.trigger("#stickerList", "overlay-open");
-            this.stickersLoaded = true;
-          });
+        if (!value) {
+          return;
         }
+
+        const hasCoords = () => {
+          const lat = document.getElementById("geo-lat")?.value;
+          const lon = document.getElementById("geo-lon")?.value;
+          return lat && lon;
+        };
+
+        if (hasCoords()) {
+          // Coords ready
+          if (!this.stickersLoaded) {
+            this.$nextTick(() => {
+              htmx.trigger("#stickerList", "overlay-open");
+              this.stickersLoaded = true;
+            });
+          }
+        } else {
+          // Coords missing
+          const poll = setInterval(() => {
+            if (hasCoords()) {
+              clearInterval(poll);
+              this.$nextTick(() => {
+                htmx.trigger("#stickerList", "overlay-open");
+                this.stickersLoaded = true;
+              });
+            }
+          }, 300);
+
+          // Safety: stop polling after 10s to avoid leaks
+          setTimeout(() => clearInterval(poll), 10000);
+        }
+
       });
 
       window.addEventListener("resize", () => {
@@ -62,7 +90,7 @@ function overlayState() {
       this.$el.style.bottom = `${newBottom}px`;
 
       const elapsed = Date.now() - this.dragStartTime;
-      this.dragVelocity = deltaY / elapsed;
+      this.dragVelocity = elapsed > 0 ? deltaY / elapsed : 0;
 
       if (
         this.$el.scrollHeight - this.$el.scrollTop ===

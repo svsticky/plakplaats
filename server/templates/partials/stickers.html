@@ -1,7 +1,7 @@
 {% for sticker in stickers %}
 <div class="overlay-sticker-card" style="--sticker-board-color: var(--board-{{ sticker.boardyear }}-color);">
 
-  <img src="{{ sticker.picture_url }}" class="overlay-sticker-img">
+  <img src="{{ sticker.picture_url }}" class="overlay-sticker-img" alt="sticker-img-{{ sticker.id }}">
 
   <div class="overlay-meta">
     <span>#{{ sticker.id }}</span> •

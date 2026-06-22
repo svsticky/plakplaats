@@ -2,7 +2,7 @@ import flask
 from flask import request
 from flask import jsonify
 from flask import render_template
-from sqlalchemy import create_engine, select, and_, update, func
+from sqlalchemy import create_engine, select, and_, update
 from flask import flash
 from sqlalchemy.orm import Session
 from geoalchemy2.functions import ST_MakePoint, ST_DistanceSphere
