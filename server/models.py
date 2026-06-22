@@ -1,31 +1,49 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+import os
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
-from sqlalchemy import Integer, String, DateTime
+from sqlalchemy import Integer, String, DateTime, ForeignKey, event
 from datetime import datetime
 
 class Base(DeclarativeBase):
     pass
 
+class User(Base):
+    __tablename__ = "users"
+
+    sub:    Mapped[int] = mapped_column(primary_key=True)
+    name:   Mapped[str]
+    email:  Mapped[str]
+
+    stickers: Mapped[list["Sticker"]] = relationship(back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+    admin: Mapped["Admin | None"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan", passive_deletes=True)
+
+    def __str__(self):
+        return f"{self.name} (#{self.sub})"
+
 class Sticker(Base):
     __tablename__ = "stickers"
-    id:         Mapped[int]      = mapped_column(primary_key=True, autoincrement=True)
+
+    id:         Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     longitude:  Mapped[float]
     latitude:   Mapped[float]
     picture:    Mapped[str]
-    adderemail: Mapped[str]
+
+    sub:        Mapped[int] = mapped_column(ForeignKey("users.sub", ondelete="CASCADE"), index=True)
+
+    user:       Mapped["User"] = relationship(back_populates="stickers")
+
     posttime:   Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    spots:      Mapped[int]      = mapped_column(default=0)
+    spots:      Mapped[int] = mapped_column(default=0)
     boardyear:  Mapped[int]
-    verified:   Mapped[bool]     = mapped_column(default=False)
-    reviewed:   Mapped[bool]     = mapped_column(default=False)
+    verified:   Mapped[bool] = mapped_column(default=False)
+    reviewed:   Mapped[bool] = mapped_column(default=False)
+
 
 class Admin(Base):
     __tablename__ = "admins"
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    # OIDC subject (provided by OIDC provider)
-    sub: Mapped[int] = mapped_column(unique=True, index=True)
-    # Optional email field for referencing the admin by email
-    email: Mapped[str | None] = mapped_column(nullable=True)
+
+    sub: Mapped[int] = mapped_column(ForeignKey("users.sub", ondelete="CASCADE"), primary_key=True)
+    user: Mapped["User"] = relationship(back_populates="admin")
 
     # run:
     #    to autogenerate a migration if this file changes:
@@ -34,4 +52,20 @@ class Admin(Base):
     #       uv run alembic upgrade head
     #    to downgrade the database:
     #       uv run alembic downgrade base
+
+@event.listens_for(Sticker, "after_delete")
+def delete_sticker_file(mapper, connection, target):
+    """
+    Automatically delete sticker image from disk when DB row is removed
+    """
+    if not target.picture:
+        return
+
+    try:
+        path = os.path.abspath(target.picture)
+
+        if os.path.abspath(target.picture):
+            os.remove(path)
     
+    except Exception as e:
+        print(f"Failed to delete sticker image {target.picture}: {e}")

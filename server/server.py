@@ -6,7 +6,7 @@ from flask import flash
 from sqlalchemy import create_engine, select, and_, update
 from sqlalchemy.orm import Session
 from geoalchemy2.functions import ST_MakePoint, ST_DistanceSphere
-from models import Sticker, Admin as AdminModel, Base
+from models import User as UserModel, Sticker, Admin as AdminModel, Base
 import requests
 import psycopg2
 import time
@@ -48,11 +48,15 @@ from urllib.parse import urlparse
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.menu import MenuLink
+from flask_admin.form import rules
+from sqlalchemy import func
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.exc import IntegrityError
 from models import Sticker
 from wtforms import Form, IntegerField, StringField
-from wtforms.validators import InputRequired, Optional
+from wtforms.validators import InputRequired, Optional, ValidationError
 
+from markupsafe import Markup
 from flask import send_from_directory
 
 load_dotenv()
@@ -96,8 +100,19 @@ class AdminIndex(AdminIndexView):
     @expose('/')
     def index(self):
         with Session(engine) as session:
-            new_stickers = session.query(Sticker).filter_by(reviewed=False).order_by(Sticker.posttime.asc()).all()
-        return self.render('admin/index.html', stickers=new_stickers)
+            new_stickers = (
+                session.query(Sticker, UserModel.name.label("username"))
+                .join(UserModel, Sticker.sub == UserModel.sub)
+                .filter(Sticker.reviewed == False)
+                .order_by(Sticker.posttime.asc())
+                .all()
+            )
+            stickers = []
+            for sticker, username in new_stickers:
+                sticker.username = username
+                stickers.append(sticker)
+
+        return self.render('admin/index.html', stickers=stickers)
 
     def is_accessible(self):
         verify_jwt_in_request()
@@ -111,8 +126,55 @@ class AdminForm(Form):
     email = StringField('Email', validators=[Optional()])
 
 class StickerAdmin(ModelView):
-    # Sort by newest posttime default
     column_default_sort = ('posttime', True)
+    column_filters = ("reviewed", "verified", "boardyear")
+
+    column_list = (
+        "id",
+        "preview",
+        "user.name",
+        "latitude",
+        "longitude",
+        "boardyear",
+        "verified",
+        "reviewed",
+        "posttime"
+    )
+
+    column_labels = {
+        "user.name": "Sticked By",
+        "preview": "Sticker"
+    }
+
+    column_searchable_list = (
+        "user.name",
+    )
+
+    column_sortable_list = (
+        "posttime",
+        "boardyear",
+    )
+
+    column_auto_select_related = True
+
+    column_formatters = {
+        "preview": lambda v, c, m, p: Markup(
+            f'<a href="/{m.picture}" target="_blank">'
+            f'<img src="/{m.picture}" style="height:60px;border-radius:4px;">'
+            f'</a>'
+        ),
+        "posttime": lambda v, c, m, p: (
+            m.posttime.strftime("%Y-%m-%d %H:%M:%S") if m.posttime else ""
+        )
+    }
+
+    form_ajax_refs = {
+        "user": {
+            "fields": ("name", "sub", "email"),
+            "order_by": UserModel.name,
+            "placeholder": "Search for a user..."
+        }
+    }
 
     def is_accessible(self):
         verify_jwt_in_request()
@@ -122,11 +184,80 @@ class StickerAdmin(ModelView):
         return redirect(url_for('stickerMap'))
 
 class SuperAdminView(ModelView):
-    column_list = ("sub", "email")
-    form_excluded_columns = ("id",)
+    column_list = ("user.name", "user.email", "sub")
+    column_default_sort = ("user.name", False)
+
+    column_labels = {
+        "user.name": "Username",
+        "user.email": "Email",
+        "sub": "User ID"
+    }
+
+    column_searchable_list = (
+        "user.name",
+        "user.email"
+    )
+
+    column_auto_select_related = True
+
+    form_columns = ("user",)
+
+    form_ajax_refs = {
+        "user": {
+            "fields": ("name", "email", "sub"),
+            "order_by": UserModel.name,
+            "placeholder": "Search for a user..."
+        }
+    }
+
+    can_edit = False
+
+    def create_model(self, form):
+        user = form.user.data
+
+        existing = self.session.get(AdminModel, user.sub)
+
+        if existing:
+            flash(f"{user.name} is already an admin.", "error")
+            return False
+
+        admin = AdminModel(sub=user.sub)
+        self.session.add(admin)
+        self.session.commit()
+
+        return admin
+
+    def is_accessible(self):
+        verify_jwt_in_request()
+        return current_user.is_super_admin
+    
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('stickerMap'))
+
+class UserView(ModelView):
+    column_list = ("sub", "name", "email")
     column_default_sort = ("sub", False)
 
-    form = AdminForm
+    form_columns = ("sub", "name", "email")
+    form_excluded_columns = ("stickers", "admin")
+
+    def create_form(self, obj=None):
+        form = super().create_form(obj)
+        # sub editable when creating
+        return form
+
+    def edit_form(self, obj=None):
+        form = super().edit_form(obj)
+        # sub readonly when editing
+        form.sub.render_kw = {"readonly": True}
+        return form
+
+    def on_model_change(self, form, model, is_created):
+        if is_created:
+            with Session(engine) as session:
+                user = session.get(UserModel, model.sub)
+                if user is not None:
+                    raise ValidationError("A user with this OIDC subject already exists.")
 
     def is_accessible(self):
         verify_jwt_in_request()
@@ -152,6 +283,7 @@ admin = Admin(
 
 admin.add_view(StickerAdmin(Sticker, db_session, name="Stickers", endpoint="stickers"))
 admin.add_view(SuperAdminView(AdminModel, db_session, name="Admins", endpoint="admins"))
+admin.add_view(UserView(UserModel, db_session, name="Users", endpoint="users"))
 
 admin.add_link(MenuLink(name='Main Site', url='/', category=''))
 admin.add_link(MenuLink(name='Logout', url='/logout', category=''))
@@ -299,7 +431,36 @@ def login():
 
     resp = flask.make_response(redirect(next_url))
     set_access_cookies(resp, plakplaats_access_token)
+
+    upsert_user(
+        int(jwt_data["sub"]),
+        jwt_data["full_name"],
+        jwt_data["email"]
+    )
     return resp
+
+def upsert_user(sub, full_name, email):
+    with Session(engine) as session:
+        user = session.get(UserModel, sub)
+
+        if user is None:
+            # Create new user
+            session.add(
+                UserModel(
+                    sub=sub,
+                    name=full_name,
+                    email=email
+                )
+            )
+        else:
+            # Update fields if they changed
+            if user.name != full_name:
+                user.name = full_name
+
+            if user.email != email:
+                user.email = email
+
+        session.commit()
 
 # ─── Backend routes ───────────────────────────────────────────────────
 @app.route('/upload', methods=['GET', 'POST'])
@@ -317,20 +478,23 @@ def uploadSticker():
                     # Save file
                     file.save(os.path.join(Config.UPLOAD_DIRECTORY, filename))
                     # create db entry
-                    with Session(engine) as session:
-                        emailCode = str(random.randrange(9999999, 999999999))
-                        sticker = Sticker(
-                            longitude  = float(request.form['lon']),
-                            latitude   = float(request.form['lat']),
-                            picture    = os.path.join(Config.UPLOAD_DIRECTORY, filename),
-                            adderemail = emailCode,
-                            boardyear  = request.form['boardYear'],
-                            verified   = False
-                        )
+                    try:
+                        with Session(engine) as session:
+                            sticker = Sticker(
+                                longitude  = float(request.form['lon']),
+                                latitude   = float(request.form['lat']),
+                                picture    = os.path.join(Config.UPLOAD_DIRECTORY, filename),
+                                sub        = current_user.sub,
+                                boardyear  = request.form['boardYear'],
+                                verified   = False
+                            )
 
-                        session.add(sticker)
-                        session.commit()
-                        return json.dumps({'status': '200', 'error': 'Sticker added to database.', 'emailCode': emailCode}), 200
+                            session.add(sticker)
+                            session.commit()
+                            return json.dumps({'status': '200', 'error': 'Sticker added to database.'}), 200
+                    except IntegrityError:
+                        os.remove(os.path.join(Config.UPLOAD_DIRECTORY, filename))
+                        return json.dumps({'status': '401', 'error': 'Your account no longer exists. Please log out and log in again.'}), 401
                 else:
                     return json.dumps({'status': '400', 'error': 'Unsupported file type.'}), 400
             else:
@@ -340,44 +504,56 @@ def uploadSticker():
     else:
         return json.dumps({'status': '405', 'error': 'HTTP Method not allowed.'}), 405
 
-@app.route('/addEmail', methods=['PATCH'])
-@login_required
-def addEmail():
-    if request.form['email'] != '':
-        if request.form['token'] != '':
-            # Check if the token is in the database
-            with Session(engine) as session:
-                stmt = select(Sticker).where(Sticker.adderemail.is_(request.form['token']))
-                sticker = session.query(Sticker).from_statement(stmt).one_or_none()
-                if sticker is not None:
-                    # Change email in database
-                    sticker.adderemail = request.form["email"]
-                    session.commit()
-                    
-                    return json.dumps({'status': '200', 'error': 'Email updated in database.'}), 200
-                else:
-                    return json.dumps({'status': '400', 'error': 'Token not valid.'}), 400
-        else:
-            return json.dumps({'status': '400', 'error': 'Token not defined.'}), 400
-    else:
-        return json.dumps({'status': '400', 'error': 'Email not defined'}), 400
-
-
 @app.route('/getStickers', methods=['GET'])
 @login_required
 def getStickers():
-    if (request.args.get('west') != '' and request.args.get('east') != '' and request.args.get('north') != '' and request.args.get('south') != ''):
+    if (
+        request.args.get('west') != '' and
+        request.args.get('east') != '' and
+        request.args.get('north') != '' and
+        request.args.get('south') != ''
+    ):
         # Get all the stickers within the bounding box
+        west = float(request.args.get('west'))
+        east = float(request.args.get('east'))
+        north = float(request.args.get('north'))
+        south = float(request.args.get('south'))
+
         with Session(engine) as session:
-            stmt = select(Sticker).where(and_(
-                Sticker.latitude.between(request.args.get('south'), request.args.get('north')),
-                Sticker.longitude.between(request.args.get('west'), request.args.get('east')),
-                Sticker.verified,
-            ))
-            rows = [row[0] for row in session.execute(stmt).all()]
-            return json.dumps([row.__dict__ for row in rows], default=str)
+            stmt = (
+                select(Sticker, UserModel)
+                .join(UserModel, Sticker.sub == UserModel.sub)
+                .where(and_(
+                    Sticker.latitude.between(south, north),
+                    Sticker.longitude.between(west, east),
+                    Sticker.verified
+                ))
+            )
+
+            rows = session.execute(stmt).all()
+
+            out = []
+            for sticker, user in rows:
+                out.append({
+                    'id': sticker.id,
+                    'latitude': float(sticker.latitude) if sticker.latitude is not None else None,
+                    'longitude': float(sticker.longitude) if sticker.longitude is not None else None,
+                    'picture_url': sticker.picture if sticker.picture is not None else None,
+                    'sub': sticker.sub,
+                    'username': user.name,
+                    'posttime': sticker.posttime,
+                    'spots': sticker.spots,
+                    'boardyear': sticker.boardyear,
+                    'verified': sticker.verified
+                })
+
+            return jsonify(out), 200
+
     else:
-        return json.dumps({'status': '400', 'error': 'Bounding box not defined or incomplete.'}), 400
+        return jsonify({
+            'status': 400,
+            'error': 'Bounding box not defined or incomplete.'
+        }), 400
 
 @app.route('/getNearYouStickers', methods=['GET'])
 @login_required
@@ -385,27 +561,26 @@ def getNearYouStickers():
     if (request.args.get('lon') != '' and request.args.get('lat') != ''):
         # Get all the stickers within the bounding box
         with Session(engine) as session:
-            stmt = select(Sticker).where(and_(
-                Sticker.verified,
-            )).order_by(ST_DistanceSphere(
+            stmt = select(Sticker, UserModel).join(UserModel, Sticker.sub == UserModel.sub).where(Sticker.verified).order_by(ST_DistanceSphere(
                 ST_MakePoint(float(request.args.get('lon')), float(request.args.get('lat'))), 
                 ST_MakePoint(Sticker.longitude, Sticker.latitude)).asc()
             ).limit(10)
 
-            rows = [row[0] for row in session.execute(stmt).all()]
+            rows = session.execute(stmt).all()
 
             out = []
-            for s in rows:
+            for sticker, user in rows:
                 out.append({
-                    'id': s.id,
-                    'latitude': float(s.latitude) if s.latitude is not None else None,
-                    'longitude': float(s.longitude) if s.longitude is not None else None,
-                    'picture_url': s.picture if s.picture is not None else None,
-                    'adderemail': s.adderemail,
-                    'posttime': s.posttime,
-                    'spots': s.spots,
-                    'boardyear': s.boardyear,
-                    'verified': s.verified
+                    'id': sticker.id,
+                    'latitude': float(sticker.latitude) if sticker.latitude is not None else None,
+                    'longitude': float(sticker.longitude) if sticker.longitude is not None else None,
+                    'picture_url': sticker.picture if sticker.picture is not None else None,
+                    'sub': sticker.sub,
+                    'username': user.name,
+                    'posttime': sticker.posttime,
+                    'spots': sticker.spots,
+                    'boardyear': sticker.boardyear,
+                    'verified': sticker.verified
                 })
             return jsonify(out), 200
     else:
@@ -448,9 +623,6 @@ def reviewSticker():
         sticker.verified = approved
         session.commit()
         return jsonify({'status': 'ok'}), 200
-
-def sendEmailUpdate():
-    return 0  # TODO not implemented
 
 def allowed_file(filename):
     return '.' in filename and \
