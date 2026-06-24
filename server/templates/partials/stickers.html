@@ -1,0 +1,21 @@
+{% for sticker in stickers %}
+<div class="overlay-sticker-card" style="--sticker-board-color: var(--board-{{ sticker.boardyear }}-color);">
+
+  <img src="{{ sticker.picture_url }}" class="overlay-sticker-img" alt="sticker-img-{{ sticker.id }}">
+
+  <div class="overlay-meta">
+    <span>#{{ sticker.id }}</span> •
+    <span class="posttime" data-posttime="{{ sticker.posttime }}">
+      Posted just now
+    </span> •
+    <span class="distance" data-distance="{{ sticker.distance_m }}">...</span>
+  </div>
+
+  <button @click="
+      window.dispatchEvent(new CustomEvent('close-overlay'));
+      flyToSticker({{ sticker.lat }}, {{ sticker.lon }}, {{ sticker.id }})
+    ">
+    Open on map
+  </button>
+</div>
+{% endfor %}
