@@ -10,7 +10,7 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
 
-    sub:    Mapped[int] = mapped_column(primary_key=True)
+    sub:    Mapped[str] = mapped_column(primary_key=True)
     name:   Mapped[str]
     email:  Mapped[str]
 
@@ -28,7 +28,7 @@ class Sticker(Base):
     latitude:   Mapped[float]
     picture:    Mapped[str]
 
-    sub:        Mapped[int] = mapped_column(ForeignKey("users.sub", ondelete="CASCADE"), index=True)
+    sub:        Mapped[str] = mapped_column(ForeignKey("users.sub", ondelete="CASCADE"), index=True)
 
     user:       Mapped["User"] = relationship(back_populates="stickers")
 
@@ -42,7 +42,7 @@ class Sticker(Base):
 class Admin(Base):
     __tablename__ = "admins"
 
-    sub: Mapped[int] = mapped_column(ForeignKey("users.sub", ondelete="CASCADE"), primary_key=True)
+    sub: Mapped[str] = mapped_column(ForeignKey("users.sub", ondelete="CASCADE"), primary_key=True)
     user: Mapped["User"] = relationship(back_populates="admin")
 
     # run:

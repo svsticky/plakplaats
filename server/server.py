@@ -290,7 +290,7 @@ admin.add_link(MenuLink(name='Logout', url='/logout', category=''))
 
 disc = requests.get(f"{app.config['OIDC_ISSUER_BASE']}/.well-known/openid-configuration", verify=True).json()
 jwks = requests.get(disc["jwks_uri"], verify=True).json()
-koala_public_key = RSAAlgorithm.from_jwk(json.dumps(jwks["keys"][0]))
+koala_public_key = RSAAlgorithm.from_jwk(json.dumps(jwks["keys"][1]))
 
 jwt = JWTManager(app)
 
@@ -304,7 +304,7 @@ class User:
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
     return User(
-        sub       = int(jwt_data["sub"]),
+        sub       = jwt_data["sub"],
         email     = jwt_data.get("email"),
         is_super_admin = jwt_data.get("is_admin"),
         full_name = jwt_data.get("full_name", "")
@@ -391,7 +391,7 @@ def login():
     if not code:
         next_url = request.args.get("next") or url_for("stickerMap")
         auth_url = (
-            f"{Config.OIDC_ISSUER_BASE}/api/oauth/authorize"
+            f"{Config.OIDC_ISSUER_BASE}/protocol/openid-connect/auth"
             f"?client_id={Config.OIDC_CLIENT_ID}"
             f"&scope={Config.OIDC_SCOPES}"
             f"&redirect_uri={url_for('login', _external=True)}"
@@ -402,7 +402,7 @@ def login():
 
     # Exchange code for tokens
     token_response = requests.post(
-        f"{Config.OIDC_ISSUER_BASE}/api/oauth/token",
+        f"{Config.OIDC_ISSUER_BASE}/protocol/openid-connect/token",
         data={
             "grant_type":   "authorization_code",
             "code":         code,
@@ -433,7 +433,7 @@ def login():
     set_access_cookies(resp, plakplaats_access_token)
 
     upsert_user(
-        int(jwt_data["sub"]),
+        jwt_data["sub"],
         jwt_data["full_name"],
         jwt_data["email"]
     )
@@ -456,7 +456,7 @@ def upsert_user(sub, full_name, email):
             # Update fields if they changed
             if user.name != full_name:
                 user.name = full_name
-
+ 
             if user.email != email:
                 user.email = email
 
