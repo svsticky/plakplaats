@@ -2,8 +2,8 @@ import flask
 from flask import request
 from flask import jsonify
 from flask import render_template
-from flask import flash
 from sqlalchemy import create_engine, select, and_, update
+from flask import flash
 from sqlalchemy.orm import Session
 from geoalchemy2.functions import ST_MakePoint, ST_DistanceSphere
 from models import User as UserModel, Sticker, Admin as AdminModel, Base
@@ -555,36 +555,44 @@ def getStickers():
             'error': 'Bounding box not defined or incomplete.'
         }), 400
 
-@app.route('/getNearYouStickers', methods=['GET'])
+@app.route("/api/nearby-stickers")
 @login_required
-def getNearYouStickers():
-    if (request.args.get('lon') != '' and request.args.get('lat') != ''):
-        # Get all the stickers within the bounding box
-        with Session(engine) as session:
-            stmt = select(Sticker, UserModel).join(UserModel, Sticker.sub == UserModel.sub).where(Sticker.verified).order_by(ST_DistanceSphere(
-                ST_MakePoint(float(request.args.get('lon')), float(request.args.get('lat'))), 
-                ST_MakePoint(Sticker.longitude, Sticker.latitude)).asc()
-            ).limit(10)
+def nearby_stickers():
+    stickers = get_nearby_stickers()
+    return render_template("partials/stickers.html", stickers=stickers)
 
-            rows = session.execute(stmt).all()
+def get_nearby_stickers():
+    lon = request.args.get("geo-lon", type=float)
+    lat = request.args.get("geo-lat", type=float)
 
-            out = []
-            for sticker, user in rows:
-                out.append({
-                    'id': sticker.id,
-                    'latitude': float(sticker.latitude) if sticker.latitude is not None else None,
-                    'longitude': float(sticker.longitude) if sticker.longitude is not None else None,
-                    'picture_url': sticker.picture if sticker.picture is not None else None,
-                    'sub': sticker.sub,
-                    'username': user.name,
-                    'posttime': sticker.posttime,
-                    'spots': sticker.spots,
-                    'boardyear': sticker.boardyear,
-                    'verified': sticker.verified
-                })
-            return jsonify(out), 200
-    else:
-        return json.dumps({'status': '400', 'error': 'Bounding box not defined or incomplete.'}), 400
+    if lon is None or lat is None:
+        return []
+
+    with Session(engine) as session:
+        distance_expr = ST_DistanceSphere(
+            ST_MakePoint(lon, lat),
+            ST_MakePoint(Sticker.longitude, Sticker.latitude)
+        ).label("distance")
+
+        stmt = (
+        select(Sticker, distance_expr)
+        .order_by(distance_expr.asc())
+        .limit(10))
+
+        results = session.execute(stmt).all()
+        
+        return [
+            {
+                "id": s.id,
+                "lat": float(s.latitude),
+                "lon": float(s.longitude),
+                "picture_url": s.picture,
+                "posttime": s.posttime.isoformat(),
+                "distance_m": float(dist),
+                "boardyear": s.boardyear,
+            }
+            for s, dist in results
+        ]
 
 @app.route('/updateStickerSpots', methods=['POST'])
 @login_required

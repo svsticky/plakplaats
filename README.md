@@ -34,12 +34,12 @@ In `home.html`:
 
 1. Add a new option inside `<select id="boardYearInputSelect" name="boardYearInputSelect">`, by duplicating the last option. Then change this new option to `<option value="<current-board-number>" selected>B<current-board-number></option>` and remove the `selected` tag from the one second-to-last option item.
 
-In general.css:
+In `general.css`:
 
 2. Add a new variable called `--board-<previous-board-number>-color` and set its value to the current value of `--board-color`
 3. Set the value of `--board-color` equal to the new current board color
 
-In home.css:
+In `home.css`:
 
 4. Change the background of `#boardYearInputSelect option:nth-child(<previous-board-number>), .marker-B<previous-board-number>` from `background: var(--board-<previous-board-number>-color);` to `background: var(--board-<current-board-number>-color);`. Add a new declaration `#boardYearInputSelect option:nth-child(<current-board-number>), .marker-B<current-board-number>` with the value `background: var(--board-color);`.
 

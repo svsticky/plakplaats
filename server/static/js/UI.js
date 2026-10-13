@@ -3,8 +3,8 @@ var addIsOpen = false;
 
 emailInput.addEventListener('input', (event) => setSubmitbutton(event.target.value));
 
-addIcon.addEventListener('click', function(){
-    if(!addIsOpen){
+addIcon.addEventListener('click', function () {
+    if (!addIsOpen) {
         //Open add view
         openAddView(true);
         addIsOpen = true;
@@ -16,45 +16,45 @@ addIcon.addEventListener('click', function(){
         closeSuccessView();
         addIsOpen = false;
         addIcon.classList.remove('addIconClose');
-        
+
     }
 });
 //Open view
-function openAddView(reset){
+function openAddView(reset) {
     if (reset) {
         resetView();
-        setTimeout(function(){
+        setTimeout(function () {
             getLocation();
         }, 500);
     }
     addView.classList.add('openView');
 }
 
-function closeAddView(reset){
+function closeAddView(reset) {
     addView.classList.remove('openView');
     if (reset)
         resetView();
 }
 
-function setOverlay(state){
+function setOverlay(state) {
     if (state)
         document.getElementById("mapOverlay").style.display = "block";
     else
         document.getElementById("mapOverlay").style.display = "none";
 }
 
-function openSuccessView(){
+function openSuccessView() {
     successView.classList.add('openView');
 }
 
-function closeSuccessView(){
+function closeSuccessView() {
     successView.classList.remove('openView');
     addIsOpen = false;
     addIcon.classList.remove('addIconClose');
 }
 
 //Reset add view
-function resetView(){
+function resetView() {
     imageText.classList.remove('addImageTextHidden');
     imagePreview.classList.remove('addImagePreviewShow');
     dropArea.classList.remove('invalid');
@@ -70,7 +70,6 @@ function resetView(){
     closeAddView();
     closeSuccessView();
     addIcon.classList.remove('addIconClose');
-    overlay.toggleOverlay({ isOpen: false, isMobile: false });
     setManualLocationInput(false);
     setSubmitbutton("")
 }

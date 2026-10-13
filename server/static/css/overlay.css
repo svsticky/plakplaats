@@ -1,0 +1,169 @@
+#nearYouOverlay.desktop {
+  position: fixed;
+  top: var(--navbar-height);
+  right: 0;
+  width: 380px;
+  height: calc(100vh - var(--navbar-height));
+  background: white;
+  color: black;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+#nearYouOverlay.desktop.active {
+  transform: translateX(0);
+}
+
+#nearYouOverlay.desktop.inactive {
+  transform: translateX(100%);
+}
+
+#nearYouOverlay.mobile {
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  width: 100%;
+  height: 85vh;
+
+  background: white;
+  color: black;
+
+  bottom: -90%;
+  border-radius: 20px 20px 0 0;
+
+  transition: bottom 0.32s cubic-bezier(.22, 1, .36, 1), border-radius 0.35s ease;
+
+  overflow-y: hidden;
+  padding: 10px;
+}
+
+#nearYouOverlay.mobile.active {
+  bottom: 0;
+  border-radius: 0;
+  overflow-y: auto;
+}
+
+#nearYouOverlay.mobile.inactive {
+  bottom: -75vh;
+}
+
+#nearYouMobileHandle {
+  width: 60px;
+  height: 6px;
+  background: #ccc;
+  border-radius: 3px;
+  margin: 8px auto;
+}
+
+#nearYouOverlay.mobile>#nearYouMobileHandle {
+  display: block;
+  width: 60px;
+  height: 6px;
+  background: #ccc;
+  border-radius: 3px;
+  margin: 8px auto;
+}
+
+#nearYouOverlay.mobile.active>#nearYouMobileHandle {
+  display: none;
+}
+
+#nearYouOverlay.desktop>#nearYouMobileHandle {
+  display: none;
+}
+
+#nearYouOverlay h2 {
+  color: black;
+  margin: 10px auto;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.near-toggle-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  background: black;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+#stickerList {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.overlay-sticker-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  background-color: var(--background-color);
+  color: var(--dark-text-color);
+
+  width: 80%;
+  border-radius: 6px;
+  padding: 10px;
+
+  transition:
+    background-color 0.8s ease,
+    opacity 0.8s ease;
+  opacity: 0;
+}
+
+.overlay-sticker-card.revealed {
+  background-color: var(--element-background-color);
+  opacity: 1;
+}
+
+.overlay-sticker-img {
+  width: 40%;
+  border-radius: 5px;
+  margin: 8px 0;
+  box-shadow:
+    0 0 12px 2px var(--sticker-board-color),
+    0 0 30px 8px color-mix(in srgb, var(--sticker-board-color), transparent 70%);
+}
+
+.overlay-meta {
+  font-size: 14px;
+  color: var(--lighter-text-color);
+  text-align: center;
+}
+
+.overlay-sticker-card button {
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 0.5rem;
+  margin-top: 8px;
+  width: 30%;
+  background-color: var(--board-color);
+  color: var(--secondary-color);
+  cursor: pointer;
+}
+
+#nearYouDesktopToggleButton {
+  background-color: rgba(100, 100, 100, 0.3);
+  display: none;
+}
+
+#toggle-chevron-img {
+  width: 2rem;
+}
+
+@media (min-width: 768px) {
+  #nearYouDesktopToggleButton {
+    display: block;
+  }
+}
