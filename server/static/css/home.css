@@ -420,6 +420,11 @@ button,
 
 #boardYearInputSelect option:nth-child(20),
 .marker-B20 {
+  background: var(--board-20-color);
+}
+
+#boardYearInputSelect option:nth-child(21),
+.marker-B21 {
   background: var(--board-color);
 }
 
