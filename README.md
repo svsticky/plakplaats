@@ -49,4 +49,4 @@ In `/img/markers`:
 
 In `/img`:
 
-6. Similarly to `4.`, open `favicon.svg` and search (`ctrl+f`) for `#`. This should return one result of `fill="#<hex-color>"`. Replace this hex color with the new current board color. Convert this `favicon.svg` to an `favicon.ico` and replace the current favicon with this new `favicon.ico`. This conversion can be done with online services, such as [Picflow Svg to Ico](https://picflow.com/convert/svg-to-ico) (these online services do differ in quality, so check if the result for example has the transparant background the current favicon has). Do note that browser sometimes do not update the favicon image on a reload. Opening an incognito window or clearing the browser cache can help in this case.
+6. Similarly to `4.`, open `favicon.svg` and search (`ctrl+f`) for `#`. This should return one result of `fill="#<hex-color>"`. Replace this hex color with the new current board color.
