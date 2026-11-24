@@ -1,8 +1,10 @@
 /* SETTINGS */
 :root {
   /* Board Color Variables */
-  --board-color: rgb(250, 107, 32);
-  /* #FA6B20 primary color of the current board of Sticky */
+  --board-color: rgb(178, 27, 33);
+  /* #B21B21 primary color of the current board of Sticky */
+  --board-21-color: rgb(178, 27, 33);
+  /* #B21B21 */
   --board-20-color: rgb(250, 107, 32);
   /* #FA6B20 */
   --board-19-color: rgb(25, 112, 82);
